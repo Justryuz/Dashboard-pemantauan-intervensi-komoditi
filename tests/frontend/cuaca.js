@@ -5,7 +5,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const server = require('../../api/server.js');
-const { buatFixture, pasangCache, stubCuaca } = require('../helpers/cuaca-fixture.js');
+const { buatFixture } = require('../helpers/cuaca-fixture.js');
+const { pasangSemuaCache } = require('../helpers/banjir-fixture.js');
+const { stubApi } = require('../helpers/api-stub.js');
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );
@@ -14,7 +16,7 @@ const EDGE =
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
-  pasangCache();
+  pasangSemuaCache();
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await puppeteer.launch({
@@ -40,7 +42,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       if (jangkaRalatRangkaian && /Failed to load resource/.test(m.text())) return;
       masalah.push(`console.${m.type()}: ${m.text()}`);
     });
-    if (handler) await stubCuaca(page, handler);
+    if (handler) await stubApi(page, { cuaca: handler });
     await page.goto(url, { waitUntil: 'load', timeout: 60000 });
     if (tunggu === 'tile')
       await page.waitForFunction(
@@ -124,8 +126,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       let r = await buka(() => ({ body: buatFixture({ amaran: false }) }));
       const a1 = await teks(r.page, '#metAlertBody');
       ok(
-        '(iii-b) tiada amaran aktif',
-        a1.includes('Tiada amaran rasmi aktif') && a1.includes('MET Malaysia'),
+        '(iii-b) tiada amaran dalam 7 hari',
+        a1.includes('Tiada amaran rasmi dalam 7 hari lepas') && a1.includes('MET Malaysia'),
         a1,
       );
       await r.page.close();

@@ -69,7 +69,7 @@
               >Cerah
             </button>
           </div>
-          <span class="tag demo-badge">● DATA DUMMY (kecuali cuaca & senario cuaca)</span
+          <span class="tag demo-badge">● DATA DUMMY (kecuali cuaca, banjir, IPU & senario)</span
           ><button class="button ghost" id="downloadLogistik">↓ CSV Logistik PO</button
           ><button class="button ghost" id="downloadCsv">↓ CSV Harga Dummy</button
           ><button class="button ghost" id="showLogs">
@@ -106,7 +106,7 @@
           ><span class="source">◎ Threshold Harga</span
           ><span class="source">⌂ Outlet Intervensi</span
           ><span class="source">▰ Kapasiti Infrastruktur</span
-          ><span class="source">≋ JPS <b class="cyan">(belum disambungkan)</b></span
+          ><span class="source">≋ JPS Malaysia · JPS Selangor <b class="cyan">(sebenar)</b></span
           ><span class="source">☁ MET Malaysia · Open-Meteo <b class="cyan">(sebenar)</b></span>
         </div>
         <section class="filterbar" aria-label="Penapis dashboard">
@@ -174,10 +174,17 @@
                   <button
                     class="button tiny ghost"
                     id="floodToggle"
-                    disabled
-                    title="Risiko banjir: data JPS belum disambungkan"
+                    aria-pressed="true"
+                    title="Tunjuk atau sembunyi stesen paras air JPS"
                   >
-                    ≋ Risiko banjir: data JPS belum disambungkan</button
+                    ≋ Stesen banjir JPS</button
+                  ><button
+                    class="button tiny ghost"
+                    id="floodAllToggle"
+                    aria-pressed="false"
+                    title="Tunjuk juga stesen berstatus Normal"
+                  >
+                    Tunjuk semua stesen</button
                   ><button class="button tiny" id="backMap" style="display: none">
                     ← Malaysia
                   </button>
@@ -202,7 +209,10 @@
                 <span class="legend-item"><i class="dot green"></i>Hijau: Stabil</span
                 ><span class="legend-item"><i class="dot yellow"></i>Kuning: Waspada</span
                 ><span class="legend-item"><i class="dot red"></i>Merah berkelip: Kritikal</span
-                ><span class="legend-item">≋ Banjir: data JPS belum disambungkan</span
+                ><span class="legend-item"><i class="dot bj-normal"></i>Stesen JPS: Normal</span
+                ><span class="legend-item"><i class="dot bj-waspada"></i>Waspada</span
+                ><span class="legend-item"><i class="dot bj-amaran"></i>Amaran</span
+                ><span class="legend-item"><i class="dot bj-bahaya"></i>Bahaya</span
                 ><span class="legend-item" style="margin-left: auto">🔄 Peta ↔ Panel harga</span>
               </div>
               <div class="map-detail" id="mapDetail" hidden style="display: none"></div>
@@ -340,15 +350,13 @@
           </section>
           <section class="panel">
             <div class="alert-head">
-              ⚠ Amaran Rasmi MET Malaysia
+              ⚠ Amaran Rasmi (MET Malaysia & JPS)
               <span id="metAlertTag" style="margin-left: auto; font-size: 10px; font-weight: 400"
-                >MET · Sebenar</span
+                >MET · JPS · Sebenar</span
               >
             </div>
             <div class="alert-body" id="metAlertBody">Memuatkan amaran…</div>
-            <div class="right-note" id="metAlertNote">
-              Sumber: API rasmi MET Malaysia (dataset WARNING)
-            </div>
+            <div class="right-note" id="metAlertNote">Sumber: MET Malaysia · JPS Malaysia</div>
           </section>
           <section class="panel ams-panel" id="amsPanel" aria-labelledby="amsTitle">
             <div class="ams-head">
@@ -379,13 +387,13 @@
             </div>
             <div class="ams-state" id="amsState" role="status" aria-live="polite"></div>
             <div class="ams-note" id="amsNote">
-              Dijana daripada data cuaca sebenar (anggaran sistem, bukan amaran rasmi). Sumber: MET
-              Malaysia · Open-Meteo.
+              Dijana daripada data sebenar cuaca dan banjir (anggaran sistem, bukan amaran rasmi).
+              Sumber: MET Malaysia · Open-Meteo · JPS Malaysia.
             </div>
-            <div class="ams-note" id="amsFloodNote">Risiko banjir: data JPS belum disambungkan</div>
+            <div class="ams-note" id="amsFloodNote">Memuatkan data banjir JPS…</div>
             <div class="ams-overview" id="amsOverview">
               <div class="ams-kpis" id="amsKpis"></div>
-              <h3 class="ams-section">Senario Cuaca yang Dikesan</h3>
+              <h3 class="ams-section">Senario yang Dikesan</h3>
               <div id="amsList" class="ams-list"></div>
             </div>
             <div id="amsDetail" class="ams-detail" hidden></div>
@@ -727,8 +735,8 @@
             kumpulan logistik ialah angka gabungan: Dengkil/Selayang dan Johor Baharu/Simpang
             Renggam.
             <b>Daerah seliaan, rekod harga, forecast, status amaran dan outlet ialah simulasi</b>.
-            Data cuaca dan senario cuaca ialah data sebenar (MET Malaysia, Open-Meteo); data banjir
-            JPS belum disambungkan. Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
+            Data cuaca, banjir dan senario ialah data sebenar (MET Malaysia, Open-Meteo, JPS
+            Malaysia, JPS Selangor). Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
             <b>Ketakselarasan sumber:</b> 64 bilik sejuk dalam ringkasan berbanding 65 daripada
             jumlah butiran.
           </div>

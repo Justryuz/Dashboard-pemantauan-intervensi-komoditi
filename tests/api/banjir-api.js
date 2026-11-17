@@ -405,6 +405,23 @@ function risiko(stesenWL, opts = {}) {
     assert.deepEqual(a[1].negeri, []);
     assert.ok(!a.some((x) => /Pahang/.test(x.mesej)));
   });
+  ok('amaran: sejarah 7 hari (dilihat, aktif/tamat, buang >7 hari, tiada rekaan)', () => {
+    const N = new Date('2026-11-17T05:00:00Z');
+    const a = { mesej: 'Banjir A', dikeluarkan: '2026-11-17T10:00:00+08:00', negeri: ['Kelantan'] };
+    const h1 = banjir.gabungSejarahAmaran([], [a], N);
+    assert.equal(h1.length, 1);
+    assert.equal(h1[0].aktif, true);
+    assert.equal(h1[0].dilihat, N.toISOString());
+    // amaran hilang daripada sumber semasa: kekal dalam sejarah sebagai tamat, dilihat kekal
+    const h2 = banjir.gabungSejarahAmaran(h1, [], new Date('2026-11-19T05:00:00Z'));
+    assert.equal(h2.length, 1);
+    assert.equal(h2[0].aktif, false);
+    assert.equal(h2[0].dilihat, N.toISOString());
+    // lebih 7 hari dibuang
+    assert.equal(banjir.gabungSejarahAmaran(h1, [], new Date('2026-11-30T05:00:00Z')).length, 0);
+    // tiada pendua
+    assert.equal(banjir.gabungSejarahAmaran(h1, [a], N).length, 1);
+  });
   ok('amaran: mesej dipotong 600 aksara dan HTML dibuang', () => {
     const a = banjir.normalisasiAmaran(
       [{ Message: '<b>Amaran</b> ' + 'x'.repeat(900), MessageDT: '17/11/2026 08:00' }],

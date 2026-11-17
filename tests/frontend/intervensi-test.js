@@ -670,7 +670,7 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  const b13=await (async()=>{const p2=await page(OLD,1440,900,[]);await p2.select('#filterCommodity','Cili Merah').catch(()=>{});await sleep(300);const x=await p2.evaluate(()=>DASHBOARD_TEST.filteredRecords().length);await p2.close();return x})();
  ok('13 #filterCommodity sama seperti baseline',r13===b13,[r13,b13]);
  await po.click('#resetFilters');await po.click('#floodToggle');await sleep(300);
- ok('13 #floodToggle dilumpuhkan: data JPS belum disambungkan',await po.evaluate(()=>{const b=document.getElementById('floodToggle');return b.disabled&&b.textContent.includes('JPS belum disambungkan')}));
+ ok('13 #floodToggle berfungsi: stesen banjir JPS',await po.evaluate(()=>{const b=document.getElementById('floodToggle');return !b.disabled&&b.textContent.includes('Stesen banjir JPS')}));
  await po.click('#showLogs');await sleep(400);ok('13 #showLogs',await po.evaluate(()=>!!document.getElementById('modalBack')));
  await po.evaluate(()=>{const b=document.getElementById('modalBack');if(b)b.remove()});
  await po.evaluate(()=>{const c=document.querySelector('#amsList [data-sid]');if(c)c.click()});await sleep(500);

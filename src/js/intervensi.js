@@ -742,6 +742,13 @@
     });
     return best;
   }
+  // Banjir sebenar (JPS): risiko PO 'Tinggi' daripada /api/banjir menjadi penanda Waspada (anggaran sistem, bukan amaran rasmi).
+  function banjirDisruption(poId) {
+    if (typeof banjirState === 'undefined' || banjirState.status !== 'ready') return null;
+    if (banjirLapuk(banjirState.data)) return null;
+    const p = (banjirState.data.po || []).find((x) => x.poId === poId);
+    return p && p.risikoBanjir === 'Tinggi' ? { level: 'Waspada', source: 'Banjir (JPS)' } : null;
+  }
   const disruptionLabel = (d) =>
     d
       ? 'Cuaca tinggi (Open-Meteo/MET)' +
@@ -798,6 +805,7 @@
       if (km > inp.distLimitKm)
         return ex(`Jarak ${Math.round(km)} km melebihi had ${inp.distLimitKm} km`);
       const dis = disruptionLevel(c.id, inp.now);
+      const banjir = banjirDisruption(c.id);
       if (dis && dis.level === 'Amaran') return ex(dis.source);
       const adv = mode === 'pengguna' ? refPrice - pr.actual : pr.actual - refPrice;
       if (!(adv > 0)) return ex('Harga tidak lebih baik daripada harga rujukan');
@@ -824,6 +832,7 @@
         maxCapMT: lg.muatanMaxMT,
         sameGroup: c.group === anchor.group,
         flood: dis && dis.level === 'Waspada' ? dis : null,
+        banjir,
         overlay: pr.overlay,
       });
     });
@@ -834,7 +843,10 @@
           ds = clamp(1 - x.km / inp.distLimitKm, 0, 1);
         x.priceScore = ps;
         x.distScore = ds;
-        x.score = Math.max(0, Math.round(100 * (wP * ps + wD * ds)) - (x.flood ? 5 : 0));
+        x.score = Math.max(
+          0,
+          Math.round(100 * (wP * ps + wD * ds)) - (x.flood || x.banjir ? 5 : 0),
+        );
       });
       list.sort(
         (a, b) => b.score - a.score || b.qty - a.qty || a.km - b.km || a.name.localeCompare(b.name),
@@ -2645,6 +2657,7 @@
     const chips = [];
     if (c.sameGroup) chips.push(chip('Kongsi kapasiti logistik (kumpulan gabungan)', 'info'));
     if (c.flood) chips.push(chip('Cuaca (Open-Meteo/MET)', 'warn'));
+    if (c.banjir) chips.push(chip('Banjir (JPS)', 'warn'));
     if (c.overlay) chips.push(chip('Senario ujian (dummy)', 'warn'));
     return `<button type="button" class="iv-cand" aria-pressed="${s.mob.candidateKey === c.poId}" data-iv-act="cand" data-iv-arg="${E(c.poId)}" data-iv-side="${side}"><div class="iv-cand-h"><span>#${c.rank} ${E(c.name)}</span><span>Skor ${c.score}/100</span></div>
  <div class="iv-row-s">${E(c.negeri)}</div>
@@ -2706,6 +2719,9 @@
     else if (s.ui.scenError)
       h += `<div class="iv-chips">${chip('Data cuaca tidak tersedia, gangguan cuaca tidak dikira', 'warn')}</div>`;
     const ad = disruptionLevel(r.po);
+    const adBanjir = banjirDisruption(r.po);
+    if (adBanjir)
+      h += `<div class="iv-banner">PO terpilih berada dalam kawasan risiko banjir (JPS). Sahkan akses laluan sebelum menghantar. <small>(Anggaran sistem berdasarkan data JPS, bukan amaran rasmi)</small></div>`;
     if (ad)
       h += `<div class="iv-banner ${ad.level === 'Amaran' ? 'bad' : ''}">PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar. <small>(${E(ad.source)})</small></div>`;
     if (!eng.trigger.ok) {
@@ -2722,7 +2738,7 @@
       const t = tf.top;
       h += `<div class="iv-calc" id="ivMobSummary"><h4>Ringkasan Cadangan Mobilisasi ${tagD}</h4>
   <div class="iv-kv"><span>PO ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} dicadangkan<b>${E(t.name)}</b></span><span>Lokasi<b>${tf.inState ? 'Dalam negeri' : 'Luar negeri'} (${E(t.negeri)})</b></span><span>Kuantiti<b>${f2(t.qty)} MT</b></span><span>Anggaran jarak<b>${Math.round(t.km)} km</b></span></div>
-  <div class="iv-note"><b>Mengapa:</b> skor tertinggi ${t.score}/100 dalam senarai ${tf.inState ? 'Dalam Negeri' : 'Luar Negeri'}; harga lebih baik daripada harga rujukan dan jarak ${Math.round(t.km)} km dalam had ${s.mob.distLimitKm} km. <b>Kekangan:</b> ${t.vehicleKnown ? 'kenderaan tersedia dihadkan kepada ' + f2(t.vehicleCapMT) + ' MT' : 'ketersediaan kenderaan semasa tidak diketahui (kapasiti maksimum statik ' + f2(t.maxCapMT) + ' MT)'}${t.sameGroup ? '; kapasiti logistik dikongsi dengan PO terpilih' : ''}${t.flood ? '; waspada banjir' : ''}. Stok: Belum disahkan.</div></div><div id="ivMobAI"></div>`;
+  <div class="iv-note"><b>Mengapa:</b> skor tertinggi ${t.score}/100 dalam senarai ${tf.inState ? 'Dalam Negeri' : 'Luar Negeri'}; harga lebih baik daripada harga rujukan dan jarak ${Math.round(t.km)} km dalam had ${s.mob.distLimitKm} km. <b>Kekangan:</b> ${t.vehicleKnown ? 'kenderaan tersedia dihadkan kepada ' + f2(t.vehicleCapMT) + ' MT' : 'ketersediaan kenderaan semasa tidak diketahui (kapasiti maksimum statik ' + f2(t.maxCapMT) + ' MT)'}${t.sameGroup ? '; kapasiti logistik dikongsi dengan PO terpilih' : ''}${t.flood || t.banjir ? '; waspada banjir' : ''}. Stok: Belum disahkan.</div></div><div id="ivMobAI"></div>`;
     }
     h += `<div class="iv-two" style="margin-top:10px"><div><div class="iv-sec">TOP 5 PO DALAM NEGERI ${E(IV_POBY[r.po].negeri)} ${tagD}</div><div id="ivListDalam">${eng.dalam.length ? eng.dalam.map((c) => candCard(c, 'dalam')).join('') : `<div class="iv-empty">${empD}</div>`}</div></div>
  <div><div class="iv-sec">TOP 5 PO LUAR NEGERI ${tagD}</div><div id="ivListLuar">${eng.luar.length ? eng.luar.map((c) => candCard(c, 'luar')).join('') : `<div class="iv-empty">${empL}</div>`}</div></div></div>`;
@@ -2734,6 +2750,7 @@
       const risks = [];
       if (ad && ad.level === 'Amaran') risks.push('Destinasi/sumber terjejas banjir');
       if (sel.flood) risks.push('Cuaca tinggi (Open-Meteo/MET) pada ' + sel.name);
+      if (sel.banjir) risks.push('Banjir (JPS) pada ' + sel.name);
       if (sel.sameGroup) risks.push('Kapasiti kenderaan dikongsi dengan PO terpilih');
       if (!sel.vehicleKnown)
         risks.push(
@@ -2783,6 +2800,7 @@
           .map((d) => +d.interventionId.slice(-3) || 0),
       ) + 1;
     const ad = disruptionLevel(r.po);
+    const adBanjir = banjirDisruption(r.po);
     ivDrafts.push({
       interventionId: `IV-${ds}-${String(suf).padStart(3, '0')}`,
       mode: r.mode,
@@ -2798,7 +2816,12 @@
       deliveryRisk:
         (ad && ad.level === 'Amaran'
           ? 'PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar. '
-          : '') + (c.vehicleKnown ? '' : 'Ketersediaan kenderaan tidak diketahui.'),
+          : '') +
+        (adBanjir
+          ? 'Banjir (JPS) pada PO terpilih. Sahkan akses laluan sebelum menghantar. '
+          : '') +
+        (c.banjir ? 'Banjir (JPS) pada ' + c.name + '. ' : '') +
+        (c.vehicleKnown ? '' : 'Ketersediaan kenderaan tidak diketahui.'),
       stockVerification: 'belum disahkan',
       weights: { price: s.mob.wPrice, dist: 100 - s.mob.wPrice },
       createdBy: 'prototaip',
@@ -3760,6 +3783,7 @@
     priorityScore,
     mobilisationEngine,
     disruptionLevel,
+    banjirDisruption,
     marginPct,
     maxFarmPrice,
     minSell,

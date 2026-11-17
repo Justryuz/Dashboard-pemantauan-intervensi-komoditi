@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const server = require('../../api/server.js');
-const { pasangCache } = require('../helpers/cuaca-fixture.js');
+const { pasangSemuaCache } = require('../helpers/banjir-fixture.js');
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );
@@ -15,7 +15,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const IDS = ['ivFKomoditi', 'ivFNegeri', 'ivFPO', 'ivFDaerah', 'ivFTempoh', 'ivFRisiko'];
 
 (async () => {
-  pasangCache();
+  pasangSemuaCache();
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await puppeteer.launch({

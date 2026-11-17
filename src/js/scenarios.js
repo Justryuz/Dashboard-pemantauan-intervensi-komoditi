@@ -3,13 +3,14 @@
    state.scenarioPO, state.scenarioLoad) dan dirender semula daripada state oleh renderAll(). */
 Object.assign(state, { scenario: null, scenarioPO: null, scenarioLoad: 'loading' });
 let SCEN_LIST = []; // senario yang sah (dimuat melalui ScenarioService)
-const INSIGHT_CACHE = {}; // scenarioId -> ringkasan dijana sistem daripada data cuaca (bukan model AI)
+const INSIGHT_CACHE = {}; // scenarioId -> ringkasan dijana sistem daripada data sebenar (bukan model AI)
 let scenFetchedAt = ''; // masa data cuaca terakhir dikemas kini (untuk banner lapuk)
+let scenBanjir = { status: 'memuat', fetchedAt: '', senario: 0, lapuk: false }; // keadaan data banjir JPS
 let amsFitted = false; // true jika peta digerakkan oleh panel ini
 let amsListSig = '',
   amsDetailSig = '';
 
-/* --- Senario dijana di pelayan (api/services/cuaca.js) daripada data cuaca sebenar MET Malaysia + Open-Meteo. --- */
+/* --- Senario dijana di pelayan: cuaca (api/services/cuaca.js) dan banjir (api/services/banjir.js, JPS). --- */
 const WARNING_LABELS = {
   hujan_berterusan: 'Hujan berterusan',
   hujan_lebat: 'Hujan lebat',
@@ -22,19 +23,35 @@ const COMMODITY_PRICE_MAP = { 'Cili Merah': 'Cili Merah', Tomato: 'Tomato Bulat'
 /* --- Lapisan servis ---
    MET Malaysia + Open-Meteo -> pelayan (api/services/cuaca.js) -> senario -> /api/cuaca -> dashboard.
    Tiada kunci API di pelayar; pelayar hanya memanggil /api/cuaca (same-origin) melalui CUACA.load().
-   Tiada sumber JPS: senario banjir hanya dibenarkan jika datang daripada sumber rasmi (dataStatus 'rasmi', sumber JPS). */
+   Banjir: /api/banjir melalui BANJIR.load(). Senario banjir hanya dibenarkan daripada sumber rasmi (dataStatus 'rasmi', sumber JPS). */
 const ScenarioService = {
   async loadScenarios() {
-    const j = await CUACA.load();
+    // Cuaca dan banjir dimuat serentak; banjir gagal tidak menggagalkan senario cuaca.
+    const [c, b] = await Promise.allSettled([CUACA.load(), BANJIR.load()]);
+    if (c.status === 'rejected') throw c.reason;
+    const j = c.value;
     const data = [];
-    (Array.isArray(j.senario) ? j.senario : []).forEach((s) => {
+    const tambah = (s) => {
       const v = ScenarioService.validateScenario(s);
       if (v.ok) {
         s.affectedCommodities = ScenarioService.commoditiesFor(s);
         data.push(s);
       } else console.warn('Senario tidak sah diabaikan', s && s.scenarioId, v.errors);
-    });
-    return { status: 'sebenar', data, fetchedAt: j.fetchedAt };
+      return v.ok;
+    };
+    (Array.isArray(j.senario) ? j.senario : []).forEach(tambah);
+    const banjir = { status: 'ready', fetchedAt: '', senario: 0, lapuk: false };
+    if (b.status === 'fulfilled') {
+      if (banjirState.status === 'memuat') banjirState = { status: 'ready', data: b.value };
+      banjir.fetchedAt = b.value.fetchedAt;
+      banjir.lapuk = banjirLapuk(b.value);
+      (Array.isArray(b.value.senario) ? b.value.senario : []).forEach((s) => {
+        const ids = data.map((x) => Number(String(x.scenarioId).slice(1)) || 0);
+        const id = 'S' + String(Math.max(0, ...ids) + 1).padStart(2, '0');
+        if (tambah({ ...s, scenarioId: id })) banjir.senario++;
+      });
+    } else banjir.status = b.reason && b.reason.kind === 'file' ? 'file' : 'error';
+    return { status: 'sebenar', data, fetchedAt: j.fetchedAt, banjir };
   },
   // Komoditi paling kerap berstatus bukan hijau (peringkat Borong) di PO terlibat; data harga ialah dummy.
   commoditiesFor(s) {
@@ -256,6 +273,20 @@ function priceStatusHTML(poId, commodities) {
     })
     .join('');
 }
+function stesenBanjirHTML(poId, scs) {
+  const bs = scs.find((s) => s.warningType === 'amaran_banjir');
+  const r = bs && (bs.rincian || []).find((x) => x.poId === poId);
+  const st = (r && r.stesen) || [];
+  if (!st.length) return '';
+  const baris = st
+    .map((s) => {
+      const paras = s.parasAir == null ? '-' : Number(s.parasAir).toFixed(2) + ' m';
+      const jarak = s.jarakKm == null ? '' : ' · ' + esc(s.jarakKm) + ' km';
+      return `<li><b>${esc(s.nama)}</b> · ${esc(s.sungai || '-')}${jarak}<br><span class="bj-chip bj-${esc(String(s.statusRasmi).toLowerCase())}">${esc(s.statusRasmi)}</span> Paras ${esc(paras)} · Trend ${esc(s.trend || '-')} · Bacaan ${esc(s.masaBacaan ? cuacaMasa(s.masaBacaan) : '-')}<br><span class="ams-stesen-sumber">Sumber: ${esc(s.sumber || '-')}</span></li>`;
+    })
+    .join('');
+  return `<div class="ams-drawer-row ams-stesen"><span class="ams-k">STESEN JPS BERHAMPIRAN</span><ul>${baris}</ul><div class="ams-note">Anggaran sistem berdasarkan data JPS, bukan amaran rasmi</div></div>`;
+}
 function poDrawerHTML(poId, sc) {
   const p = poById[poId];
   if (!p) return '';
@@ -274,11 +305,12 @@ function poDrawerHTML(poId, sc) {
  <div class="ams-drawer-row"><span class="ams-k">NEGERI</span>${esc(p.negeri)}</div>
  <div class="ams-drawer-row"><span class="ams-k">SENARIO TERLIBAT</span>${esc(ids.join(', '))}</div>
  <div class="ams-drawer-row"><span class="ams-k">KOMODITI SENARIO</span>${esc(commText(comms))}</div>
- <div class="ams-drawer-row"><span class="ams-k">RISIKO CUACA</span><ul>${risk}</ul></div>
+ <div class="ams-drawer-row"><span class="ams-k">RISIKO SENARIO</span><ul>${risk}</ul></div>
+ ${stesenBanjirHTML(poId, scs)}
  <div class="ams-drawer-grid"><div class="ams-stat"><span>Kenderaan</span><b>${val(l.kenderaan, ' buah')}</b></div><div class="ams-stat"><span>Muatan</span><b>${val(l.muatanMT, ' MT')}</b></div><div class="ams-stat"><span>Bilik sejuk</span><b>${val(l.bilikSejuk, ' unit')}</b></div><div class="ams-stat"><span>Kapasiti simpanan</span><b>${val(l.kapasitiSimpananMT, ' MT')}</b></div></div>
  ${l.shared && Array.isArray(l.pemilikBersama) ? `<div class="ams-note">Angka gabungan: ${esc(l.pemilikBersama.join(' + '))}</div>` : ''}
  <div class="ams-price-box"><span class="ams-k">Status bekalan/harga komoditi (berasingan daripada amaran cuaca)</span>${priceStatusHTML(poId, comms)}</div>
- <div class="ams-note">Amaran cuaca tidak menukar status PO kepada merah. Status merah/kuning/hijau pada peta kekal berdasarkan data harga dan bekalan sahaja.</div>
+ <div class="ams-note">Amaran cuaca dan banjir tidak menukar status PO kepada merah. Status merah/kuning/hijau pada peta kekal berdasarkan data harga dan bekalan sahaja.</div>
  <div class="ams-drawer-row"><span class="ams-k">TINDAKAN DICADANGKAN</span><ul>${sc.recommendedActions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul></div>
  <button type="button" class="button" data-act="prices">Lihat harga komoditi PO ini</button></div>`;
 }
@@ -310,8 +342,21 @@ function renderScenarioDetail() {
   <p><span class="ams-k">AI INSIGHT SUMMARY</span><span class="ams-ins-summary">${esc(ins.summary)}</span></p>
   <p><span class="ams-k">KOMODITI BERPOTENSI TERJEJAS</span><b>Komoditi:</b> <span class="ams-ins-comm">${esc(commText(sc.affectedCommodities))}.</span></p>
   <p><span class="ams-k">CADANGAN INTERVENSI</span><b>Cadangan:</b> <span class="ams-ins-rec">${esc(ins.cadangan)}</span></p>
-  <span class="ams-dummy-chip">Ringkasan dijana sistem daripada data cuaca (bukan model AI)</span></section>
+  <span class="ams-dummy-chip">Ringkasan dijana sistem daripada data sebenar (bukan model AI)</span></section>
  <div class="ams-actions"><button type="button" class="button" data-act="interv">Lihat Pilihan Intervensi</button></div>`;
+}
+function floodNoteHTML() {
+  const b = scenBanjir;
+  if (state.scenarioLoad === 'loading' || b.status === 'memuat')
+    return 'Memuatkan data banjir JPS…';
+  if (b.status === 'file') return 'Data banjir JPS sebenar memerlukan pelayan (npm start)';
+  if (b.status === 'error') return 'Data banjir JPS tidak dapat dimuatkan.' + banjirRetryBtn();
+  let s =
+    'Risiko banjir: data sebenar JPS Malaysia / JPS Selangor · dikemas kini ' +
+    esc(cuacaMasa(b.fetchedAt));
+  if (!b.senario) s += ' · Tiada stesen Amaran/Bahaya berhampiran PO';
+  if (b.lapuk) s += ' · Data banjir lapuk';
+  return s;
 }
 function renderScenarioPanel() {
   if (!$('amsPanel')) return;
@@ -332,12 +377,9 @@ function renderScenarioPanel() {
             : ld === 'stale'
               ? 'Data cuaca lapuk: kemas kini terakhir ' + cuacaMasa(scenFetchedAt)
               : '';
+  $('amsFloodNote').innerHTML = floodNoteHTML();
   $('amsBadge').textContent =
-    ld === 'loading'
-      ? 'MEMUAT'
-      : ld === 'error' || ld === 'file'
-        ? 'TIADA DATA'
-        : 'DATA CUACA SEBENAR';
+    ld === 'loading' ? 'MEMUAT' : ld === 'error' || ld === 'file' ? 'TIADA DATA' : 'DATA SEBENAR';
   renderScenarioKpis();
   renderScenarioList();
   renderScenarioDetail();
@@ -498,6 +540,12 @@ async function initScenarios(loader = ScenarioService.loadScenarios) {
         INSIGHT_CACHE[s.scenarioId] = await ScenarioService.fetchAIInsight(s.scenarioId);
       }),
     );
+    scenBanjir = (r && r.banjir) || {
+      status: 'ready',
+      fetchedAt: (r && r.fetchedAt) || '',
+      senario: 0,
+      lapuk: false,
+    };
     scenFetchedAt = (r && r.fetchedAt) || '';
     state.scenarioLoad =
       scenFetchedAt && cuacaLapuk({ fetchedAt: scenFetchedAt })
@@ -507,6 +555,12 @@ async function initScenarios(loader = ScenarioService.loadScenarios) {
           : 'empty';
   } catch (err) {
     applyScenarios([]);
+    scenBanjir = {
+      status: banjirState.status === 'file' ? 'file' : 'error',
+      fetchedAt: '',
+      senario: 0,
+      lapuk: false,
+    };
     state.scenarioLoad = err && err.kind === 'file' ? 'file' : 'error';
   }
   renderAll();

@@ -359,9 +359,10 @@ function renderMap() {
     ? poById[state.po].negeri + ' · klik daerah'
     : 'Klik titik PO untuk perincian';
   $('mapPOCount').textContent = state.po ? poById[state.po].districts.length : visible.length;
-  $('mapCaption').textContent = state.po
+  mapCaptionAsas = state.po
     ? `${poById[state.po].name} · ${poById[state.po].districts.length} daerah · status tertinggi: ${labels[poStatus(poById[state.po])]}`
     : '15 PO berpandukan infografik · koordinat bandar anggaran · warna risiko adalah simulasi';
+  renderMapCaption();
   $('mapDetail').innerHTML = state.po
     ? `<div class="detail-copy"><strong>${esc(poById[state.po].name)} · ${statusHTML(poStatus(poById[state.po]))}</strong><div class="note">${esc(poById[state.po].negeri)} · Kedudukan titik ialah anggaran bandar, bukan koordinat tapak sebenar. ${poById[state.po].logistik.shared ? '<b>Data logistik berkongsi angka dengan PO pasangan.</b>' : ''}</div><div class="note">Liputan daerah di bawah ialah <b>contoh simulasi</b> (tiada senarai seliaan daerah dalam infografik). Klik daerah untuk mengemas kini panel harga.</div><div class="district-pills"><button class="pill ${!state.daerah ? 'active' : ''}" data-district="">Semua daerah</button>${poById[state.po].districts.map((d) => `<button class="pill ${state.daerah === d[0] ? 'active' : ''}" data-district="${esc(d[0])}">${esc(d[0])} · ${labels[poStatus(poById[state.po], d[0])]}</button>`).join('')}</div></div><button class="button tiny ghost" id="clearSelection">Reset PO</button>`
     : `<div class="detail-copy"><strong>Prinsip Amaran Minimum</strong><div class="note">Jika satu daerah atau komoditi ditanda kritikal (dummy), penanda PO berkelip merah. Klik titik atau nama PO untuk melihat logistik sumber dan perincian harga simulasi.</div></div><span class="tag-status"><i class="dot red"></i>Merah = tindakan segera</span>`;
@@ -542,62 +543,131 @@ function renderWeather() {
     })
     .join('');
 }
+const AMARAN_MET = 'MET Malaysia';
+const AMARAN_JPS = 'JPS Malaysia (Public Info Banjir)';
+const AMARAN_HAD = 7;
+const amaranTahap = (a) => {
+  const cari = (t) => {
+    const u = String(t || '').toUpperCase();
+    if (/\bBERBAHAYA\b|\bBAHAYA\b/.test(u)) return 'BAHAYA';
+    if (/\bBURUK\b/.test(u)) return 'BURUK';
+    if (/\bWASPADA\b/.test(u)) return 'WASPADA';
+    return '';
+  };
+  return a.sumber === AMARAN_MET ? cari(a.tajuk) || cari(String(a.teks || '').slice(0, 160)) : '';
+};
+const amaranDaerah = (a) => {
+  const m = a.sumber === AMARAN_MET && /\(([^()]{3,70})\)/.exec(a.teks || '');
+  return m ? m[1].trim() : '';
+};
+// Gabung amaran rasmi MET + JPS, terbaharu dahulu (ikut masa dikeluarkan), maksimum 7.
+function senaraiAmaranRasmi(kini = Date.now()) {
+  const senarai = [];
+  if (cuacaState.status === 'ready')
+    (cuacaState.data.amaran || []).forEach((a) =>
+      senarai.push({
+        sumber: AMARAN_MET,
+        tajuk: a.tajuk,
+        teks: a.teks,
+        negeri: a.negeri || [],
+        dikeluarkan: a.dikeluarkan,
+        sahHingga: a.sah_hingga,
+        bendera: a.aktif !== false,
+      }),
+    );
+  if (banjirState.status === 'ready') {
+    const d = banjirState.data;
+    (d.amaranSejarah || d.amaran || []).forEach((a) =>
+      senarai.push({
+        sumber: a.sumber || AMARAN_JPS,
+        tajuk: 'AMARAN BANJIR',
+        teks: a.mesej,
+        negeri: a.negeri || [],
+        dikeluarkan: a.dikeluarkan || a.dilihat || null,
+        sahHingga: a.anggaranTamat,
+        bendera: a.aktif !== false,
+      }),
+    );
+  }
+  const masa = (a) => Date.parse(a.dikeluarkan) || 0;
+  return senarai
+    .sort((x, y) => masa(y) - masa(x))
+    .slice(0, AMARAN_HAD)
+    .map((a) => {
+      const t = Date.parse(a.sahHingga);
+      return { ...a, aktif: Number.isNaN(t) ? !!a.bendera : t >= kini };
+    });
+}
+const amaranItemHTML = (a, i) => {
+  const lok = a.negeri.length
+    ? a.negeri.length > 4
+      ? a.negeri.length + ' negeri'
+      : a.negeri.join(', ')
+    : '';
+  const daerah = amaranDaerah(a);
+  const tahap = amaranTahap(a);
+  const sah = a.sahHingga ? ' · Sah hingga ' + cuacaMasa(a.sahHingga) : '';
+  const panjang = String(a.teks || '').length > 110;
+  return `<div class="alert-item${a.aktif ? '' : ' tamat'}" data-amaran="${i}"><div class="alert-top"><b>${esc(a.tajuk)}</b>${tahap ? `<span class="alert-tahap t-${esc(tahap.toLowerCase())}">${esc(tahap)}</span>` : ''}<span class="alert-chip ${a.aktif ? 'aktif' : 'tamat'}">${a.aktif ? 'Aktif' : 'Tamat'}</span></div>${lok || daerah ? `<div class="alert-lok">${esc(lok)}${lok && daerah ? ' · ' : ''}${esc(daerah)}</div>` : ''}<p class="alert-teks">${esc(a.teks)}</p>${panjang ? '<button type="button" class="alert-more" data-act="amaran-lagi" aria-expanded="false">Lihat lagi</button>' : ''}<p class="alert-meta">${esc(a.sumber)} · Dikeluarkan ${esc(a.dikeluarkan ? cuacaMasa(a.dikeluarkan) : '-')}${esc(sah)}</p></div>`;
+};
 const renderMetAlerts = () => {
   const body = $('metAlertBody');
   const note = $('metAlertNote');
+  const tag = $('metAlertTag');
   const cs = cuacaState;
-  const sumber = 'Sumber: API rasmi MET Malaysia (dataset WARNING)';
-  if (cs.status === 'memuat') {
+  const bs = banjirState;
+  const sumber = 'Sumber: MET Malaysia · JPS Malaysia';
+  if (cs.status === 'memuat' && bs.status === 'memuat') {
     body.textContent = 'Memuatkan amaran…';
     note.textContent = sumber;
+    tag.textContent = 'MET · JPS · Sebenar';
     return;
   }
-  if (cs.status === 'file') {
+  if (cs.status === 'file' && bs.status === 'file') {
     body.textContent = 'Amaran rasmi sebenar memerlukan pelayan (npm start)';
     note.textContent = sumber;
+    tag.textContent = 'MET · JPS · Sebenar';
     return;
   }
-  if (cs.status === 'error') {
-    body.innerHTML = 'Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn();
-    note.textContent = sumber;
-    return;
+  const mesej = [];
+  if (cs.status === 'memuat') mesej.push('Memuatkan amaran MET…');
+  else if (cs.status === 'file') mesej.push('Amaran MET memerlukan pelayan (npm start)');
+  else if (cs.status === 'error')
+    mesej.push('Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn());
+  else {
+    const st =
+      cs.data.sumber && cs.data.sumber.metAmaran ? cs.data.sumber.metAmaran.status : 'gagal';
+    if (st === 'tiada_dataset') mesej.push('Amaran rasmi belum tersedia melalui API MET');
+    else if (st === 'gagal') mesej.push('Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn());
   }
-  const d = cs.data;
-  const st = d.sumber && d.sumber.metAmaran ? d.sumber.metAmaran.status : 'gagal';
-  const masa = cuacaMasa(d.amaranDiambil || d.fetchedAt);
+  if (bs.status === 'memuat') mesej.push('Memuatkan amaran JPS…');
+  else if (bs.status === 'file') mesej.push('Amaran JPS memerlukan pelayan (npm start)');
+  else if (bs.status === 'error')
+    mesej.push('Amaran JPS tidak dapat dimuatkan.' + banjirRetryBtn());
+  else {
+    const st =
+      bs.data.sumber && bs.data.sumber.amaranJps ? bs.data.sumber.amaranJps.status : 'gagal';
+    if (st === 'gagal') mesej.push('Amaran JPS tidak dapat dikemas kini (data lama dikekalkan).');
+  }
+  const diambil = [
+    cs.status === 'ready' ? cs.data.amaranDiambil || cs.data.fetchedAt : null,
+    bs.status === 'ready' ? bs.data.amaranDiambil || bs.data.fetchedAt : null,
+  ].filter(Boolean);
+  const masa = cuacaMasa(diambil.sort().pop());
   note.textContent = `${sumber} · Dikemas kini ${masa}`;
-  if (st === 'tiada_dataset') {
-    body.textContent = 'Amaran rasmi belum tersedia melalui API MET';
+  const senarai = senaraiAmaranRasmi();
+  const aktif = senarai.filter((a) => a.aktif).length;
+  tag.textContent = senarai.length
+    ? `${aktif} aktif · ${senarai.length} terkini`
+    : 'MET · JPS · Sebenar';
+  const status = mesej.map((m) => `<div class="alert-status">${m}</div>`).join('');
+  if (!senarai.length) {
+    body.innerHTML =
+      status ||
+      `<div class="alert-item"><b>Tiada amaran rasmi dalam 7 hari lepas</b><p>Sumber: MET Malaysia · JPS Malaysia · ${esc(masa)}</p></div>`;
     return;
   }
-  if (st === 'gagal') {
-    body.innerHTML = 'Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn();
-    return;
-  }
-  const kini = Date.now();
-  const aktif = (d.amaran || []).filter((a) => !a.sah_hingga || Date.parse(a.sah_hingga) >= kini);
-  if (!aktif.length) {
-    body.innerHTML = `<div class="alert-item"><b>Tiada amaran rasmi aktif</b><p>Sumber: MET Malaysia · ${esc(masa)}</p></div>`;
-    return;
-  }
-  const had = 4;
-  body.innerHTML =
-    aktif
-      .slice(0, had)
-      .map((a) => {
-        const lok =
-          a.negeri && a.negeri.length
-            ? a.negeri.length > 4
-              ? a.negeri.length + ' negeri'
-              : a.negeri.join(', ')
-            : '';
-        const sah = a.sah_hingga ? ' · Sah hingga ' + cuacaMasa(a.sah_hingga) : '';
-        return `<div class="alert-item"><b>${esc(a.tajuk)}${lok ? ' · ' + esc(lok) : ''}</b><p title="${esc(a.teks)}">${esc(a.teks)}</p><p class="alert-meta">MET Malaysia · Dikeluarkan ${esc(cuacaMasa(a.dikeluarkan))}${esc(sah)}</p></div>`;
-      })
-      .join('') +
-    (aktif.length > had
-      ? `<div class="alert-item"><b>+${aktif.length - had} amaran aktif lain</b></div>`
-      : '');
+  body.innerHTML = status + senarai.map(amaranItemHTML).join('');
 };
 const aplikasiCuaca = (p) => {
   return p.then(
@@ -624,6 +694,239 @@ document.addEventListener('click', (ev) => {
     if (typeof initScenarios === 'function') initScenarios();
   });
 });
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-act="amaran-lagi"]');
+  if (!b) return;
+  const item = b.closest('.alert-item');
+  const buka = item.classList.toggle('open');
+  b.setAttribute('aria-expanded', buka ? 'true' : 'false');
+  b.textContent = buka ? 'Kurangkan' : 'Lihat lagi';
+});
+
+/* ===== Banjir sebenar (JPS Malaysia + JPS Selangor) =====
+   Dimuat daripada /api/banjir (same-origin). Digunakan oleh kad amaran, senario AMS, lapisan peta dan Intervensi. */
+const BANJIR = {
+  promise: null,
+  load(force) {
+    if (force || !this.promise) {
+      this.promise = (async () => {
+        if (location.protocol === 'file:') {
+          const e = new Error('file');
+          e.kind = 'file';
+          throw e;
+        }
+        let res;
+        for (let cuba = 0; ; cuba++) {
+          res = await fetch('/api/banjir', { cache: 'no-store' });
+          const bd =
+            res.status === 503 && cuba < 6
+              ? await res
+                  .clone()
+                  .json()
+                  .catch(() => null)
+              : null;
+          if (!(bd && bd.sedangDikemaskini)) break;
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        if (!j || !Array.isArray(j.stesen) || !Array.isArray(j.po))
+          throw new Error('Format data banjir tidak sah');
+        return j;
+      })();
+    }
+    return this.promise;
+  },
+  staleHours: 2,
+};
+let banjirState = { status: 'memuat', data: null };
+const banjirLapuk = (d) => {
+  const t = Date.parse(d && d.fetchedAt);
+  return Number.isNaN(t) || (Date.now() - t) / 36e5 > BANJIR.staleHours;
+};
+const banjirRetryBtn = () => {
+  return ' <button type="button" class="button tiny" data-act="banjir-retry">Cuba semula</button>';
+};
+const aplikasiBanjir = (p) => {
+  return p.then(
+    (d) => {
+      banjirState = { status: 'ready', data: d };
+    },
+    (e) => {
+      banjirState = { status: e && e.kind === 'file' ? 'file' : 'error', data: null };
+    },
+  );
+};
+const initBanjir = (force) => {
+  banjirState = { status: 'memuat', data: null };
+  renderMetAlerts();
+  renderFloodLayer();
+  return aplikasiBanjir(BANJIR.load(force)).then(() => {
+    renderMetAlerts();
+    renderFloodLayer();
+  });
+};
+document.addEventListener('click', (ev) => {
+  if (!ev.target.closest('[data-act="banjir-retry"]')) return;
+  initBanjir(true).then(() => {
+    if (typeof initScenarios === 'function') initScenarios();
+  });
+});
+
+/* --- Lapisan peta stesen JPS (GeoJSON circle; bukan penanda DOM kerana ratusan titik) --- */
+const BANJIR_WARNA = {
+  Normal: '#22c55e',
+  Waspada: '#facc15',
+  Amaran: '#fb923c',
+  Bahaya: '#ef4444',
+};
+let banjirLapisan = { tunjuk: true, semua: false, sedia: false, popup: null };
+const banjirPenapis = () => (banjirLapisan.semua ? null : ['!=', ['get', 'statusRasmi'], 'Normal']);
+function banjirFitur() {
+  const d = banjirState.status === 'ready' ? banjirState.data : null;
+  if (!d || banjirLapuk(d)) return [];
+  return d.stesen
+    .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lon))
+    .map((s) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+      properties: {
+        id: s.id,
+        nama: s.nama,
+        sungai: s.sungai || '',
+        negeri: s.negeri || '',
+        statusRasmi: s.statusRasmi,
+        parasAir: s.parasAir,
+        trend: s.trend || '',
+        masaBacaan: s.masaBacaan || '',
+        sumber: s.sumber || '',
+      },
+    }));
+}
+function stesenPopupNode(p) {
+  const n = document.createElement('div');
+  n.className = 'banjir-popup';
+  const baris = (k, v) => {
+    const r = document.createElement('div');
+    const b = document.createElement('b');
+    b.textContent = k + ': ';
+    r.append(b, document.createTextNode(v));
+    n.append(r);
+  };
+  const t = document.createElement('div');
+  t.className = 'banjir-popup-tajuk';
+  t.textContent = p.nama;
+  n.append(t);
+  baris('Sungai', p.sungai || '-');
+  baris('Status', p.statusRasmi);
+  baris('Paras air', p.parasAir == null ? '-' : Number(p.parasAir).toFixed(2) + ' m');
+  baris('Trend', p.trend || '-');
+  baris('Bacaan', p.masaBacaan ? cuacaMasa(p.masaBacaan) : '-');
+  const s = document.createElement('div');
+  s.className = 'banjir-popup-sumber';
+  s.textContent = 'Sumber: ' + (p.sumber || 'JPS Malaysia');
+  n.append(s);
+  return n;
+}
+function bukaPopupStesen(p, lngLat) {
+  if (!map || typeof maplibregl === 'undefined') return null;
+  if (banjirLapisan.popup) banjirLapisan.popup.remove();
+  banjirLapisan.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+    .setLngLat(lngLat)
+    .setDOMContent(stesenPopupNode(p))
+    .addTo(map);
+  return banjirLapisan.popup;
+}
+function pasangLapisanBanjir() {
+  if (!map || banjirLapisan.sedia) return;
+  try {
+    map.addSource('banjir-stesen', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: banjirFitur() },
+    });
+    const warna = ['match', ['get', 'statusRasmi']];
+    Object.entries(BANJIR_WARNA).forEach(([k, v]) => warna.push(k, v));
+    warna.push(BANJIR_WARNA.Normal);
+    const lapisan = {
+      id: 'banjir-stesen',
+      type: 'circle',
+      source: 'banjir-stesen',
+      layout: { visibility: banjirLapisan.tunjuk ? 'visible' : 'none' },
+      paint: {
+        'circle-color': warna,
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 3, 8, 5, 11, 8],
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 1.2,
+        'circle-opacity': 0.95,
+      },
+    };
+    const f = banjirPenapis();
+    if (f) lapisan.filter = f;
+    map.addLayer(lapisan);
+    map.on('click', 'banjir-stesen', (e) => {
+      const ft = e.features && e.features[0];
+      if (ft) bukaPopupStesen(ft.properties, e.lngLat);
+    });
+    map.on('mouseenter', 'banjir-stesen', () => (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', 'banjir-stesen', () => (map.getCanvas().style.cursor = ''));
+    banjirLapisan.sedia = true;
+  } catch (err) {
+    console.warn('Lapisan banjir tidak dapat dipasang', err);
+  }
+}
+function renderFloodLayer() {
+  const tog = $('floodToggle');
+  const semua = $('floodAllToggle');
+  if (tog) tog.setAttribute('aria-pressed', banjirLapisan.tunjuk ? 'true' : 'false');
+  if (semua) {
+    semua.setAttribute('aria-pressed', banjirLapisan.semua ? 'true' : 'false');
+    semua.disabled = !banjirLapisan.tunjuk;
+  }
+  if (map) {
+    const kemas = () => {
+      pasangLapisanBanjir();
+      if (!banjirLapisan.sedia) return;
+      map
+        .getSource('banjir-stesen')
+        .setData({ type: 'FeatureCollection', features: banjirFitur() });
+      map.setFilter('banjir-stesen', banjirPenapis());
+      map.setLayoutProperty(
+        'banjir-stesen',
+        'visibility',
+        banjirLapisan.tunjuk ? 'visible' : 'none',
+      );
+    };
+    if (map.isStyleLoaded()) kemas();
+    else map.once('load', kemas);
+  }
+  renderMapCaption();
+}
+function initFloodLayer() {
+  const tog = $('floodToggle');
+  const semua = $('floodAllToggle');
+  if (tog)
+    tog.onclick = () => {
+      banjirLapisan.tunjuk = !banjirLapisan.tunjuk;
+      renderFloodLayer();
+    };
+  if (semua)
+    semua.onclick = () => {
+      banjirLapisan.semua = !banjirLapisan.semua;
+      renderFloodLayer();
+    };
+  renderFloodLayer();
+}
+const banjirCatatanPeta = () => {
+  if (banjirState.status === 'error') return ' · Stesen banjir JPS tidak dapat dimuatkan';
+  if (banjirState.status === 'ready' && banjirLapuk(banjirState.data))
+    return ' · Data banjir JPS lapuk, stesen tidak dipaparkan';
+  return '';
+};
+let mapCaptionAsas = '';
+function renderMapCaption() {
+  const c = $('mapCaption');
+  if (c && mapCaptionAsas) c.textContent = mapCaptionAsas + banjirCatatanPeta();
+}
 /* ===== Tamat cuaca sebenar ===== */ function logistikStatsHTML(l) {
   return `<div class="logistic-stat-grid"><div class="logistic-stat"><div class="l-label">Kenderaan</div><div class="l-val">${l.kenderaan} buah</div></div><div class="logistic-stat"><div class="l-label">Muatan</div><div class="l-val">${l.muatanMT.toFixed(2)} MT</div></div><div class="logistic-stat"><div class="l-label">Bilik sejuk</div><div class="l-val">${l.bilikSejuk} unit</div></div><div class="logistic-stat"><div class="l-label">Kapasiti simpanan</div><div class="l-val">${l.kapasitiSimpananMT.toFixed(2)} MT</div></div></div>`;
 }

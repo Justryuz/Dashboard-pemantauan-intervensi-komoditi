@@ -31,6 +31,22 @@ function get(base, p) {
   };
 
   // --- Unit ---
+  ok('dedupeAmaran: ikut id atau tajuk+negeri+tarikh, terbaharu dahulu', () => {
+    const d = (o) => ({ tajuk: 'T', negeri: ['Johor'], ...o });
+    const r = cuaca.dedupeAmaran([
+      d({ id: 1, dikeluarkan: '2026-11-10T01:00:00Z' }),
+      d({ id: 1, dikeluarkan: '2026-11-10T01:00:00Z' }),
+      d({ dikeluarkan: '2026-11-12T01:00:00Z' }),
+      d({ dikeluarkan: '2026-11-12T01:00:00Z' }),
+      d({ tajuk: 'U', dikeluarkan: '2026-11-11T01:00:00Z' }),
+    ]);
+    assert.equal(r.length, 3);
+    assert.deepEqual(
+      r.map((x) => x.dikeluarkan),
+      ['2026-11-12T01:00:00Z', '2026-11-11T01:00:00Z', '2026-11-10T01:00:00Z'],
+    );
+    assert.equal(cuaca.AMBANG.amaranHari, 7);
+  });
   ok('kiraRisiko sempadan', () => {
     assert.equal(cuaca.kiraRisiko({ hujanMm: 9.9 }).tahap, 'Rendah');
     assert.equal(cuaca.kiraRisiko({ hujanMm: 10 }).tahap, 'Sederhana');

@@ -3,7 +3,7 @@
 // Jalankan dari root: node tests/frontend/smoke.js
 const path = require('node:path');
 const server = require('../../api/server.js');
-require('../helpers/cuaca-fixture.js').pasangCache(); // data cuaca deterministik, tidak bergantung pada cache tempatan
+require('../helpers/banjir-fixture.js').pasangSemuaCache(); // cuaca, banjir dan IPU deterministik, tidak bergantung pada cache tempatan
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );

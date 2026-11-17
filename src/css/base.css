@@ -1719,3 +1719,145 @@ select option {
     max-height: 320px;
   }
 }
+
+/* ===== Banjir (JPS): amaran rasmi, lapisan peta, drill-down ===== */
+.alert-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.alert-top b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.alert-chip,
+.alert-tahap,
+.bj-chip {
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: var(--panel2);
+  white-space: nowrap;
+}
+.alert-chip {
+  margin-left: auto;
+}
+.alert-chip.aktif {
+  color: var(--bj-fg-normal);
+}
+.alert-chip.tamat {
+  color: var(--muted);
+}
+.alert-item.tamat .alert-top b {
+  color: var(--muted);
+}
+.alert-tahap.t-waspada,
+.bj-chip.bj-waspada {
+  color: var(--bj-fg-waspada);
+}
+.alert-tahap.t-buruk,
+.bj-chip.bj-amaran {
+  color: var(--bj-fg-amaran);
+}
+.alert-tahap.t-bahaya,
+.bj-chip.bj-bahaya {
+  color: var(--bj-fg-bahaya);
+}
+.bj-chip.bj-normal {
+  color: var(--bj-fg-normal);
+}
+.alert-lok {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.alert-more {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0 0 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--cyan);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.alert-item.open p.alert-teks {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+.alert-status {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border: 1px solid var(--yellow);
+  border-radius: 8px;
+  color: var(--yellow);
+  font-size: 11px;
+}
+.bottom-grid .alert-item {
+  flex: none;
+}
+#metAlertBody {
+  scrollbar-width: thin;
+}
+.map-tools .button[aria-pressed='true'] {
+  border-color: var(--cyan);
+}
+.dot.bj-normal {
+  background: #22c55e;
+}
+.dot.bj-waspada {
+  background: #facc15;
+}
+.dot.bj-amaran {
+  background: #fb923c;
+}
+.dot.bj-bahaya {
+  background: #ef4444;
+}
+.banjir-popup {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #11273d;
+}
+.banjir-popup-tajuk {
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+.banjir-popup-sumber {
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: #405f77;
+}
+.ams-stesen ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.ams-stesen li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+.ams-stesen li:last-child {
+  border: 0;
+}
+.ams-stesen-sumber {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+#metAlertTag {
+  white-space: nowrap;
+}
+.alert-item p.alert-meta {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}

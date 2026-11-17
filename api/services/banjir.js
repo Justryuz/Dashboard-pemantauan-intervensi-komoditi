@@ -316,6 +316,35 @@ function normalisasiAmaran(rows, sekarang = new Date()) {
   return hasil;
 }
 
+// Sejarah amaran JPS yang pernah dilihat (getdisse hanya memberi amaran semasa), disimpan 7 hari.
+// Fungsi tulen: `sekarang` dihantar masuk. Setiap rekod ada `dilihat` (kali pertama dilihat) dan `aktif`.
+function gabungSejarahAmaran(lama = [], semasa = [], sekarang = new Date()) {
+  const now = new Date(sekarang).getTime();
+  const had = now - SEJARAH_MAKS_HARI * 864e5;
+  const kunci = (a) => [a.mesej, a.dikeluarkan || a.anggaranMula || ''].join('|');
+  const aktifSet = new Set(semasa.map(kunci));
+  const peta = new Map();
+  (Array.isArray(lama) ? lama : []).forEach((a) => {
+    if (a && a.mesej) peta.set(kunci(a), { ...a });
+  });
+  semasa.forEach((a) => {
+    const ada = peta.get(kunci(a));
+    peta.set(kunci(a), { ...a, dilihat: (ada && ada.dilihat) || new Date(now).toISOString() });
+  });
+  return [...peta.values()]
+    .map((a) => ({ ...a, dilihat: a.dilihat || a.dikeluarkan || new Date(now).toISOString() }))
+    .filter((a) => (Date.parse(a.dikeluarkan || a.dilihat) || 0) >= had)
+    .map((a) => ({
+      ...a,
+      aktif: aktifSet.has(kunci(a)) || (!!a.anggaranTamat && Date.parse(a.anggaranTamat) >= now),
+    }))
+    .sort(
+      (x, y) =>
+        (Date.parse(y.dikeluarkan || y.dilihat) || 0) -
+        (Date.parse(x.dikeluarkan || x.dilihat) || 0),
+    );
+}
+
 function normalisasiSejarah(json) {
   const fitur = json && Array.isArray(json.features) ? json.features : [];
   const hasil = [];
@@ -606,6 +635,7 @@ async function bina(lama = null, sekarang = new Date()) {
   }
   let amaran;
   let amaranDiambil = sekarang.toISOString();
+  const sejarahLama = (lama && (lama.amaranSejarah || lama.amaran)) || [];
   if (aml.rows) {
     amaran = normalisasiAmaran(aml.rows, sekarang);
     sumber.amaranJps.bilangan = amaran.length;
@@ -619,6 +649,7 @@ async function bina(lama = null, sekarang = new Date()) {
     rekodNasional,
     rekodSelangor,
     amaran,
+    amaranSejarah: gabungSejarahAmaran(sejarahLama, aml.rows ? amaran : [], sekarang),
     amaranDiambil,
     sejarah: sej.kawasan,
     sumber,
@@ -631,6 +662,7 @@ function susun({
   rekodNasional = [],
   rekodSelangor = [],
   amaran = [],
+  amaranSejarah,
   amaranDiambil,
   sejarah = [],
   sumber = {},
@@ -651,6 +683,7 @@ function susun({
     atribusi: ATRIBUSI,
     stesen: stesenWL,
     amaran,
+    amaranSejarah: amaranSejarah || gabungSejarahAmaran([], amaran, sekarang),
     po,
     senario: bangunSenarioBanjir({ po, sekarang: new Date(sekarang).toISOString() }),
   };
@@ -706,6 +739,7 @@ module.exports = {
   normalisasiSelangor,
   gabungStesen,
   normalisasiAmaran,
+  gabungSejarahAmaran,
   normalisasiSejarah,
   terbitPO,
   bangunSenarioBanjir,

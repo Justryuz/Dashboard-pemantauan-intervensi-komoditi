@@ -5,7 +5,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const server = require('../../api/server.js');
-const { buatFixture, pasangCache, stubCuaca } = require('../helpers/cuaca-fixture.js');
+const { buatFixture } = require('../helpers/cuaca-fixture.js');
+const { pasangSemuaCache } = require('../helpers/banjir-fixture.js');
+const { stubApi } = require('../helpers/api-stub.js');
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );
@@ -14,7 +16,7 @@ const EDGE =
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
-  pasangCache();
+  pasangSemuaCache();
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await puppeteer.launch({
@@ -37,7 +39,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       if (rangkaian && /Failed to load resource/.test(m.text())) return;
       masalah.push(`console.${m.type()}: ${m.text()}`);
     });
-    if (handler) await stubCuaca(page, handler);
+    if (handler) await stubApi(page, { cuaca: handler });
     await page.goto(url, { waitUntil: 'load', timeout: 60000 });
     await sleep(2000);
     return { page, masalah };
@@ -82,7 +84,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         [kpi, st],
       );
       const badge = await teks(page, '#amsBadge');
-      ok('(i) lencana bukan DATA DUMMY', badge === 'DATA CUACA SEBENAR', badge);
+      ok('(i) lencana bukan DATA DUMMY', badge === 'DATA SEBENAR', badge);
       const panel = await teks(page, '#amsPanel');
       const tanpaHarga = panel.replace(/Data harga tidak tersedia \(dummy\)/g, '');
       ok('(i) panel tiada "dummy"', !/dummy/i.test(tanpaHarga), panel.slice(0, 200));
@@ -92,11 +94,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       );
       ok(
         '(i) nota banjir JPS',
-        (await teks(page, '#amsFloodNote')) === 'Risiko banjir: data JPS belum disambungkan',
+        (await teks(page, '#amsFloodNote')).includes(
+          'Risiko banjir: data sebenar JPS Malaysia / JPS Selangor',
+        ) && !/belum disambungkan/.test(await teks(page, '#amsFloodNote')),
       );
       ok(
         '(i) nota senario',
-        (await teks(page, '#amsNote')).includes('Dijana daripada data cuaca sebenar'),
+        (await teks(page, '#amsNote')).includes('Dijana daripada data sebenar cuaca dan banjir'),
       );
       const fl = await page.evaluate(() => ({
         dis: document.getElementById('floodToggle').disabled,
@@ -104,8 +108,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         dum: typeof DATA.banjir + typeof DATA.cuaca,
       }));
       ok(
-        '(i) #floodToggle disabled, tiada .flood-dot, DATA.cuaca/banjir dibuang',
-        fl.dis && fl.dot === 0 && fl.dum === 'undefinedundefined',
+        '(i) #floodToggle aktif, tiada .flood-dot, DATA.cuaca/banjir dibuang',
+        !fl.dis && fl.dot === 0 && fl.dum === 'undefinedundefined',
         fl,
       );
 

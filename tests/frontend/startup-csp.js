@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
-const { pasangCache } = require('../helpers/cuaca-fixture.js');
+const { pasangSemuaCache } = require('../helpers/banjir-fixture.js');
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );
@@ -28,7 +28,15 @@ async function mula(env) {
   const port = await portBebas();
   const child = spawn(process.execPath, ['api/server.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', CUACA_AUTO: '0', ...env },
+    env: {
+      ...process.env,
+      PORT: String(port),
+      HOST: '127.0.0.1',
+      CUACA_AUTO: '0',
+      BANJIR_AUTO: '0',
+      IPU_AUTO: '0',
+      ...env,
+    },
     stdio: 'ignore',
   });
   const base = `http://127.0.0.1:${port}`;
@@ -50,12 +58,21 @@ async function mula(env) {
   const ok = (nama, cond, info) => {
     if (!cond) gagal.push(nama + (info !== undefined ? ' -> ' + JSON.stringify(info) : ''));
   };
-  const fixture = pasangCache();
-  const { child, base } = await mula({ CUACA_CACHE_FILE: fixture });
+  const fx = pasangSemuaCache();
+  const fixture = fx.cuaca;
+  const { child, base } = await mula({
+    CUACA_CACHE_FILE: fixture,
+    BANJIR_CACHE_FILE: fx.banjir,
+    IPU_CACHE_FILE: fx.ipu,
+  });
   let browser;
   try {
     const c = await fetch(base + '/api/cuaca');
     ok('/api/cuaca 200 selepas permulaan', c.status === 200, c.status);
+    const bj = await fetch(base + '/api/banjir');
+    ok('/api/banjir 200 selepas permulaan', bj.status === 200, bj.status);
+    const ip = await fetch(base + '/api/kualiti-udara');
+    ok('/api/kualiti-udara 200 selepas permulaan', ip.status === 200, ip.status);
     const idx = await fetch(base + '/');
     const csp = idx.headers.get('content-security-policy') || '';
     ok('CSP pengepala tiada unpkg', !/unpkg/.test(csp), csp);

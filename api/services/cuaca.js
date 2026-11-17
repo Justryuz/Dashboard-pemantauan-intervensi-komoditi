@@ -35,6 +35,7 @@ const AMBANG = {
   berterusanTinggiMm: 60,
   hariSenario: 2,
   hariRamalan: 3,
+  amaranHari: 7,
   umurSegarJam: 24,
 };
 
@@ -316,6 +317,7 @@ function negeriDalamTeks(teks) {
 }
 async function ambilAmaranMET(sekarang = new Date()) {
   const hari = tarikhMYT(sekarang);
+  const mula = tambahHari(hari, -AMBANG.amaranHari);
   const amaran = [];
   const mesej = [];
   let berjaya = 0;
@@ -332,7 +334,7 @@ async function ambilAmaranMET(sekarang = new Date()) {
       let offset = 0;
       for (;;) {
         const j = await metGet(
-          `/data?datasetid=WARNING&datacategoryid=${kategori}&start_date=${hari}&end_date=${hari}&limit=50&offset=${offset}`,
+          `/data?datasetid=WARNING&datacategoryid=${kategori}&start_date=${mula}&end_date=${hari}&limit=50&offset=${offset}`,
         );
         const hasil = (j && j.results) || [];
         hasil.forEach((r) => {
@@ -354,8 +356,8 @@ async function ambilAmaranMET(sekarang = new Date()) {
           const aktif = sahHingga
             ? Date.parse(sahHingga) >= sekarang.getTime()
             : tarikhMYT(r.date) === hari;
-          if (!aktif) return;
           amaran.push({
+            id: r.id || a.id || null,
             jenis,
             tajuk,
             teks,
@@ -363,7 +365,7 @@ async function ambilAmaranMET(sekarang = new Date()) {
             dikeluarkan: a.timestamp || r.date || null,
             sah_dari: sahDari,
             sah_hingga: sahHingga,
-            aktif: true,
+            aktif,
           });
         });
         const jumlah = (j && j.metadata && j.metadata.resultset && j.metadata.resultset.count) || 0;
@@ -375,25 +377,29 @@ async function ambilAmaranMET(sekarang = new Date()) {
       mesej.push(kategori + ': ' + redak(e));
     }
   }
-  // Buang nasihat kosong, dan kekalkan hanya keluaran terbaru bagi amaran yang saling menggantikan.
-  const terkini = new Map();
-  amaran
-    .filter((a) => !/tiada nasihat|no advisory/i.test(a.tajuk))
-    .forEach((a) => {
-      const kunci =
-        a.jenis === 'angin_laut' || a.jenis === 'siklon'
-          ? a.jenis + '|' + a.tajuk
-          : a.jenis + '|' + a.tajuk + '|' + a.teks;
-      const ada = terkini.get(kunci);
-      if (!ada || Date.parse(a.dikeluarkan || 0) > Date.parse(ada.dikeluarkan || 0))
-        terkini.set(kunci, a);
-    });
   return {
-    amaran: [...terkini.values()],
+    amaran: dedupeAmaran(amaran.filter((a) => !/tiada nasihat|no advisory/i.test(a.tajuk))),
     status: berjaya
       ? { status: 'ok', mesej: mesej.join('; ') }
       : { status: 'gagal', mesej: mesej[0] || 'Tiada data' },
   };
+}
+// Buang pendua (id sama, atau tajuk + negeri + tarikh dikeluarkan sama); terbaharu dahulu.
+function dedupeAmaran(senarai) {
+  const lihat = new Set();
+  const hasil = [];
+  senarai
+    .slice()
+    .sort((x, y) => (Date.parse(y.dikeluarkan) || 0) - (Date.parse(x.dikeluarkan) || 0))
+    .forEach((a) => {
+      const kunci = a.id
+        ? 'id|' + a.id
+        : [a.tajuk, (a.negeri || []).join(','), a.dikeluarkan].join('|');
+      if (lihat.has(kunci)) return;
+      lihat.add(kunci);
+      hasil.push(a);
+    });
+  return hasil;
 }
 
 async function ambilOpenMeteo(poList) {
@@ -777,6 +783,7 @@ module.exports = {
   fetchJson,
   ambilMET,
   ambilAmaranMET,
+  dedupeAmaran,
   ambilOpenMeteo,
   bangunSenario,
   bina,

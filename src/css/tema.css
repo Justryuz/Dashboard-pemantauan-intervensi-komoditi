@@ -446,3 +446,17 @@ html[data-theme='cerah'] .button:not(.ghost):not(.danger) {
   border-color: #0f5a8a;
   color: #fff;
 }
+
+/* --- warna status banjir (teks pada latar panel; nisbah kontras >= 4.5:1) --- */
+:root {
+  --bj-fg-normal: #22d88a;
+  --bj-fg-waspada: #ffbd43;
+  --bj-fg-amaran: #ff9f43;
+  --bj-fg-bahaya: #ff7a8a;
+}
+html[data-theme='cerah'] {
+  --bj-fg-normal: #146c46;
+  --bj-fg-waspada: #80560a;
+  --bj-fg-amaran: #9a4400;
+  --bj-fg-bahaya: #aa0d20;
+}
