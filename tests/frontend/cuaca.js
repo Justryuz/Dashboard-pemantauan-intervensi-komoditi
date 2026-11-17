@@ -73,7 +73,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         kad.includes('Hujan terpencil') || kad.includes('Tiada hujan'),
       );
       ok('(i) lencana risiko Tinggi untuk Kelantan', /Kelantan[\s\S]*Tinggi/.test(kad), kad);
-      ok('(i) tag sumber', (await teks(page, '#weatherTag')).includes('MET Malaysia + Open-Meteo'));
+      ok('(i) tiada lencana sumber pada pengepala', !(await page.$('#weatherTag')));
       ok('(i) dikemas kini', (await teks(page, '#weatherNote')).includes('Dikemas kini'));
       ok(
         '(i) atribusi Open-Meteo',

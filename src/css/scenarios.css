@@ -499,7 +499,7 @@
     padding: 11px 12px;
   }
 }
-/* Penempatan padat di dalam .bottom-grid (Cuaca | Amaran / IPU | AMS) */
+/* Penempatan padat di dalam .bottom-grid (Cuaca | Amaran | Stesen Banjir | AMS) */
 .bottom-grid {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -598,38 +598,83 @@
   border-radius: 12px;
   scroll-margin-top: 12px;
 }
-@media (min-width: 1251px) {
-  .bottom-grid > .ams-panel,
-  .bottom-grid > .ipu-panel {
-    contain: size;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--b2a5b78) transparent;
-  }
-  .bottom-grid > .ipu-panel {
-    overflow: hidden;
-  }
+/* ===== Susun atur 4 kad sebaris (Cuaca | Amaran | Stesen Banjir | AMS) ===== */
+.bottom-grid > .panel {
+  min-height: 0;
+  overflow: hidden;
+  min-width: 0;
+}
+.bottom-grid > .ams-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--b2a5b78) transparent;
+}
+.bottom-grid .ams-title-wrap > div {
+  min-width: 0;
+}
+.bottom-grid .ams-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bottom-grid .ams-panel h2 {
+  line-height: 1.2;
+}
+.bottom-grid .ams-note {
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin: 0 0 6px;
+}
+.bottom-grid .ams-kpis {
+  gap: 6px;
+}
+.bottom-grid .ams-kpi {
+  padding: 6px 6px;
+  text-align: center;
+}
+.bottom-grid .ams-kpi-v {
+  font-size: 18px;
+}
+.bottom-grid .ams-kpi-l {
+  font-size: 9.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 1400px) {
   .bottom-grid {
-    grid-auto-rows: minmax(376px, auto);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 440px;
+    gap: 16px;
   }
 }
-@media (max-width: 1250px) {
+@media (min-width: 768px) and (max-width: 1399px) {
   .bottom-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .bottom-grid > .ams-panel,
-  .bottom-grid > .ipu-panel {
-    grid-column: 1/-1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 420px;
+    gap: 14px;
   }
 }
-@media (max-width: 800px) {
+@media (max-width: 767px) {
   .bottom-grid {
     grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    gap: 12px;
+    padding: 10px;
   }
-  .bottom-grid > .ams-panel,
-  .bottom-grid > .ipu-panel {
-    grid-column: auto;
+  .bottom-grid > .panel {
+    height: auto;
+  }
+  .bottom-grid > .ams-panel {
+    max-height: 520px;
+  }
+  .bottom-grid .weather-grid,
+  .bottom-grid .bj-list,
+  .bottom-grid #metAlertBody {
+    flex: none;
+    max-height: 360px;
   }
 }
 /* ===== Halaman senario (pemacu: state.scenario) ===== */

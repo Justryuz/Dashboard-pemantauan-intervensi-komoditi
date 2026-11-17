@@ -106,7 +106,10 @@ function amaranCampur() {
         kpi.join() === [senarai.length, unik, bertindih].join(),
         [kpi, unik, bertindih],
       );
-      ok('(i) lencana DATA SEBENAR', (await teks(page, '#amsBadge')) === 'DATA SEBENAR');
+      ok(
+        '(i) tiada lencana DATA SEBENAR',
+        !(await page.$('#amsBadge')) && !/DATA SEBENAR/.test(await teks(page, '#amsPanel')),
+      );
       const nota = await teks(page, '#amsFloodNote');
       ok('(i) nota banjir sebenar', /data sebenar JPS Malaysia \/ JPS Selangor/.test(nota), nota);
       ok('(i) tajuk bahagian', (await teks(page, '.ams-section')) === 'Senario yang Dikesan');

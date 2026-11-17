@@ -83,8 +83,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         kpi.join() === [st.scenarios, st.uniquePO, st.overlapPO].join(),
         [kpi, st],
       );
-      const badge = await teks(page, '#amsBadge');
-      ok('(i) lencana bukan DATA DUMMY', badge === 'DATA SEBENAR', badge);
+      ok('(i) tiada lencana DATA SEBENAR', !(await page.$('#amsBadge')));
       const panel = await teks(page, '#amsPanel');
       const tanpaHarga = panel.replace(/Data harga tidak tersedia \(dummy\)/g, '');
       ok('(i) panel tiada "dummy"', !/dummy/i.test(tanpaHarga), panel.slice(0, 200));
@@ -163,7 +162,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         s.includes('tidak dapat dijana') && s.includes('Cuba semula'),
         s,
       );
-      ok('(v) badge TIADA DATA', (await teks(page, '#amsBadge')) === 'TIADA DATA');
+      ok('(v) tiada lencana TIADA DATA', !(await page.$('#amsBadge')));
       pulih = true;
       await page.click('#amsState [data-act="cuaca-retry"]');
       await page.waitForFunction(

@@ -532,14 +532,13 @@ function renderWeather() {
         (b.negeri === pilihan) - (a.negeri === pilihan) ||
         RISIKO_NILAI[b.risiko] - RISIKO_NILAI[a.risiko] ||
         a.negeri.localeCompare(b.negeri),
-    )
-    .slice(0, 6);
+    );
   grid.innerHTML = tiles
     .map((w) => {
       const tip = w.met
         ? `Pagi: ${w.met.pagiMs || '-'} · Petang: ${w.met.tengahHariMs || '-'} · Malam: ${w.met.malamMs || '-'}`
         : '';
-      return `<article class="weather-card" title="${esc(tip)}"><div class="weather-name"><span class="weather-nm">${esc(w.negeri)}</span><span class="weather-risk r-${esc(w.risiko.toLowerCase())}" title="Anggaran sistem, bukan amaran rasmi">${esc(w.risiko)}</span></div><div class="weather-now">${esc(w.ikon)} <span>${esc(w.keadaan)}</span></div><div class="weather-sub">♧ ${esc(w.suhu)}　≋ ${w.angin == null ? '-' : esc(Math.round(w.angin))} km/j　💧 ${w.lembap == null ? '-' : esc(Math.round(w.lembap))}%</div></article>`;
+      return `<article class="weather-card" title="${esc(tip)}"><div class="weather-name"><span class="weather-ico" aria-hidden="true">${esc(w.ikon)}</span><span class="weather-nm">${esc(w.negeri)}</span><span class="weather-risk r-${esc(w.risiko.toLowerCase())}" title="Anggaran sistem, bukan amaran rasmi">${esc(w.risiko)}</span></div><div class="weather-sub"><span class="weather-cond">${esc(w.keadaan)}</span> · ♧ ${esc(w.suhu)} · ≋ ${w.angin == null ? '-' : esc(Math.round(w.angin))} km/j · 💧 ${w.lembap == null ? '-' : esc(Math.round(w.lembap))}%</div></article>`;
     })
     .join('');
 }
@@ -632,13 +631,13 @@ const renderMetAlerts = () => {
   if (cs.status === 'memuat' && bs.status === 'memuat') {
     body.textContent = 'Memuatkan amaran…';
     note.textContent = sumber;
-    tag.textContent = 'MET · JPS · Sebenar';
+    tag.textContent = '';
     return;
   }
   if (cs.status === 'file' && bs.status === 'file') {
     body.textContent = 'Amaran rasmi sebenar memerlukan pelayan (npm start)';
     note.textContent = sumber;
-    tag.textContent = 'MET · JPS · Sebenar';
+    tag.textContent = '';
     return;
   }
   const mesej = [];
@@ -669,9 +668,7 @@ const renderMetAlerts = () => {
   note.textContent = `${sumber} · Dikemas kini ${masa}`;
   const senarai = senaraiAmaranRasmi();
   const aktif = senarai.filter((a) => a.aktif).length;
-  tag.textContent = senarai.length
-    ? `${aktif} aktif · ${senarai.length} terkini`
-    : 'MET · JPS · Sebenar';
+  tag.textContent = senarai.length ? `${aktif} aktif · ${senarai.length} terkini` : '';
   const status = mesej.map((m) => `<div class="alert-status">${m}</div>`).join('');
   if (!senarai.length) {
     body.innerHTML =
@@ -838,7 +835,11 @@ function renderIPU() {
     })
     .join('');
 }
+// Kad IPU dibuang daripada UI (diganti kad Stesen Banjir JPS). Tukar kepada true dan pulihkan
+// markup #ipuPanel dalam index.html untuk memaparkannya semula. API /api/kualiti-udara kekal.
+const IV_SHOW_IPU = false;
 const initIPU = (force) => {
+  if (!IV_SHOW_IPU) return Promise.resolve();
   ipuState = { status: 'memuat', data: null };
   renderIPU();
   return IPU.load(force).then(
@@ -914,9 +915,11 @@ const initBanjir = (force) => {
   banjirState = { status: 'memuat', data: null };
   renderMetAlerts();
   renderFloodLayer();
+  renderFloodCard();
   return aplikasiBanjir(BANJIR.load(force)).then(() => {
     renderMetAlerts();
     renderFloodLayer();
+    renderFloodCard();
   });
 };
 document.addEventListener('click', (ev) => {
@@ -943,19 +946,20 @@ function banjirFitur() {
     .map((s) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
-      properties: {
-        id: s.id,
-        nama: s.nama,
-        sungai: s.sungai || '',
-        negeri: s.negeri || '',
-        statusRasmi: s.statusRasmi,
-        parasAir: s.parasAir,
-        trend: s.trend || '',
-        masaBacaan: s.masaBacaan || '',
-        sumber: s.sumber || '',
-      },
+      properties: stesenProps(s),
     }));
 }
+const stesenProps = (s) => ({
+  id: s.id,
+  nama: s.nama,
+  sungai: s.sungai || '',
+  negeri: s.negeri || '',
+  statusRasmi: s.statusRasmi,
+  parasAir: s.parasAir,
+  trend: s.trend || '',
+  masaBacaan: s.masaBacaan || '',
+  sumber: s.sumber || '',
+});
 function stesenPopupNode(p) {
   const n = document.createElement('div');
   n.className = 'banjir-popup';
@@ -1075,6 +1079,131 @@ const banjirCatatanPeta = () => {
     return ' · Data banjir JPS lapuk, stesen tidak dipaparkan';
   return '';
 };
+/* --- Kad Stesen Banjir JPS (Pemantauan): stesen bukan Normal mengikut tahap amaran --- */
+const BJ_TAHAP = ['Bahaya', 'Amaran', 'Waspada'];
+const BJ_NILAI = { Bahaya: 3, Amaran: 2, Waspada: 1 };
+const BJ_TREND = {
+  Naik: ['▲', 'naik', 1],
+  Surut: ['▼', 'turun', 0],
+  Tetap: ['▬', 'tiada perubahan', 0],
+};
+const banjirRingkas = (iso) => {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return '-';
+  const p = Object.fromEntries(cuacaFmt.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
+};
+const stesenSah = (d) =>
+  d.stesen.filter(
+    (s) => s.statusRasmi && s.parasAir != null && Number.isFinite(s.lat) && Number.isFinite(s.lon),
+  );
+function senaraiStesenBanjir(d) {
+  return stesenSah(d)
+    .filter((s) => BJ_NILAI[s.statusRasmi])
+    .sort(
+      (a, b) =>
+        BJ_NILAI[b.statusRasmi] - BJ_NILAI[a.statusRasmi] ||
+        (BJ_TREND[b.trend] ? BJ_TREND[b.trend][2] : 0) -
+          (BJ_TREND[a.trend] ? BJ_TREND[a.trend][2] : 0) ||
+        (Date.parse(b.masaBacaan) || 0) - (Date.parse(a.masaBacaan) || 0) ||
+        String(a.nama).localeCompare(String(b.nama)),
+    );
+}
+const stesenBarisHTML = (s) => {
+  const tr = BJ_TREND[s.trend];
+  const lok = [s.sungai, [s.daerah, s.negeri].filter(Boolean).join(', ')]
+    .filter(Boolean)
+    .join(' · ');
+  const paras = Number(s.parasAir).toFixed(2) + ' m';
+  const trend = tr
+    ? `<span class="bj-trend" title="Trend: ${esc(tr[1])}"><span aria-hidden="true">${tr[0]}</span> ${esc(tr[1])}</span>`
+    : '<span class="bj-trend">tiada data trend</span>';
+  return `<button type="button" class="bj-row" data-act="stesen-banjir" data-stesen="${esc(s.id)}" data-tahap="${esc(s.statusRasmi)}" aria-label="${esc(s.nama + ', ' + s.statusRasmi + ', ' + paras + '. Papar pada peta')}"><span class="bj-row-top"><b class="bj-nama" title="${esc(s.nama)}">${esc(s.nama)}</b><span class="bj-chip bj-${esc(s.statusRasmi.toLowerCase())}">${esc(s.statusRasmi)}</span></span><span class="bj-lok" title="${esc(lok)}">${esc(lok || '-')}</span><span class="bj-row-bot"><b class="bj-paras">${esc(paras)}</b>${trend}<span class="bj-masa">${esc(banjirRingkas(s.masaBacaan))} MYT</span></span></button>`;
+};
+function renderFloodCard() {
+  const list = $('floodList');
+  if (!list) return;
+  const banner = $('floodStatus');
+  const note = $('floodNote');
+  const ring = $('floodSummary');
+  const poNote = $('floodPoNote');
+  const bs = banjirState;
+  let msg = '';
+  let kind = '';
+  const kosong = () => {
+    list.innerHTML = '';
+    ring.innerHTML = '';
+    poNote.hidden = true;
+    banner.hidden = !msg;
+    banner.className = 'weather-banner' + (kind ? ' ' + kind : '');
+    banner.innerHTML = msg;
+  };
+  if (bs.status === 'memuat') {
+    note.textContent = 'Memuatkan data banjir JPS…';
+    return kosong();
+  }
+  if (bs.status === 'file') {
+    note.textContent = 'Data banjir sebenar tidak tersedia';
+    msg = 'Data banjir sebenar memerlukan pelayan (npm start)';
+    return kosong();
+  }
+  if (bs.status === 'error') {
+    note.textContent = 'Data banjir tidak tersedia';
+    msg = 'Data banjir tidak dapat dimuatkan.' + banjirRetryBtn();
+    kind = 'err';
+    return kosong();
+  }
+  const d = bs.data;
+  note.textContent = 'Dikemas kini ' + cuacaMasa(d.fetchedAt);
+  if (banjirLapuk(d)) {
+    msg =
+      'Data lapuk: kemas kini terakhir ' + cuacaMasa(d.fetchedAt) + '. Stesen tidak dipaparkan.';
+    kind = 'err';
+    return kosong();
+  }
+  const gagal = ['jpsNasional', 'jpsSelangor']
+    .filter((k) => d.sumber && d.sumber[k] && d.sumber[k].status === 'gagal')
+    .map((k) => (k === 'jpsNasional' ? 'JPS Malaysia' : 'JPS Selangor'));
+  const sg = $('floodSrcGagal');
+  if (sg) sg.textContent = gagal.map((g) => ' · ' + g + ': data terakhir').join('');
+  banner.hidden = true;
+  banner.textContent = '';
+  const sah = stesenSah(d);
+  const kira = (t) => sah.filter((s) => s.statusRasmi === t).length;
+  ring.innerHTML = [...BJ_TAHAP, 'Normal']
+    .map(
+      (t) =>
+        `<span class="bj-chip bj-${t.toLowerCase()}" data-tahap="${t}"><b>${kira(t)}</b> ${t}</span>`,
+    )
+    .join('');
+  const tinggi = (d.po || []).filter((p) => p.risikoBanjir === 'Tinggi');
+  poNote.hidden = !tinggi.length;
+  poNote.textContent = tinggi.length
+    ? `PO berisiko banjir Tinggi (${tinggi.length}): ${tinggi.map((p) => p.nama).join(', ')}`
+    : '';
+  const baris = senaraiStesenBanjir(d);
+  list.innerHTML = baris.length
+    ? baris.map(stesenBarisHTML).join('')
+    : `<div class="bj-kosong"><b>Tiada stesen pada tahap Waspada, Amaran atau Bahaya sekarang</b><span>${sah.length} stesen sah dipantau</span></div>`;
+}
+// Klik baris stesen: terbang ke stesen pada peta utama dan buka pop-up (hidupkan lapisan jika dimatikan).
+function pilihStesenBanjir(id) {
+  const d = banjirState.status === 'ready' ? banjirState.data : null;
+  const s = d && d.stesen.find((x) => String(x.id) === String(id));
+  if (!s || !map) return;
+  if (!banjirLapisan.tunjuk) {
+    banjirLapisan.tunjuk = true;
+    renderFloodLayer();
+  }
+  const mc = $('map');
+  if (mc && mc.scrollIntoView) mc.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  map.flyTo({ center: [s.lon, s.lat], zoom: Math.max(map.getZoom(), 10), essential: true });
+  bukaPopupStesen(stesenProps(s), [s.lon, s.lat]);
+}
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-act="stesen-banjir"]');
+  if (b) pilihStesenBanjir(b.dataset.stesen);
+});
 let mapCaptionAsas = '';
 function renderMapCaption() {
   const c = $('mapCaption');

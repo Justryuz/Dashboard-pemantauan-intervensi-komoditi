@@ -378,8 +378,6 @@ function renderScenarioPanel() {
               ? 'Data cuaca lapuk: kemas kini terakhir ' + cuacaMasa(scenFetchedAt)
               : '';
   $('amsFloodNote').innerHTML = floodNoteHTML();
-  $('amsBadge').textContent =
-    ld === 'loading' ? 'MEMUAT' : ld === 'error' || ld === 'file' ? 'TIADA DATA' : 'DATA SEBENAR';
   renderScenarioKpis();
   renderScenarioList();
   renderScenarioDetail();

@@ -333,13 +333,8 @@
         <section class="bottom-grid">
           <section class="panel">
             <div class="titlebar">
-              <div>
-                <div class="panel-title">☁ Ramalan Cuaca Mengikut Negeri</div>
-                <div class="note" id="weatherNote">Memuatkan data cuaca…</div>
-              </div>
-              <span class="tag" id="weatherTag" style="font-size: 10px; padding: 4px 8px"
-                >MET Malaysia + Open-Meteo</span
-              >
+              <div class="panel-title">☁ Ramalan Cuaca Mengikut Negeri</div>
+              <div class="note" id="weatherNote">Memuatkan data cuaca…</div>
             </div>
             <div class="weather-banner" id="weatherStatus" role="status" hidden></div>
             <div class="weather-grid" id="weatherGrid"></div>
@@ -351,28 +346,32 @@
           <section class="panel">
             <div class="alert-head">
               ⚠ Amaran Rasmi (MET Malaysia & JPS)
-              <span id="metAlertTag" style="margin-left: auto; font-size: 10px; font-weight: 400"
-                >MET · JPS · Sebenar</span
-              >
+              <span id="metAlertTag">MET · JPS · Sebenar</span>
             </div>
             <div class="alert-body" id="metAlertBody">Memuatkan amaran…</div>
             <div class="right-note" id="metAlertNote">Sumber: MET Malaysia · JPS Malaysia</div>
           </section>
-          <section class="panel ipu-panel" id="ipuPanel" aria-labelledby="ipuTitle">
+          <section class="panel flood-panel" id="floodPanel" aria-labelledby="floodTitle">
             <div class="titlebar">
-              <div>
-                <div class="panel-title" id="ipuTitle">☁ Kualiti Udara (IPU) Berhampiran PO</div>
-                <div class="note" id="ipuNote">Memuatkan data kualiti udara…</div>
-              </div>
-              <span class="tag" id="ipuTag" style="font-size: 10px; padding: 4px 8px"
-                >JAS · Sebenar</span
-              >
+              <div class="panel-title" id="floodTitle">🌊 Stesen Banjir JPS</div>
+              <div class="note" id="floodNote">Memuatkan data banjir JPS…</div>
+              <span class="tag" id="floodTag">JPS · Sebenar</span>
             </div>
-            <div class="weather-banner" id="ipuStatus" role="status" hidden></div>
-            <div class="ipu-legend" id="ipuLegend"></div>
-            <div class="ipu-list" id="ipuList"></div>
-            <div class="weather-attrib" id="ipuAttrib">
-              Sumber: JAS (MyEQMS) · IPU jam semasa. Stesen terdekat, bukan bacaan di lokasi PO.
+            <div class="weather-banner" id="floodStatus" role="status" hidden></div>
+            <div
+              class="bj-summary"
+              id="floodSummary"
+              aria-label="Bilangan stesen mengikut tahap"
+            ></div>
+            <div class="bj-ponote" id="floodPoNote" hidden></div>
+            <div
+              class="bj-list"
+              id="floodList"
+              aria-label="Stesen paras air terkini mengikut tahap amaran"
+            ></div>
+            <div class="weather-attrib" id="floodAttrib">
+              Sumber: JPS Malaysia (Public Info Banjir) · JPS Selangor. Rekod lapuk (&gt; 3 jam) dan
+              status palsu ditapis.
             </div>
           </section>
           <section class="panel ams-panel" id="amsPanel" aria-labelledby="amsTitle">
@@ -657,8 +656,8 @@
               <h3 id="ivMuseT">AI Muse - Gambaran Mingguan Komoditi</h3>
               <div class="note">
                 Isu Komoditi Mengikut Lokasi dan Minggu. Kemas kini secara kelompok harian, bukan
-                masa nyata.
-              </div>
+                Berita komoditi mingguan daripada AI Muse (fail db-curated, Google Drive). Kemas kini
+                secara kelompok harian, bukan masa nyata.
             </div>
             <div class="iv-chips" id="ivMuseChips"></div>
           </div>
