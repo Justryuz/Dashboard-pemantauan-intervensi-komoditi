@@ -47,20 +47,6 @@
     'November',
     'Disember',
   ];
-  const MY_MON_IDX = {
-    januari: 1,
-    februari: 2,
-    mac: 3,
-    april: 4,
-    mei: 5,
-    jun: 6,
-    julai: 7,
-    ogos: 8,
-    september: 9,
-    oktober: 10,
-    november: 11,
-    disember: 12,
-  };
 
   const IV_CONFIG = {
     refNow: '2026-11-15T12:00:00+08:00',
@@ -71,7 +57,6 @@
     supply: { minSurplusMT: 3, minSurplusRatio: 0.15, shortageCoverage: 0.8, staleHours: 72 },
     detour: 1.3,
     crossZoneRules: [],
-    museBands: { kuning: 20, merah: 40 },
     minHistory: 8,
     labelShift: {
       perlis: [-8, -16],
@@ -1022,323 +1007,6 @@
     };
   }
 
-  /* ===== AI Muse (data dummy mentah + penyarian) ===== */
-  const IV_MUSE_RAW = [
-    {
-      rawId: 'M01',
-      recordDate: '2026-11-11',
-      analystNote:
-        'Kelapa tua (Matag): pada 4 November 2026 seramai 69 pekebun kelapa Matag terjejas di Dungun, Terengganu akibat tekanan harga daripada kelapa import.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.42,
-      sampleCount: 69,
-      riskBefore: 4,
-      riskCurrent: 16,
-      riskForward: 18,
-    },
-    {
-      rawId: 'M02',
-      recordDate: '2026-11-12',
-      analystNote:
-        'Harga ladang cili merah jatuh di Kluang, Johor pada 12 November 2026 akibat lebihan bekalan; peladang sukar memasarkan hasil.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.55,
-      sampleCount: 42,
-      riskBefore: 12,
-      riskCurrent: 38,
-      riskForward: 44,
-    },
-    {
-      rawId: 'M03',
-      recordDate: '2026-11-13',
-      analystNote:
-        'Harga runcit bawang merah kecil naik di Pasir Mas, Kelantan pada 13 November 2026; bekalan terhad selepas gangguan banjir.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.48,
-      sampleCount: 35,
-      riskBefore: 15,
-      riskCurrent: 41,
-      riskForward: 46,
-    },
-    {
-      rawId: 'M04',
-      recordDate: '2026-11-11',
-      analystNote:
-        'Cuaca buruk menjejaskan hasil tomato bulat di Cameron Highlands, Pahang pada 10 November 2026.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.3,
-      sampleCount: 21,
-      riskBefore: 8,
-      riskCurrent: 24,
-      riskForward: 27,
-    },
-    {
-      rawId: 'M05',
-      recordDate: '2026-11-13',
-      analystNote:
-        'Dipercayai harga ladang cili merah masih jatuh di Kluang pada 12 November 2026 kerana lebihan bekalan.',
-      sourceName: 'Laporan kedua (dummy)',
-      sentimentIndex: -0.5,
-      sampleCount: 18,
-      riskBefore: 12,
-      riskCurrent: 36,
-      riskForward: 40,
-    },
-    {
-      rawId: 'M06',
-      recordDate: '2026-11-12',
-      analystNote:
-        'Harga kubis bulat jatuh di Serian, Sarawak; berbanding pada 3 Mac 2025 harga jatuh dengan teruk.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.2,
-      sampleCount: 12,
-      riskBefore: 6,
-      riskCurrent: 14,
-      riskForward: 15,
-    },
-    {
-      rawId: 'M07',
-      recordDate: '2026-11-12',
-      analystNote:
-        'Harga ayam proses super dilaporkan naik di sebuah pasar di utara pada 12 November 2026.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.25,
-      sampleCount: 9,
-      riskBefore: 5,
-      riskCurrent: 18,
-      riskForward: 19,
-    },
-    {
-      rawId: 'M08',
-      recordDate: '2026-11-12',
-      analystNote:
-        'Latihan kakitangan mengenai pengendalian telur gred A diadakan di Kangar pada 11 November 2026.',
-      sourceName: 'Nota dalaman (dummy)',
-      sentimentIndex: 0.1,
-      sampleCount: 0,
-      riskBefore: 2,
-      riskCurrent: 2,
-      riskForward: 2,
-    },
-    {
-      rawId: 'M09',
-      recordDate: '2026-11-06',
-      analystNote:
-        'Hasil cili hijau merosot di Temerloh, Pahang pada 5 November 2026 akibat hujan lebat.',
-      sourceName: 'Nota penganalisis FAMA (dummy)',
-      sentimentIndex: -0.35,
-      sampleCount: 27,
-      riskBefore: 10,
-      riskCurrent: 30,
-      riskForward: 33,
-    },
-  ];
-  const IV_COMM_ALIAS = [
-    ['kelapa matag', null, 'Kelapa Tua (Matag)'],
-    ['kelapa tua', null, 'Kelapa Tua (Matag)'],
-    ['kelapa', null, 'Kelapa Tua (Matag)'],
-    ['cili merah', 'cili-merah', 'Cili Merah'],
-    ['cili hijau', 'cili-hijau', 'Cili Hijau'],
-    ['tomato bulat', 'tomato-bulat', 'Tomato Bulat'],
-    ['tomato', 'tomato-bulat', 'Tomato Bulat'],
-    ['bawang merah kecil', 'bawang-merah-kecil', 'Bawang Merah Kecil'],
-    ['bawang merah', 'bawang-merah-kecil', 'Bawang Merah Kecil'],
-    ['ayam proses super', 'ayam-proses-super', 'Ayam Proses Super'],
-    ['ayam', 'ayam-proses-super', 'Ayam Proses Super'],
-    ['kubis bulat', 'kubis-bulat', 'Kubis Bulat'],
-    ['kubis', 'kubis-bulat', 'Kubis Bulat'],
-    ['telur gred a', 'telur-gred-a', 'Telur Gred A'],
-    ['telur', 'telur-gred-a', 'Telur Gred A'],
-  ];
-  const MUSE_ISSUE_RE =
-    /harga|bekalan|lebihan|hasil|pengeluaran|pemasaran|memasarkan|kekurangan|terjejas|menjejaskan/i;
-  const MUSE_RECALL_RE = /tahun lepas|berbanding|sebelum ini|lalu|pada tahun/i;
-  function validateMuseRaw(rows) {
-    const ok = [];
-    let dropped = 0;
-    (Array.isArray(rows) ? rows : []).forEach((r) => {
-      if (
-        r &&
-        typeof r.rawId === 'string' &&
-        typeof r.analystNote === 'string' &&
-        /^\d{4}-\d{2}-\d{2}$/.test(r.recordDate || '')
-      )
-        ok.push(r);
-      else dropped++;
-    });
-    return { ok, dropped };
-  }
-  function extractMuseIssue(raw) {
-    const note = raw.analystNote,
-      low = note.toLowerCase();
-    let com = null;
-    for (const [a, id, lbl] of IV_COMM_ALIAS) {
-      if (low.includes(a)) {
-        com = { id, label: lbl };
-        break;
-      }
-    }
-    const sentences = note.split(/(?<=[.;:])\s+/);
-    const csent = com
-      ? sentences.find((s) =>
-          s
-            .toLowerCase()
-            .includes(IV_COMM_ALIAS.find((a) => a[2] === com.label && low.includes(a[0]))[0]),
-        ) || note
-      : note;
-    const dates = [];
-    let m;
-    const re1 =
-      /(\d{1,2})\s+(januari|februari|mac|april|mei|jun|julai|ogos|september|oktober|november|disember)(?:\s+(\d{4}))?/gi;
-    while ((m = re1.exec(note))) {
-      const y = m[3] ? +m[3] : +raw.recordDate.slice(0, 4);
-      dates.push({
-        ds: `${y}-${String(MY_MON_IDX[m[2].toLowerCase()]).padStart(2, '0')}-${String(+m[1]).padStart(2, '0')}`,
-        off: m.index,
-      });
-    }
-    const re2 = /(\d{2})\/(\d{2})\/(\d{4})/g;
-    while ((m = re2.exec(note))) dates.push({ ds: `${m[3]}-${m[2]}-${m[1]}`, off: m.index });
-    const re3 = /(\d{4})-(\d{2})-(\d{2})/g;
-    while ((m = re3.exec(note))) dates.push({ ds: m[0], off: m.index });
-    const ry = +raw.recordDate.slice(0, 4);
-    const keep = dates.filter((d) => {
-      const pre = note.slice(Math.max(0, d.off - 40), d.off);
-      return !(MUSE_RECALL_RE.test(pre) || +d.ds.slice(0, 4) < ry);
-    });
-    const cOff = note.indexOf(csent),
-      cEnd = cOff + csent.length;
-    const dist = (d) =>
-      d.off >= cOff && d.off <= cEnd ? 0 : Math.min(Math.abs(d.off - cOff), Math.abs(d.off - cEnd));
-    keep.sort((a, b) => dist(a) - dist(b) || (a.ds < b.ds ? -1 : 1));
-    let eventDate = keep.length ? keep[0].ds : null;
-    if (!eventDate) {
-      if (/kelmarin/i.test(note)) eventDate = addDays(raw.recordDate, -2);
-      else if (/semalam/i.test(note)) eventDate = addDays(raw.recordDate, -1);
-      else if (/hari ini|baru-baru ini/i.test(note)) eventDate = raw.recordDate;
-    }
-    let loc = null;
-    const mapped = IV_DISTRICTS.find((d) => new RegExp('\\b' + d.name + '\\b', 'i').test(note));
-    if (mapped)
-      loc = {
-        name: mapped.name,
-        stateId: mapped.stateId,
-        negeri: mapped.negeri,
-        districtId: mapped.districtId,
-        mapped: true,
-      };
-    else {
-      const g = IV_GAZETTEER.find((x) => new RegExp('\\b' + x.name + '\\b', 'i').test(note));
-      if (g)
-        loc = {
-          name: g.name,
-          stateId: g.stateId,
-          negeri: g.negeri,
-          districtId: g.stateId + '/' + slug(g.name),
-          mapped: false,
-        };
-    }
-    let ltype = 'belum',
-      conf = 0;
-    if (loc) {
-      const pre = note.slice(
-        Math.max(0, note.search(new RegExp('\\b' + loc.name + '\\b', 'i')) - 18),
-        note.search(new RegExp('\\b' + loc.name + '\\b', 'i')),
-      );
-      if (/(dilaporkan dari|berbanding|\bdari)\s*$/i.test(pre)) ltype = 'disebut';
-      else if (/\bdi\s*$/i.test(pre)) {
-        ltype = 'disahkan';
-      } else ltype = 'disebut';
-      conf = ltype === 'disahkan' ? (/dipercayai|mungkin|dikatakan/i.test(note) ? 0.8 : 0.9) : 0.5;
-    }
-    const issue = MUSE_ISSUE_RE.test(note);
-    const band =
-      raw.riskCurrent >= IV_CONFIG.museBands.merah
-        ? 'merah'
-        : raw.riskCurrent >= IV_CONFIG.museBands.kuning
-          ? 'kuning'
-          : 'hijau';
-    const po = loc && loc.mapped ? IV_DISTBY[loc.districtId].poId : null;
-    const supplyKw = /bekalan|lebihan|kekurangan/i.test(note);
-    return {
-      insightId: raw.rawId,
-      commodityId: com ? com.id : null,
-      commodityLabel: com ? com.label : null,
-      eventDate,
-      recordDate: raw.recordDate,
-      location: loc
-        ? { label: `${loc.name}, ${loc.negeri}`, type: ltype }
-        : { label: 'Tidak dikenal pasti', type: 'belum' },
-      districtName: loc ? loc.name : null,
-      stateId: loc ? loc.stateId : null,
-      negeri: loc ? loc.negeri : null,
-      districtId: loc ? loc.districtId : null,
-      matchedPOId: po,
-      locationConfidence: conf,
-      locationType: ltype,
-      riskBefore: raw.riskBefore,
-      riskCurrent: raw.riskCurrent,
-      riskForward: raw.riskForward,
-      riskBand: band,
-      sentimentIndex: raw.sentimentIndex,
-      sampleCount: raw.sampleCount,
-      analystNote: note,
-      sourceName: raw.sourceName,
-      evidence: [{ quote: note, sourceName: raw.sourceName, date: raw.recordDate }],
-      issueRelevant: issue,
-      issueClass: /lebihan|jatuh|turun/i.test(note)
-        ? 'lebihan-harga-turun'
-        : /naik|terhad|kekurangan/i.test(note)
-          ? 'bekalan-harga-naik'
-          : 'hasil',
-      supplyKw,
-      suggestedActions:
-        band === 'merah'
-          ? [
-              'Sahkan stok dan harga di lokasi',
-              'Pertimbangkan mobilisasi bekalan melalui Mobilisasi Stok Pintar AI',
-            ]
-          : [
-              'Pantau harga dan bekalan di lokasi',
-              'Semak semula dalam kemas kini harian seterusnya',
-            ],
-      summary: `${com ? com.label : 'Komoditi'}: ${csent}`,
-      explanation:
-        'Penyarian deterministik (simulasi) daripada nota penganalisis; bukan keputusan AI sebenar.',
-      source: 'dummy',
-      origin: 'iv',
-    };
-  }
-  function museInclude(ins, ws) {
-    const [a, b] = weekRange(ws);
-    return !!(
-      ins.commodityLabel &&
-      ins.locationType === 'disahkan' &&
-      ins.districtId &&
-      ins.eventDate &&
-      ins.eventDate >= a &&
-      ins.eventDate <= b &&
-      ins.issueRelevant
-    );
-  }
-  function museWeekList(all, ws) {
-    const cand = all.filter((i) => museInclude(i, ws));
-    const best = new Map();
-    cand.forEach((i) => {
-      const k = [i.commodityId || i.commodityLabel, i.districtId, i.eventDate, i.issueClass].join(
-        '|',
-      );
-      const o = best.get(k);
-      if (
-        !o ||
-        i.locationConfidence > o.locationConfidence ||
-        (i.locationConfidence === o.locationConfidence && i.recordDate > o.recordDate)
-      )
-        best.set(k, i);
-    });
-    return [...best.values()].sort((x, y) => y.riskCurrent - x.riskCurrent);
-  }
-
   /* ===== Keadaan ternamaruang dan dispatch ===== */
   const ivState = {
     selectedMode: 'pengeluar',
@@ -1355,7 +1023,7 @@
     outletCats: { 'pasar-awam': true, ptk: true, rakr: true, agrobazaar: true },
     mob: { needMT: null, refPrice: null, wPrice: 65, distLimitKm: 550, candidateKey: null },
     margin: { jual: '', beli: '', ladang: '', kos: '', target: '15', touched: false, ctx: null },
-    muse: { weekStart: '2026-11-09', expandedId: null, evidenceOpen: {}, status: 'loading' },
+    muse: { weekStart: null, expandedId: null, view: 'komoditi', status: 'loading', errMsg: '' },
     ui: {
       mapReady: false,
       mapError: null,
@@ -1437,12 +1105,6 @@
       explainMargin: (f) => run('ai', () => f.text),
       recommendPriority: (f) => run('ai', () => f.text),
       summariseMuse: (f) => run('ai', () => f.text),
-      extractMuseIssue: async (raw) => ({
-        ok: true,
-        data: extractMuseIssue(raw),
-        model,
-        generatedAt: new Date().toISOString(),
-      }),
     });
   })();
   function ivValidateAi(r) {
@@ -1768,43 +1430,31 @@
         break;
       }
       case 'museWeek': {
-        const cur = weekStart(myDate(refNow));
-        let ws = s.muse.weekStart;
-        if (payload === 'prev') {
-          const min = addDays(weekStart(addDays(museEarliest(), -14)), 0);
-          if (addDays(ws, -7) >= min) ws = addDays(ws, -7);
-        } else if (payload === 'next') {
-          if (ws < cur) ws = addDays(ws, 7);
-        } else ws = cur;
-        s.muse.weekStart = ws;
-        s.muse.expandedId = null;
-        dirty = ['muse'];
-        break;
+        const tersedia = (museData && museData.mingguTersedia) || [];
+        const cur = s.muse.weekStart;
+        let target = null;
+        if (payload === 'prev' || payload === 'next') {
+          const i = tersedia.indexOf(cur);
+          const j = payload === 'prev' ? i - 1 : i + 1;
+          if (i >= 0 && j >= 0 && j < tersedia.length) target = tersedia[j];
+        } else {
+          const minggu = weekStart(myDate(new Date(museNow()).toISOString()));
+          target = tersedia.includes(minggu) ? minggu : tersedia[tersedia.length - 1] || null;
+        }
+        if (!target || target === cur) return false;
+        ivLoadMuse(target);
+        return true;
       }
       case 'museExpand': {
         s.muse.expandedId = s.muse.expandedId === payload ? null : payload;
         dirty = ['muse'];
         break;
       }
-      case 'museEvidence': {
-        s.muse.evidenceOpen[payload] = !s.muse.evidenceOpen[payload];
+      case 'museView': {
+        if (payload !== 'komoditi' && payload !== 'hari') return false;
+        s.muse.view = payload;
+        s.muse.expandedId = null;
         dirty = ['muse'];
-        break;
-      }
-      case 'museTransfer': {
-        const ins = museAll.find((i) => i.insightId === payload);
-        if (!ins || !ins.matchedPOId || !ins.commodityId || !IV_COMMBY[ins.commodityId]) return;
-        const p = IV_POBY[ins.matchedPOId];
-        s.selectedCommodityId = ins.commodityId;
-        s.selectedPOId = p.id;
-        s.selectedStateId = p.stateId;
-        s.selectedDistrictId = ins.districtId;
-        s.selectedInterventionId = null;
-        s.selectedOutletId = null;
-        resetMobSel();
-        applyRoles();
-        focus = true;
-        toastSafe('Konteks dipindahkan: ' + ins.commodityLabel + ' · ' + p.name);
         break;
       }
       case 'setThreshold': {
@@ -1828,9 +1478,6 @@
     if (focus) ivFocusMap();
     ivRender(dirty);
     return true;
-  }
-  function museEarliest() {
-    return museAll.length ? museAll.map((i) => i.recordDate).sort()[0] : '2026-11-01';
   }
 
   /* ===== Peta ===== */
@@ -2987,173 +2634,267 @@
     h.innerHTML = `<div class="iv-ai"><h4>Pandangan AI Margin (simulasi)</h4><div>${E(res.text)}</div>${res.ai ? '' : '<div class="iv-note">Penjelasan AI tidak tersedia, angka dikira oleh enjin.</div>'}<div class="iv-note">Nasihat sahaja dan tertakluk kepada pengesahan operasi.</div></div>`;
   }
 
-  /* ===== Paparan 6 ===== */
-  let museAll = [],
-    museMeta = { dropped: 0, lastDataDate: '2026-11-14', processing: 'Siap' };
+  /* ===== Paparan 6: AI Muse (db-curated, Google Drive melalui /api/muse) ===== */
+  let museData = null,
+    _museSeq = 0,
+    _museNowOverride = null;
+  const museNow = () => (_museNowOverride != null ? _museNowOverride : Date.now());
+  const MUSE_STALE_MS = 36 * 3600e3;
+  const MUSE_COMM_ALIAS = {
+    'cili-merah': ['cili-merah-hijau'],
+    'cili-hijau': ['cili-merah-hijau'],
+    'tomato-bulat': ['tomato'],
+    'bawang-merah-kecil': ['bawang'],
+    'ayam-proses-super': ['ayam'],
+    'kubis-bulat': ['kubis'],
+    'telur-gred-a': ['telur'],
+  };
+  const MUSE_BAND = {
+    Merah: { cls: 'bad', rank: 0 },
+    Kuning: { cls: 'warn', rank: 1 },
+    Hijau: { cls: 'ok', rank: 2 },
+  };
   const ivDataService = {
-    loadMuse() {
-      return new Promise((res, rej) => {
-        setTimeout(() => {
-          if (failFlags.muse) {
-            failFlags.muse = false;
-            rej(new Error('Kegagalan data Muse disuntik (ujian)'));
-            return;
-          }
-          res({
-            status: 'dummy',
-            lastDataDate: '2026-11-14',
-            processingStatus: 'Siap',
-            records: IV_MUSE_RAW.map((x) => ({ ...x })),
-          });
-        }, 250);
+    async loadMuse(minggu) {
+      if (failFlags.muse) {
+        failFlags.muse = false;
+        throw new Error('Kegagalan data Muse disuntik (ujian)');
+      }
+      if (location.protocol === 'file:') {
+        const e = new Error('Memerlukan pelayan');
+        e.kind = 'file';
+        throw e;
+      }
+      const r = await fetch('/api/muse' + (minggu ? '?minggu=' + encodeURIComponent(minggu) : ''), {
+        headers: { Accept: 'application/json' },
       });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      if (!d || !Array.isArray(d.rekod) || typeof d.minggu !== 'string')
+        throw new Error('Respons AI Muse tidak sah');
+      d.mingguTersedia = Array.isArray(d.mingguTersedia) ? d.mingguTersedia : [];
+      return d;
     },
   };
-  async function ivLoadMuse() {
+  async function ivLoadMuse(minggu) {
+    const seq = ++_museSeq;
     ivState.muse.status = 'loading';
+    ivState.muse.expandedId = null;
     ivRender(['muse']);
     try {
-      const d = await ivDataService.loadMuse();
-      const v = validateMuseRaw(d.records);
-      const ex = await Promise.all(v.ok.map((r) => aiAdapter.extractMuseIssue(r)));
-      museAll = ex.map((x) => x.data);
-      museMeta = {
-        dropped: v.dropped,
-        lastDataDate: d.lastDataDate,
-        processing: v.dropped ? `Sebahagian (${v.dropped} rekod tidak sah)` : d.processingStatus,
-      };
+      const d = await ivDataService.loadMuse(minggu);
+      if (seq !== _museSeq) return;
+      museData = d;
+      ivState.muse.weekStart = d.minggu;
       ivState.muse.status = 'ready';
     } catch (err) {
+      if (seq !== _museSeq) return;
       console.warn('Data AI Muse tidak dapat dimuatkan', err && err.message);
-      ivState.muse.status = 'error';
+      ivState.muse.status = err && err.kind === 'file' ? 'file' : 'error';
     }
     ivRender(['muse']);
-  }
-  function sparkline(i) {
-    const pts = [i.riskBefore, i.riskCurrent, i.riskForward];
-    const mx = Math.max(50, ...pts);
-    const W = 160,
-      H = 44;
-    const xy = pts.map((v, k) => [10 + k * 70, H - 6 - (v / mx) * (H - 14)]);
-    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Trend risiko: sebelum ${i.riskBefore}, semasa ${i.riskCurrent}, ramalan ${i.riskForward}"><polyline fill="none" style="stroke:var(--cyan)" stroke-width="2" points="${xy.map((p) => p.join(',')).join(' ')}"/>${xy.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" style="fill:var(--cyan)"/>`).join('')}</svg>`;
-  }
-  function museInsightText(i) {
-    let x = String(i.summary || '');
-    const lb = i.commodityLabel ? i.commodityLabel + ': ' : '';
-    if (lb && x.startsWith(lb)) x = x.slice(lb.length);
-    x = x.replace(/^[^:.;]{1,40}:\s+/, '');
-    let dt = '';
-    x = x.replace(
-      /(^|\s)pada\s+(\d{1,2})\s+(Januari|Februari|Mac|April|Mei|Jun|Julai|Ogos|September|Oktober|November|Disember)(?:\s+(\d{4}))?/i,
-      (m, p, d, mn, y) => {
-        dt = d + ' ' + mn.slice(0, 3) + (y ? ' ' + y : '');
-        return p;
-      },
-    );
-    x = x
-      .replace(/\s{2,}/g, ' ')
-      .replace(/\s+([,.;:])/g, '$1')
-      .replace(/[\s;:,.]+$/, '')
-      .trim();
-    if (!x) x = i.analystNote || '';
-    x = x.charAt(0).toUpperCase() + x.slice(1);
-    return x + (dt ? ' (' + dt + ')' : '') + '.';
   }
   function museShortDate(ds) {
     const [y, m, d] = ds.split('-').map(Number);
     return d + ' ' + MY_MONTHS[m - 1].slice(0, 3);
   }
-  // ubah kepada true untuk papar semula "Tindakan disyorkan", PO berkaitan dan butang Buka Tindakan Intervensi / Butiran
+  // ubah kepada true untuk papar semula butang tindakan pada kad
   const IV_MUSE_SHOW_ACTION = false;
-  function museSentLbl(v) {
-    return v < -0.15 ? 'Negatif' : v > 0.15 ? 'Positif' : 'Neutral';
+  function museMatch(r) {
+    const f = ivState,
+      lk = r.lokasi || [];
+    if (f.selectedCommodityId) {
+      const ok = [f.selectedCommodityId, ...(MUSE_COMM_ALIAS[f.selectedCommodityId] || [])];
+      if (!ok.includes(r.komoditiId)) return false;
+    }
+    if (f.selectedStateId && !lk.some((l) => slug(l.negeri || '') === f.selectedStateId))
+      return false;
+    if (f.selectedPOId && !lk.some((l) => l.poId === f.selectedPOId)) return false;
+    if (f.selectedDistrictId) {
+      const d = IV_DISTBY[f.selectedDistrictId];
+      if (
+        !d ||
+        !lk.some(
+          (l) =>
+            l.daerah &&
+            l.daerah.toLowerCase() === d.name.toLowerCase() &&
+            slug(l.negeri) === d.stateId,
+        )
+      )
+        return false;
+    }
+    if (
+      f.selectedRisk !== 'all' &&
+      r.band !== { kritikal: 'Merah', waspada: 'Kuning', normal: 'Hijau' }[f.selectedRisk]
+    )
+      return false;
+    return true;
+  }
+  function museSort(a, b) {
+    return (
+      MUSE_BAND[a.band].rank - MUSE_BAND[b.band].rank ||
+      b.risikoSemasa - b.risikoSebelum - (a.risikoSemasa - a.risikoSebelum) ||
+      String(a.komoditiLabel).localeCompare(String(b.komoditiLabel), 'ms')
+    );
+  }
+  function museSortLokasi(a, b) {
+    const na = museNegeriUtama(a),
+      nb = museNegeriUtama(b);
+    if (!na !== !nb) return na ? -1 : 1;
+    if (na && na !== nb) return na.localeCompare(nb, 'ms');
+    const da = museDaerahUtama(a),
+      db = museDaerahUtama(b);
+    if (!da !== !db) return da ? -1 : 1;
+    return (da !== db ? da.localeCompare(db, 'ms') : 0) || museSort(a, b);
+  }
+  function museRiskChip(r) {
+    const ch = r.risikoSemasa - r.risikoSebelum;
+    const dir = ch > 0 ? 'up' : ch < 0 ? 'down' : 'flat',
+      arr = ch > 0 ? '↑' : ch < 0 ? '↓' : '→';
+    const b = MUSE_BAND[r.band];
+    return `<span class="iv-chip ${b.cls}">Risiko ${E(r.band)} <span class="iv-tr ${dir}">${r.risikoSemasa} ${arr} ${sgn(ch, 0)}</span></span>`;
+  }
+  function museLokasiChips(r, sembunyiKosong) {
+    const lk = r.lokasi || [];
+    if (!lk.length) return sembunyiKosong ? '' : chip('Lokasi tidak dinyatakan', 'grey');
+    return lk.map((l) => chip(l.daerah ? l.daerah + ', ' + l.negeri : l.negeri)).join('');
+  }
+  function musePrice(r) {
+    const h = r.harga;
+    if (!h) return '';
+    return `<div class="iv-mc-price">${E(h.label)} · <b>${E(Number(h.nilai).toFixed(2))} ${E(h.unit)}</b> (harga pada ${fmtDate(h.tarikh)})</div>`;
+  }
+  // tajuk ringkas: klausa/ayat pertama nota (sehingga ';' atau '.'), dibersihkan, maks. 70 aksara
+  function museTajuk(nota) {
+    let x = String(nota || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const m = x.search(/;|\.(?=\s|$)/);
+    if (m > 0) x = x.slice(0, m);
+    x = x.replace(/^[^\p{L}\p{N}]+|[\s,:;.\-–—]+$/gu, '');
+    if (x.length > 70) {
+      x = x.slice(0, 69);
+      const sp = x.lastIndexOf(' ');
+      if (sp > 35) x = x.slice(0, sp);
+      x = x.replace(/[\s,:;.\-–—]+$/, '') + '…';
+    }
+    return x.charAt(0).toUpperCase() + x.slice(1);
+  }
+  function museNegeriUtama(r) {
+    const l = (r.lokasi || [])[0];
+    return l ? l.negeri : null;
+  }
+  function museDaerahUtama(r) {
+    const l = (r.lokasi || [])[0];
+    return (l && l.daerah) || '';
+  }
+  function museCard(r, o) {
+    const id = E(o.id),
+      open = !!o.open;
+    const b = MUSE_BAND[r.band];
+    let h = `<article class="iv-muse-card" data-band="${E(r.band.toLowerCase())}" data-open="${open}" data-id="${id}" aria-label="${E(r.komoditiLabel)}, Risiko ${E(r.band)}">
+  <h4 class="iv-mc-t"><b>${E(r.komoditiLabel)}</b><span class="iv-mc-hl">${E(museTajuk(r.nota))}</span></h4>
+  <div class="iv-mc-meta"><span class="iv-chip grey">${fmtDate(r.tarikh)}</span>${museRiskChip(r)}${museLokasiChips(r, o.sembunyiKosong)}${r.awal ? chip('Awal', 'warn') : ''}</div>
+  <button type="button" class="iv-mc-more" aria-expanded="${open}" data-iv-act="museExp" data-iv-arg="${id}">${open ? 'Tutup' : 'Lihat lagi'}</button>`;
+    if (open) {
+      h += `<div class="iv-muse-x"><p class="iv-mc-ins">${E(r.nota)}</p>${musePrice(r)}
+  <div class="iv-kv"><span>Risiko sebelum<b>${r.risikoSebelum}</b></span><span>Risiko semasa<b>${r.risikoSemasa}</b></span><span>Risiko hadapan<b>${r.risikoHadapan}</b></span><span>Indeks sentimen<b>${f2(r.indeksSentimen)}</b></span><span>Bilangan sampel<b>${r.bilSampel}</b></span><span>Sumber<b>${E(r.sumberFail ? r.sumberFail.nama : '—')}</b></span></div>`;
+      if (o.timeline)
+        h += `<div class="iv-sec">REKOD MINGGU INI</div><ol class="iv-mu-tl">${o.timeline
+          .map(
+            (t) =>
+              `<li><span class="iv-mc-date">${fmtDate(t.tarikh)}</span>${chip('Risiko ' + t.band, MUSE_BAND[t.band].cls)}<p class="iv-mc-ins">${E(t.nota)}</p></li>`,
+          )
+          .join('')}</ol>`;
+      h += '</div>';
+    }
+    return h + '</article>';
   }
   function ivRenderMuse() {
     const s = ivState,
       body = $i('ivMuseBody'),
       ms = s.muse;
-    $i('ivMuseChips').innerHTML = tagD + chip('Kelompok harian', 'grey') + notApplicable('muse');
+    const src = chip('Sumber: AI Muse · db-curated (Google Drive)');
+    $i('ivMuseChips').innerHTML = chip('Kelompok harian', 'grey') + src + notApplicable('muse');
     if (ms.status === 'loading') {
       body.innerHTML = '<div class="iv-empty" aria-busy="true">Memuatkan data AI Muse…</div>';
       return;
     }
-    if (ms.status === 'error') {
+    if (ms.status === 'file') {
+      body.innerHTML =
+        '<div class="iv-banner bad" id="ivMuseFile">Data AI Muse memerlukan pelayan (npm start)</div>';
+      return;
+    }
+    if (ms.status === 'error' || !museData) {
       body.innerHTML =
         '<div class="iv-banner bad">Data AI Muse tidak dapat dimuatkan <button type="button" class="button tiny" data-iv-act="museRetry">Cuba Semula</button></div>';
       return;
     }
-    const ws = ms.weekStart,
-      cur = weekStart(myDate(refNow));
-    let list = museWeekList(museAll, ws);
-    const f = ivState;
-    list = list.filter(
-      (i) =>
-        (!f.selectedCommodityId || i.commodityId === f.selectedCommodityId) &&
-        (!f.selectedStateId || i.stateId === f.selectedStateId) &&
-        (!f.selectedPOId || i.matchedPOId === f.selectedPOId) &&
-        (!f.selectedDistrictId || i.districtId === f.selectedDistrictId) &&
-        (f.selectedRisk === 'all' ||
-          i.riskBand === { kritikal: 'merah', waspada: 'kuning', normal: 'hijau' }[f.selectedRisk]),
-    );
-    list = list
-      .slice()
-      .sort(
-        (p, q) =>
-          ({ merah: 0, kuning: 1, hijau: 2 })[p.riskBand] -
-            { merah: 0, kuning: 1, hijau: 2 }[q.riskBand] ||
-          q.riskCurrent - q.riskBefore - (p.riskCurrent - p.riskBefore),
-      );
-    const nCrit = list.filter((i) => i.riskBand === 'merah').length;
-    const stale = museMeta.lastDataDate < addDays(myDate(refNow), -1);
-    const minWs = weekStart(addDays(museEarliest(), -14));
-    let h = `${stale ? `<div class="iv-banner">Data lapuk: kemas kini terakhir pada ${fmtDate(museMeta.lastDataDate)}</div>` : ''}
- <div class="iv-mu-bar">
-  <div class="iv-mu-nav"><span class="iv-sec">MINGGU ANALISIS</span><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="prev" aria-label="Minggu sebelum" ${addDays(ws, -7) < minWs ? 'disabled' : ''}>◀</button><b id="ivWeekLbl">${fmtWeek(ws)}</b><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="next" aria-label="Minggu seterusnya" ${ws >= cur ? 'disabled' : ''}>▶</button><button type="button" class="button tiny" data-iv-act="museWeek" data-iv-arg="now">Minggu ini</button></div>
-  <div class="iv-mu-last">${list.length ? `<span class="iv-mu-n" id="ivMuseCount">${list.length} isu${nCrit ? ` · ${nCrit} kritikal` : ''}</span><span aria-hidden="true">|</span>` : ''}<span title="Minggu Isnin hingga Ahad, waktu Malaysia (UTC+8)">Tarikh data terakhir</span><b>${fmtDate(museMeta.lastDataDate)}</b></div>
-  </div><div style="margin-top:12px" id="ivMuseCards">`;
-    if (!list.length)
-      h +=
-        '<div class="iv-empty" id="ivMuseEmpty">Tiada isu sentimen berlokasi yang memenuhi kriteria minggu ini</div>';
-    list.forEach((i) => {
-      const open = ms.expandedId === i.insightId,
-        ev = !!ms.evidenceOpen[i.insightId],
-        id = E(i.insightId);
-      const bc = i.riskBand === 'merah' ? 'bad' : i.riskBand === 'kuning' ? 'warn' : 'ok';
-      const ch = i.riskCurrent - i.riskBefore;
-      const bandL = i.riskBand === 'merah' ? 'Merah' : i.riskBand === 'kuning' ? 'Kuning' : 'Hijau';
-      const dir = ch > 0 ? 'up' : ch < 0 ? 'down' : 'flat',
-        arr = ch > 0 ? '↑' : ch < 0 ? '↓' : '→';
-      const ltl = {
-        disahkan: 'Lokasi acara disahkan',
-        disebut: 'Lokasi hanya disebut',
-        belum: 'Lokasi belum disahkan',
-      }[i.locationType];
-      const canX = !!(i.matchedPOId && i.commodityId && IV_COMMBY[i.commodityId]);
-      const dummy = /dummy/i.test(i.sourceName || '') || i.source === 'dummy';
-      h += `<article class="iv-muse-card" data-band="${i.riskBand}" data-open="${open}" data-id="${id}" aria-label="${E(i.commodityLabel)}, Risiko ${bandL}">
-  <button type="button" class="iv-mc-head" aria-expanded="${open}" data-iv-act="museExp" data-iv-arg="${id}"><span class="iv-mc-t">${E(i.commodityLabel)}</span>${chip(i.location.label)}<span class="iv-chip ${bc}">Risiko ${bandL} <span class="iv-tr ${dir}">${i.riskCurrent} ${arr} ${sgn(ch, 0)}</span></span><span class="iv-mc-date">tarikh acara ${museShortDate(i.eventDate)}</span></button>
-  <p class="iv-mc-ins">${E(museInsightText(i))}</p>
-  ${
-    IV_MUSE_SHOW_ACTION
-      ? `<div class="iv-mc-act"><h4>Tindakan disyorkan</h4><ul>${i.suggestedActions
-          .slice(0, 2)
-          .map((a) => `<li>${E(a)}</li>`)
-          .join(
-            '',
-          )}</ul><div class="iv-mc-po">${canX ? `PO berkaitan: <b>${E(poName(i.matchedPOId))}</b>` : 'PO belum disahkan'}</div>
-  <div class="iv-mc-btns">${canX ? `<button type="button" class="button" data-iv-act="museXfer" data-iv-arg="${id}">Buka Tindakan Intervensi</button>` : ''}<button type="button" class="button tiny ghost iv-mc-more" data-iv-act="museExp" data-iv-arg="${id}" aria-expanded="${open}">${open ? 'Tutup butiran' : 'Butiran'}</button></div></div>`
-      : ''
-  }`;
-      if (open) {
-        h += `<div class="iv-muse-x"><div class="iv-kv"><span>Risiko sebelum → semasa<b>${i.riskBefore} → ${i.riskCurrent} (${sgn(ch, 0)})</b></span><span>Indeks sentimen<b>${f2(i.sentimentIndex)} (${museSentLbl(i.sentimentIndex)})</b></span><span>Bilangan sampel<b>${i.sampleCount}</b></span><span>Jenis lokasi<b>${ltl} (${Math.round(i.locationConfidence * 100)}%)</b></span><span>Sumber<b>${E(i.sourceName)}</b></span><span>PO berkaitan<b>${i.matchedPOId ? E(poName(i.matchedPOId)) : 'Belum disahkan'}</b></span></div>
-   ${dummy ? tagD : ''}<div class="iv-note">${E(i.explanation)}</div><div class="iv-sec">TREND RISIKO</div>${sparkline(i)}
-   <div class="iv-fix"><button type="button" class="button tiny ghost" data-iv-act="museEv" data-iv-arg="${id}" aria-expanded="${ev}">Lihat Butiran Bukti</button>${canX ? '' : `<span class="iv-note">Padanan daerah kepada PO masih memerlukan pengesahan.</span>`}</div>
-   ${ev ? `<div class="iv-sec">BUKTI SUMBER</div>${i.evidence.map((e) => `<div class="iv-ev">“${E(e.quote)}”<br><small>${E(e.sourceName)} · ${fmtDate(e.date)}</small></div>`).join('')}` : ''}</div>`;
-      }
-      h += '</article>';
+    const d = museData,
+      ws = ms.weekStart || d.minggu,
+      tersedia = d.mingguTersedia;
+    const idx = tersedia.indexOf(ws);
+    const list = d.rekod.filter(museMatch);
+    const groups = new Map();
+    list.forEach((r) => {
+      if (!groups.has(r.komoditiId)) groups.set(r.komoditiId, []);
+      groups.get(r.komoditiId).push(r);
     });
+    const newest = (a, b) => (a.tarikh < b.tarikh ? 1 : a.tarikh > b.tarikh ? -1 : b.id - a.id);
+    groups.forEach((g) => g.sort(newest));
+    const stale =
+      d.latestDate && museNow() - Date.parse(d.latestDate + 'T00:00:00+08:00') > MUSE_STALE_MS;
+    let h = '';
+    if (stale)
+      h += `<div class="iv-banner" id="ivMuseStale">Data AI Muse lapuk: tarikh data terakhir ${fmtDate(d.latestDate)}</div>`;
+    if (d.status === 'sebahagian')
+      h +=
+        '<div class="iv-note" id="ivMusePart">Sebahagian folder Drive gagal dimuat turun; data mungkin tidak lengkap.</div>';
+    const view = ms.view;
+    h += `<div class="iv-mu-bar">
+  <div class="iv-mu-nav"><span class="iv-sec">MINGGU ANALISIS</span><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="prev" aria-label="Minggu sebelum" ${idx <= 0 ? 'disabled' : ''}>◀</button><b id="ivWeekLbl">${fmtWeek(ws)}</b><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="next" aria-label="Minggu seterusnya" ${idx < 0 || idx >= tersedia.length - 1 ? 'disabled' : ''}>▶</button><button type="button" class="button tiny" data-iv-act="museWeek" data-iv-arg="now">Minggu ini</button></div>
+  <div class="iv-mu-last">${groups.size ? `<span class="iv-mu-n" id="ivMuseCount">${groups.size} komoditi</span><span aria-hidden="true">|</span>` : ''}<span title="Minggu Isnin hingga Ahad, waktu Malaysia (UTC+8)">Tarikh data terakhir</span><b>${d.latestDate ? fmtDate(d.latestDate) : '—'}</b></div>
+  <div class="iv-mu-toggle" role="group" aria-label="Paparan berita"><button type="button" class="button tiny ${view === 'komoditi' ? '' : 'ghost'}" data-iv-act="museView" data-iv-arg="komoditi" aria-pressed="${view === 'komoditi'}">Ikut komoditi</button><button type="button" class="button tiny ${view === 'hari' ? '' : 'ghost'}" data-iv-act="museView" data-iv-arg="hari" aria-pressed="${view === 'hari'}">Ikut hari</button></div>
+  </div><div style="margin-top:12px" id="ivMuseCards">`;
+    if (!list.length) {
+      h += '<div class="iv-empty" id="ivMuseEmpty">Tiada berita AI Muse untuk minggu ini</div>';
+    } else if (view === 'hari') {
+      const days = [...new Set(list.map((r) => r.tarikh))].sort().reverse();
+      days.forEach((day) => {
+        const rows = list.filter((r) => r.tarikh === day).sort(museSortLokasi);
+        h += `<h4 class="iv-mu-day">${fmtDate(day)} <span class="iv-mc-date">${rows.length} komoditi</span></h4>`;
+        rows.forEach((r) => {
+          h += museCard(r, {
+            id: r.komoditiId + '|' + r.tarikh,
+            open: ms.expandedId === r.komoditiId + '|' + r.tarikh,
+          });
+        });
+      });
+    } else {
+      const utama = [...groups.values()].map((g) => g[0]).sort(museSortLokasi);
+      const kumpul = new Map();
+      utama.forEach((r) => {
+        const n = museNegeriUtama(r) || '';
+        if (!kumpul.has(n)) kumpul.set(n, []);
+        kumpul.get(n).push(r);
+      });
+      [...kumpul.keys()]
+        .sort((a, b) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, 'ms')))
+        .forEach((n) => {
+          const rows = kumpul.get(n);
+          h += `<h4 class="iv-mu-grp" data-negeri="${E(n)}">${n ? E(n) : 'Lokasi tidak dinyatakan'} (${rows.length})</h4>`;
+          rows.forEach((r) => {
+            h += museCard(r, {
+              id: r.komoditiId,
+              open: ms.expandedId === r.komoditiId,
+              timeline: groups.get(r.komoditiId),
+              sembunyiKosong: true,
+            });
+          });
+        });
+    }
     h +=
-      '</div><details class="iv-crit" id="ivMuseCrit"><summary>Kriteria isu</summary><p>Isu dipaparkan jika komoditi dan lokasi acara disahkan, tarikh acara (bukan tarikh rekod) dalam minggu dipilih, berkaitan bekalan atau harga, dan bukan pendua. Sentimen negatif sahaja bukan kekurangan bekalan.</p></details>';
+      '</div><details class="iv-crit" id="ivMuseCrit"><summary>Maklumat paparan</summary><p>Sumber ialah fail db-curated JSON sahaja (Google Drive). Minggu dikira Isnin hingga Ahad mengikut waktu Malaysia. Lokasi diekstrak daripada teks nota dan mungkin tidak lengkap.</p></details>';
     body.innerHTML = h;
   }
 
@@ -3525,14 +3266,11 @@
       case 'museExp':
         ivDispatch('museExpand', arg);
         break;
-      case 'museEv':
-        ivDispatch('museEvidence', arg);
-        break;
-      case 'museXfer':
-        if (ivDispatch('museTransfer', arg) === true) mdOpen('mob', el);
+      case 'museView':
+        ivDispatch('museView', arg);
         break;
       case 'museRetry':
-        ivLoadMuse();
+        ivLoadMuse(ivState.muse.weekStart || undefined);
         break;
       case 'mapRetry':
         ivRetryMap();
@@ -3790,9 +3528,6 @@
     historyStats,
     weekStart,
     weekRange,
-    extractMuseIssue,
-    museInclude,
-    validateMuseRaw,
     ivValidateAi,
     map: () => ivMap,
     drafts: () => JSON.parse(JSON.stringify(ivDrafts)),
@@ -3820,7 +3555,11 @@
         commodity: r.commodityId,
       })),
     poLevel,
-    museAll: () => museAll.map((x) => ({ ...x })),
+    museData: () => (museData ? JSON.parse(JSON.stringify(museData)) : null),
+    setMuseNow: (iso) => {
+      _museNowOverride = iso == null ? null : Date.parse(iso);
+      ivRender(['muse']);
+    },
     config: () => IV_CONFIG,
     resolveMob: mobResolve,
     marginDefaults,

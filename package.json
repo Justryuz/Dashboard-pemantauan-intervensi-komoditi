@@ -11,7 +11,7 @@
     "banjir:ambil": "node scripts/ambil-banjir.js",
     "ipu:ambil": "node scripts/ambil-ipu.js",
     "muse:ambil": "node scripts/ambil-muse.js",
-    "test": "node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js && node --no-warnings tests/api/cuaca-api.js && node --no-warnings tests/api/banjir-api.js && node --no-warnings tests/api/ipu-api.js && node --no-warnings tests/api/muse-api.js && node --no-warnings tests/frontend/cuaca.js && node --no-warnings tests/frontend/banjir.js && node --no-warnings tests/frontend/ipu.js && node --no-warnings tests/frontend/filter-bar.js && node --no-warnings tests/frontend/ams.js && node --no-warnings tests/frontend/startup-csp.js",
+    "test": "node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js && node --no-warnings tests/api/cuaca-api.js && node --no-warnings tests/api/banjir-api.js && node --no-warnings tests/api/ipu-api.js && node --no-warnings tests/api/muse-api.js && node --no-warnings tests/frontend/cuaca.js && node --no-warnings tests/frontend/banjir.js && node --no-warnings tests/frontend/ipu.js && node --no-warnings tests/frontend/muse.js && node --no-warnings tests/frontend/filter-bar.js && node --no-warnings tests/frontend/ams.js && node --no-warnings tests/frontend/startup-csp.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

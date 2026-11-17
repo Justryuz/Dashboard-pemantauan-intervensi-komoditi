@@ -1,6 +1,6 @@
 // Ujian Tab Intervensi (index.html melalui api/server.js). Jalankan dari root: node --no-warnings tests/frontend/intervensi-test.js
 const fs=require('fs');const os=require('os');const path=require('path');const cp=require('child_process');
-const puppeteer=require(path.resolve(__dirname,'../../.agents/tasks/bt/node_modules/puppeteer-core'));const server=require('../../api/server.js');require('../helpers/cuaca-fixture.js').pasangCache(); // /api/cuaca deterministik (cuaca sebenar menggantikan senario dummy S01-S03/banjir)
+const puppeteer=require(path.resolve(__dirname,'../../.agents/tasks/bt/node_modules/puppeteer-core'));const server=require('../../api/server.js');require('../helpers/cuaca-fixture.js').pasangCache();require('../helpers/banjir-fixture.js').pasangSemuaCache();require('../helpers/muse-fixture.js').pasangCacheMuse(); // /api/cuaca deterministik (cuaca sebenar menggantikan senario dummy S01-S03/banjir)
 const ROOT=path.resolve(__dirname,'..','..'),A=path.join(ROOT,'.agents','tasks'),T=fs.mkdtempSync(path.join(os.tmpdir(),'iv-test-'));const EDGE=process.env.BROWSER_PATH||'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 let NEW;
 const OLD='file:///'+path.join(A,'backup-before-intervensi.html').replace(/\\/g,'/');
@@ -387,41 +387,17 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setFilter',['komoditi','kubis-bulat']);IV_TEST.dispatch('selectPO','penang')});await sleep(400);
  ok('8 sejarah tidak mencukupi',await ev(()=>document.getElementById('ivMarRes').innerText.includes('Data sejarah tidak mencukupi')));
   await closeMd();
- // 9 muse
- await ev(()=>IV_TEST.dispatch('resetFilters'));await sleep(300);
- const mu=()=>ev(()=>({cards:document.querySelectorAll('.iv-muse-card').length,t:document.getElementById('ivMuseCards').innerText,empty:!!document.getElementById('ivMuseEmpty')&&document.getElementById('ivMuseEmpty').textContent}));
- let m0=await mu();
- ok('9 minggu ini 3 kad (kad ringkasan dibuang)',m0.cards===3&&!/Kelapa/.test(m0.t),m0);
- {const q=await ev(()=>{const cs=[...document.querySelectorAll('.iv-muse-card')];const k=cs.find(c=>c.innerText.includes('Kluang'));const vis=(c,t)=>c.innerText.includes(t);
-  return {n:cs.length,bands:cs.map(c=>c.dataset.band),komo:!!k.querySelector('.iv-mc-t')&&k.querySelector('.iv-mc-t').textContent==='Cili Merah',loc:[...k.querySelectorAll('.iv-chip')].some(x=>x.textContent==='Kluang, Johor'),riskChips:[...k.querySelectorAll('.iv-chip')].filter(x=>/^Risiko/.test(x.textContent)).length,trend:k.querySelector('.iv-tr').textContent,ins:k.querySelector('.iv-mc-ins').textContent,act:!!k.querySelector('.iv-mc-act')||/Tindakan disyorkan|Buka Tindakan Intervensi/.test(k.innerText),
-   old:['Bilangan sampel','Indeks sentimen','Risiko sebelum','Sentimen negatif'].filter(t=>vis(k,t)),xfer:cs.map(c=>!!c.querySelector('[data-iv-act=museXfer]')),exp:k.querySelector('.iv-mc-head').getAttribute('aria-expanded'),hasX:!!k.querySelector('.iv-muse-x'),crit:(document.getElementById('ivMuseCrit')||{}).open,count:(document.getElementById('ivMuseCount')||{}).textContent}});
-  ok('9 kad: komoditi, chip lokasi, satu chip risiko, trend ringkas',q.komo&&q.loc&&q.riskChips===1&&/^38 .\s?\+26$/.test(q.trend),q);
-  ok('9 insight bersih (tiada ; hujung, tiada awalan komoditi)',/^Harga ladang cili merah jatuh di Kluang, Johor akibat lebihan bekalan \(12 Nov 2026\)\.$/.test(q.ins),q.ins);
-  ok('9 blok Tindakan disyorkan tidak dipaparkan (insight sahaja)',!q.act,q);
-  ok('9 label metrik lama tidak kelihatan ketika kad ditutup',q.old.length===0&&q.exp==='false'&&!q.hasX,q);
-  ok('9 kad disusun mengikut keterukan',q.bands.every((b,i,a)=>i===0||({merah:0,kuning:1,hijau:2}[a[i-1]]<={merah:0,kuning:1,hijau:2}[b])),q.bands);
-  ok('9 butang Buka Tindakan Intervensi tidak dipaparkan',q.xfer.every(x=>!x)&&q.xfer.length===3,q.xfer);
-  ok('9 kriteria isu dalam details tertutup, bilangan isu ringkas',q.crit===false&&/^3 isu/.test(q.count||''),[q.crit,q.count]);}
- await pg.click('[data-iv-act=museWeek][data-iv-arg=prev]');await sleep(300);m0=await mu();
- ok('9 minggu lepas Kelapa Tua tiada butang pindah',m0.cards===2&&/Kelapa/.test(m0.t));
- await ev(()=>{[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa')).querySelector('.iv-mc-head').click()});await sleep(200);
- ok('9 tiada butang pindah (daerah tidak dipetakan)',await ev(()=>{const k=[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa'));return !k.querySelector('[data-iv-act=museXfer]')&&!/PO belum disahkan|Tindakan disyorkan/.test(k.innerText)&&!!document.querySelector('.iv-muse-x')}));
- await pg.click('[data-iv-act=museWeek][data-iv-arg=prev]');await sleep(300);m0=await mu();
- ok('9 minggu kosong teks tepat',m0.empty==='Tiada isu sentimen berlokasi yang memenuhi kriteria minggu ini',m0);
- await pg.click('[data-iv-act=museWeek][data-iv-arg=now]');await sleep(300);
- await ev(()=>{[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kluang')).querySelector('.iv-mc-head').click()});await sleep(200);
- const ev1=async()=>ev(()=>!!document.querySelector('.iv-ev'));
-  {const x=await ev(()=>{const k=[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kluang'));const x=k.querySelector('.iv-muse-x');const all=[...document.querySelectorAll('.iv-mc-head,.iv-mc-more')].filter(b=>k.contains(b));return {exp:all.map(b=>b.getAttribute('aria-expanded')),t:x?x.innerText:'',inK:!!x&&k.contains(x)}});
-  ok('9 butiran dibuka: metrik sekunder kelihatan + DATA DUMMY',x.inK&&['Bilangan sampel','Indeks sentimen','Negatif','Risiko sebelum','Sumber','DATA DUMMY','Lihat Butiran Bukti'].every(t=>x.t.includes(t))&&x.exp.every(v=>v==='true'),x);}
- {const cc=async th=>ev(t=>{document.documentElement.setAttribute('data-theme',t);const k=document.querySelector('.iv-muse-card');const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);const L=c=>{const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)};return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2])};
-   const bg=getComputedStyle(k).backgroundColor;const r=(el,b)=>{const a=L(rgb(getComputedStyle(el).color)),d=L(rgb(b));return (Math.max(a,d)+.05)/(Math.min(a,d)+.05)};
-   return [['ins',r(k.querySelector('.iv-mc-ins'),bg)],['t',r(k.querySelector('.iv-mc-t'),bg)],['date',r(k.querySelector('.iv-mc-date'),bg)]].filter(a=>a[1]<4.5).map(a=>a[0]+' '+a[1].toFixed(2))},th);
-  const g=await cc('gelap'),c2=await cc('cerah');await cc('gelap');
-  ok('9 kontras teks kad Muse (gelap) >=4.5',g.length===0,g);ok('9 kontras teks kad Muse (cerah) >=4.5',c2.length===0,c2);}
- const e0=await ev1();await pg.click('[data-iv-act=museEv]');await sleep(150);const e1=await ev1();await pg.click('[data-iv-act=museEv]');await sleep(150);const e2=await ev1();
- ok('9 bukti togol',!e0&&e1&&!e2);
- ok('9 kad Muse tiada butang pindah konteks dan tiada blok tindakan (IV_MUSE_SHOW_ACTION=false)',await ev(()=>!document.querySelector('[data-iv-act=museXfer]')&&!document.querySelector('.iv-mc-act')));
- ok('9 next dilumpuhkan pada minggu semasa',await ev(()=>document.querySelector('[data-iv-act=museWeek][data-iv-arg=next]').disabled));
+ // 9 muse (data sebenar /api/muse daripada cache fixture; ujian terperinci: tests/frontend/muse.js)
+ await ev(()=>IV_TEST.dispatch('resetFilters'));await sleep(300);await ev(()=>IV_TEST.setMuseNow('2026-11-17T12:00:00+08:00'));await sleep(300);
+ const nKom=new Set(require('../helpers/muse-fixture.js').buatFixtureMuse().rekod.filter(r=>r.tarikh>='2026-11-16').map(r=>r.komoditiId)).size;
+ ok('9 satu kad setiap komoditi minggu terkini (fixture)',await ev(()=>document.querySelectorAll('.iv-muse-card').length)===nKom);
+ ok('9 tiada DATA DUMMY pada panel Muse',await ev(()=>!/DATA DUMMY/.test(document.getElementById('ivMusePanel').innerText)));
+ ok('9 huraian tersembunyi sehingga Lihat lagi',await ev(()=>!document.querySelector('.iv-muse-x')&&document.querySelector('.iv-mc-more').textContent==='Lihat lagi'));
+ await ev(()=>document.querySelector('.iv-mc-more').click());await sleep(200);
+ ok('9 Lihat lagi memaparkan butiran',await ev(()=>!!document.querySelector('.iv-muse-x .iv-mc-ins')&&document.querySelector('.iv-mc-more[aria-expanded=true]').textContent==='Tutup'));
+ await ev(()=>document.querySelector('.iv-mc-more[aria-expanded=true]').click());await sleep(200);
+ ok('9 tiada butang pindah konteks (IV_MUSE_SHOW_ACTION=false)',await ev(()=>!document.querySelector('[data-iv-act=museXfer]')&&!document.querySelector('.iv-mc-act')));
+ ok('9 next dilumpuhkan pada minggu terkini',await ev(()=>document.querySelector('[data-iv-act=museWeek][data-iv-arg=next]').disabled));
  // 10 failure injection
  await ev(()=>IV_TEST.failNext('muse'));await pg.click('[data-iv-act=museWeek][data-iv-arg=now]').catch(()=>{});
  await ev(()=>{document.querySelector('[data-iv-act=museRetry]')||0});
@@ -461,7 +437,7 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  await pm.evaluate(()=>IV_TEST.failNext('muse'));await pm.click('#ivTabIv');await sleep(1500);
  ok('10 Muse gagal tunjuk ralat',await pm.evaluate(()=>document.getElementById('ivMuseBody').innerText.includes('Data AI Muse tidak dapat dimuatkan')));
  await pm.click('[data-iv-act=museRetry]');await sleep(1000);
- ok('10 Muse cuba semula',await pm.evaluate(()=>document.querySelectorAll('.iv-muse-card').length===3));
+ ok('10 Muse cuba semula',await pm.evaluate(()=>document.querySelectorAll('.iv-muse-card').length===5));
  // button sweep
  const swp=[];pm.on('pageerror',e=>swp.push(e.message));
  const total=await pm.evaluate(()=>{window.__iv_n=0;return document.querySelectorAll('#viewIntervensi button').length});
@@ -640,7 +616,6 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
     await pg.evaluate(()=>{IV_TEST.dispatch('setMode','pengeluar')});await sleep(1200);await kon('intervensi mod pengeluar');await ovf('intervensi pengeluar');
     await pg.evaluate(()=>{const b=document.querySelector('[data-iv-act=marInsight]');if(b)b.click()});await sleep(1200);
     await pg.evaluate(()=>{const b=document.querySelector('[data-iv-act=museExp]');if(b)b.click()});await sleep(700);
-    await pg.evaluate(()=>{const b=document.querySelector('[data-iv-act=museEv]');if(b)b.click()});await sleep(700);
     await pg.evaluate(()=>{const b=document.querySelector('[data-iv-act=cand]');if(b)b.click()});await sleep(700);
     await kon('intervensi margin + muse + calon');await ovf('intervensi penuh');
     if(theme!=='base')await panelShots(pg,'tema-'+theme+'-'+w);

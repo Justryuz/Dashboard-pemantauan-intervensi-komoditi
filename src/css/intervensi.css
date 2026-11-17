@@ -2065,7 +2065,7 @@ html[data-theme='cerah'] .iv-md {
 }
 #ivMuseCards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 12px !important;
   align-items: stretch;
@@ -2098,35 +2098,6 @@ html[data-theme='cerah'] .iv-md {
 .iv-muse-card[data-open='true'] {
   border-color: var(--sev);
 }
-.iv-mc-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-}
-.iv-mc-head .iv-mc-t {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--white);
-}
-.iv-mc-head .iv-chip {
-  font-size: 12px;
-}
-.iv-mc-head .iv-mc-date {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
 .iv-tr {
   font-weight: 800;
   margin-left: 2px;
@@ -2148,66 +2119,11 @@ html[data-theme='cerah'] .iv-md {
   color: var(--white);
   flex: 1 0 auto;
 }
-.iv-mc-act {
-  padding: 10px 12px;
-  border: 1px solid var(--cyan);
-  border-radius: 12px;
-  background: var(--panel3);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.iv-mc-act h4 {
-  margin: 0;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--cyan);
-}
-.iv-mc-act ul {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 13.5px;
-  line-height: 1.4;
-  color: var(--white);
-}
-.iv-mc-act ul li + li {
-  margin-top: 2px;
-}
-.iv-mc-po {
-  font-size: 12.5px;
-  color: var(--muted);
-}
-.iv-mc-po b {
-  color: var(--white);
-}
-.iv-mc-btns {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-.iv-mc-btns .button {
-  min-height: 36px;
-  font-size: 12.5px;
-}
-#ivMuseCards .iv-mc-btns .button:not(.ghost) {
-  background: var(--tm-on-bg, var(--cyan)) !important;
-  background-image: none !important;
-  border-color: var(--tm-on-bg, var(--cyan)) !important;
-  color: var(--tm-on-fg, #061126) !important;
-}
-.iv-muse-x > .iv-tag {
-  align-self: flex-start;
-}
 .iv-mu-n {
   white-space: nowrap;
 }
 #ivMuseCards:has(.iv-muse-card[data-open='true']) {
   align-items: start;
-}
-.iv-mc-btns .iv-mc-more {
-  margin-left: auto;
 }
 .iv-muse-card .iv-muse-x {
   margin: 0;
@@ -2220,15 +2136,6 @@ html[data-theme='cerah'] .iv-md {
   flex-direction: column;
   gap: 8px;
 }
-.iv-muse-x .iv-kv {
-  margin-top: 0;
-  font-size: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-}
-.iv-muse-x .iv-kv b {
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
 .iv-muse-x .iv-sec {
   margin: 4px 0 0;
 }
@@ -2236,6 +2143,74 @@ html[data-theme='cerah'] .iv-md {
   font-size: 13px;
   font-weight: 800;
   color: var(--white);
+}
+.iv-mc-price {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.iv-mc-price b {
+  color: var(--white);
+}
+.iv-mc-ins {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.iv-mu-tl {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.iv-mu-tl li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line2);
+  min-width: 0;
+}
+.iv-mu-tl .iv-mc-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.iv-mu-tl .iv-mc-ins {
+  flex: 1 1 100%;
+  font-size: 14px;
+  font-weight: 500;
+}
+.iv-mu-day {
+  grid-column: 1/-1;
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--white);
+}
+.iv-mu-day .iv-mc-date {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.iv-mu-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.iv-mu-toggle .button[aria-pressed='true'] {
+  font-weight: 800;
+  background: var(--tm-on-bg, var(--cyan)) !important;
+  background-image: none !important;
+  border-color: var(--tm-on-bg, var(--cyan)) !important;
+  color: var(--tm-on-fg, #061126) !important;
 }
 details.iv-crit {
   margin-top: 12px;
@@ -2251,11 +2226,6 @@ details.iv-crit p {
   margin: 6px 0 0;
   line-height: 1.4;
 }
-@media (max-width: 1099px) {
-  #ivMuseCards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 @media (max-width: 539px) {
   #ivMusePanel .iv-ptitle {
     padding: 12px 12px 8px;
@@ -2263,11 +2233,92 @@ details.iv-crit p {
   #ivMusePanel .iv-pbody {
     padding: 0 12px 12px;
   }
-  .iv-mc-head .iv-mc-date {
-    margin-left: 0;
-    flex-basis: 100%;
-  }
   .iv-muse-card {
     padding: 12px 12px 12px 14px;
   }
+}
+
+@media (min-width: 900px) {
+  #ivMuseCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1400px) {
+  #ivMuseCards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+#ivMuseCards .iv-muse-card {
+  gap: 8px;
+  padding: 10px 12px 10px 14px;
+}
+.iv-muse-card .iv-mc-t {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--white);
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.iv-muse-card .iv-mc-t b {
+  font-weight: 800;
+  margin-right: 6px;
+}
+.iv-mc-meta {
+  min-height: 58px;
+  align-content: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.iv-mc-meta .iv-chip {
+  font-size: 12px;
+  min-height: 22px;
+  white-space: normal;
+}
+.iv-mc-more {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  color: var(--cyan);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.iv-mu-grp {
+  grid-column: 1/-1;
+  margin: 8px 0 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--white);
+}
+.iv-muse-card .iv-muse-x > .iv-mc-ins {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+.iv-muse-card .iv-muse-x .iv-kv {
+  font-size: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+.iv-muse-card .iv-muse-x .iv-kv b {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.iv-mu-bar {
+  padding: 6px 10px;
 }

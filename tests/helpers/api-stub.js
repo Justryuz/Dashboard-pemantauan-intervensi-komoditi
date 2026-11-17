@@ -1,5 +1,6 @@
 'use strict';
-// Satu pemintas permintaan puppeteer bagi /api/cuaca, /api/banjir dan /api/kualiti-udara.
+// Satu pemintas permintaan puppeteer bagi /api/cuaca, /api/banjir, /api/kualiti-udara dan /api/muse.
+// Fungsi pengendali menerima URL permintaan (berguna untuk /api/muse?minggu=).
 // Dua pemintas pada satu halaman akan bertembung, jadi gunakan hanya ini.
 // Setiap kunci: fungsi () => nilai, 'abort', {status}, {body} atau objek JSON terus.
 // Kunci yang tidak diberi: permintaan diteruskan ke pelayan sebenar.
@@ -7,6 +8,7 @@ const LALUAN = {
   cuaca: /\/api\/cuaca(\?|$)/,
   banjir: /\/api\/banjir(\?|$)/,
   ipu: /\/api\/kualiti-udara(\?|$)/,
+  muse: /\/api\/muse(\?|$)/,
 };
 
 async function stubApi(page, pengendali = {}) {
@@ -14,9 +16,10 @@ async function stubApi(page, pengendali = {}) {
   page.on('request', (req) => {
     const kunci = Object.keys(LALUAN).find((k) => LALUAN[k].test(req.url()));
     if (!kunci || pengendali[kunci] === undefined) return req.continue();
-    const h = typeof pengendali[kunci] === 'function' ? pengendali[kunci]() : pengendali[kunci];
+    const h =
+      typeof pengendali[kunci] === 'function' ? pengendali[kunci](req.url()) : pengendali[kunci];
     if (h === 'abort') return req.abort('failed');
-    if (h && h.status && h.status !== 200)
+    if (h && typeof h.status === 'number' && h.status !== 200)
       return req.respond({
         status: h.status,
         contentType: 'application/json',
