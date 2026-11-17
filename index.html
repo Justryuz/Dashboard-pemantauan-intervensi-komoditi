@@ -661,6 +661,38 @@
           </div>
           <div class="iv-pbody" id="ivMuseBody" aria-live="polite"></div>
         </section>
+        <div class="iv-md-back" id="ivMuseMd" hidden>
+          <div
+            class="iv-md iv-mmd"
+            id="ivMuseMdDlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ivMuseMdT"
+            tabindex="-1"
+          >
+            <div class="iv-md-head">
+              <div class="iv-md-hd">
+                <h2 id="ivMuseMdT"></h2>
+                <div class="iv-md-ctx" id="ivMuseMdCtx"></div>
+              </div>
+              <button type="button" class="iv-md-x" id="ivMuseMdClose" aria-label="Tutup">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="iv-md-body" id="ivMuseMdBody"></div>
+            <div class="iv-mm-foot">
+              <span id="ivMuseMdPos"></span>
+              <span class="iv-mm-nav">
+                <button type="button" data-iv-act="museNav" data-iv-arg="prev" id="ivMuseMdPrev">
+                  Sebelum
+                </button>
+                <button type="button" data-iv-act="museNav" data-iv-arg="next" id="ivMuseMdNext">
+                  Seterusnya
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
         <div class="iv-md-back" id="ivMd" hidden>
           <div
             class="iv-md"

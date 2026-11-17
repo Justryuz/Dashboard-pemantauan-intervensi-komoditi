@@ -1023,7 +1023,7 @@
     outletCats: { 'pasar-awam': true, ptk: true, rakr: true, agrobazaar: true },
     mob: { needMT: null, refPrice: null, wPrice: 65, distLimitKm: 550, candidateKey: null },
     margin: { jual: '', beli: '', ladang: '', kos: '', target: '15', touched: false, ctx: null },
-    muse: { weekStart: null, expandedId: null, view: 'komoditi', status: 'loading', errMsg: '' },
+    muse: { weekStart: null, page: 0, detailKey: null, status: 'loading', errMsg: '' },
     ui: {
       mapReady: false,
       mapError: null,
@@ -1445,15 +1445,12 @@
         ivLoadMuse(target);
         return true;
       }
-      case 'museExpand': {
-        s.muse.expandedId = s.muse.expandedId === payload ? null : payload;
-        dirty = ['muse'];
-        break;
-      }
-      case 'museView': {
-        if (payload !== 'komoditi' && payload !== 'hari') return false;
-        s.muse.view = payload;
-        s.muse.expandedId = null;
+      case 'musePage': {
+        const n = museItems().length,
+          pages = Math.max(1, Math.ceil(n / MUSE_PAGE));
+        const p = Math.min(pages - 1, Math.max(0, s.muse.page + (payload === 'prev' ? -1 : 1)));
+        if (p === s.muse.page) return false;
+        s.muse.page = p;
         dirty = ['muse'];
         break;
       }
@@ -2679,7 +2676,8 @@
   async function ivLoadMuse(minggu) {
     const seq = ++_museSeq;
     ivState.muse.status = 'loading';
-    ivState.muse.expandedId = null;
+    ivState.muse.page = 0;
+    museMdClose(false);
     ivRender(['muse']);
     try {
       const d = await ivDataService.loadMuse(minggu);
@@ -2737,15 +2735,18 @@
       String(a.komoditiLabel).localeCompare(String(b.komoditiLabel), 'ms')
     );
   }
-  function museSortLokasi(a, b) {
-    const na = museNegeriUtama(a),
-      nb = museNegeriUtama(b);
-    if (!na !== !nb) return na ? -1 : 1;
-    if (na && na !== nb) return na.localeCompare(nb, 'ms');
-    const da = museDaerahUtama(a),
-      db = museDaerahUtama(b);
-    if (!da !== !db) return da ? -1 : 1;
-    return (da !== db ? da.localeCompare(db, 'ms') : 0) || museSort(a, b);
+  const MUSE_PAGE = 8;
+  const MM = { open: false, timer: null, opener: null, prevOv: '', prevPad: '' };
+  const museNewest = (a, b) => (a.tarikh < b.tarikh ? 1 : a.tarikh > b.tarikh ? -1 : b.id - a.id);
+  // satu item bagi setiap komoditi (rekod terbaharu dalam minggu), disusun ikut tahap dan kenaikan risiko
+  function museItems() {
+    if (!museData) return [];
+    const m = new Map();
+    museData.rekod.filter(museMatch).forEach((r) => {
+      const c = m.get(r.komoditiId);
+      if (!c || museNewest(r, c) < 0) m.set(r.komoditiId, r);
+    });
+    return [...m.values()].sort(museSort);
   }
   function museRiskChip(r) {
     const ch = r.risikoSemasa - r.risikoSebelum;
@@ -2754,10 +2755,18 @@
     const b = MUSE_BAND[r.band];
     return `<span class="iv-chip ${b.cls}">Risiko ${E(r.band)} <span class="iv-tr ${dir}">${r.risikoSemasa} ${arr} ${sgn(ch, 0)}</span></span>`;
   }
-  function museLokasiChips(r, sembunyiKosong) {
+  function museRiskRow(r) {
+    const ch = r.risikoSemasa - r.risikoSebelum;
+    const dir = ch > 0 ? 'up' : ch < 0 ? 'down' : 'flat',
+      arr = ch > 0 ? '↑' : ch < 0 ? '↓' : '→';
+    return `<span class="iv-chip ${MUSE_BAND[r.band].cls}">${E(r.band)} <span class="iv-tr ${dir}">${r.risikoSemasa} ${arr} ${sgn(ch, 0)}</span></span>`;
+  }
+  const museLokLabel = (l) => (l.daerah ? l.daerah + ', ' + l.negeri : l.negeri);
+  function museLokRow(r) {
     const lk = r.lokasi || [];
-    if (!lk.length) return sembunyiKosong ? '' : chip('Lokasi tidak dinyatakan', 'grey');
-    return lk.map((l) => chip(l.daerah ? l.daerah + ', ' + l.negeri : l.negeri)).join('');
+    if (!lk.length) return '';
+    const sisa = lk.length > 1 ? ' +' + (lk.length - 1) : '';
+    return `<span class="iv-chip grey" title="${E(lk.map(museLokLabel).join('; '))}">${E(museLokLabel(lk[0]) + sisa)}</span>`;
   }
   function musePrice(r) {
     const h = r.harga;
@@ -2780,35 +2789,27 @@
     }
     return x.charAt(0).toUpperCase() + x.slice(1);
   }
-  function museNegeriUtama(r) {
-    const l = (r.lokasi || [])[0];
-    return l ? l.negeri : null;
+  function museRow(r) {
+    const id = E(r.komoditiId),
+      t = museTajuk(r.nota);
+    return `<li class="iv-mrow" data-band="${E(r.band.toLowerCase())}" data-id="${id}">
+  <b class="iv-mr-n" title="${E(r.komoditiLabel)}">${E(r.komoditiLabel)}</b>
+  <span class="iv-mr-hl" title="${E(t)}">${E(t)}</span>
+  <span class="iv-mr-loc">${museLokRow(r)}</span>
+  <span class="iv-mr-risk">${museRiskRow(r)}</span>
+  <span class="iv-mr-d">${museShortDate(r.tarikh)}</span>
+  <button type="button" class="iv-mr-more" data-iv-act="museOpen" data-iv-arg="${id}" aria-label="Baca lagi: ${E(r.komoditiLabel)}">Baca lagi</button>
+</li>`;
   }
-  function museDaerahUtama(r) {
-    const l = (r.lokasi || [])[0];
-    return (l && l.daerah) || '';
-  }
-  function museCard(r, o) {
-    const id = E(o.id),
-      open = !!o.open;
-    const b = MUSE_BAND[r.band];
-    let h = `<article class="iv-muse-card" data-band="${E(r.band.toLowerCase())}" data-open="${open}" data-id="${id}" aria-label="${E(r.komoditiLabel)}, Risiko ${E(r.band)}">
-  <h4 class="iv-mc-t"><b>${E(r.komoditiLabel)}</b><span class="iv-mc-hl">${E(museTajuk(r.nota))}</span></h4>
-  <div class="iv-mc-meta"><span class="iv-chip grey">${fmtDate(r.tarikh)}</span>${museRiskChip(r)}${museLokasiChips(r, o.sembunyiKosong)}${r.awal ? chip('Awal', 'warn') : ''}</div>
-  <button type="button" class="iv-mc-more" aria-expanded="${open}" data-iv-act="museExp" data-iv-arg="${id}">${open ? 'Tutup' : 'Lihat lagi'}</button>`;
-    if (open) {
-      h += `<div class="iv-muse-x"><p class="iv-mc-ins">${E(r.nota)}</p>${musePrice(r)}
-  <div class="iv-kv"><span>Risiko sebelum<b>${r.risikoSebelum}</b></span><span>Risiko semasa<b>${r.risikoSemasa}</b></span><span>Risiko hadapan<b>${r.risikoHadapan}</b></span><span>Indeks sentimen<b>${f2(r.indeksSentimen)}</b></span><span>Bilangan sampel<b>${r.bilSampel}</b></span><span>Sumber<b>${E(r.sumberFail ? r.sumberFail.nama : '—')}</b></span></div>`;
-      if (o.timeline)
-        h += `<div class="iv-sec">REKOD MINGGU INI</div><ol class="iv-mu-tl">${o.timeline
-          .map(
-            (t) =>
-              `<li><span class="iv-mc-date">${fmtDate(t.tarikh)}</span>${chip('Risiko ' + t.band, MUSE_BAND[t.band].cls)}<p class="iv-mc-ins">${E(t.nota)}</p></li>`,
-          )
-          .join('')}</ol>`;
-      h += '</div>';
-    }
-    return h + '</article>';
+  function museSummary(items) {
+    const n = (b) => items.filter((r) => r.band === b).length;
+    return [
+      items.length + ' komoditi',
+      n('Merah') ? n('Merah') + ' Merah' : '',
+      n('Kuning') ? n('Kuning') + ' Kuning' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
   }
   function ivRenderMuse() {
     const s = ivState,
@@ -2816,6 +2817,7 @@
       ms = s.muse;
     const src = chip('Sumber: AI Muse · db-curated (Google Drive)');
     $i('ivMuseChips').innerHTML = chip('Kelompok harian', 'grey') + src + notApplicable('muse');
+    if (ms.status !== 'ready') museMdClose(false);
     if (ms.status === 'loading') {
       body.innerHTML = '<div class="iv-empty" aria-busy="true">Memuatkan data AI Muse…</div>';
       return;
@@ -2834,14 +2836,9 @@
       ws = ms.weekStart || d.minggu,
       tersedia = d.mingguTersedia;
     const idx = tersedia.indexOf(ws);
-    const list = d.rekod.filter(museMatch);
-    const groups = new Map();
-    list.forEach((r) => {
-      if (!groups.has(r.komoditiId)) groups.set(r.komoditiId, []);
-      groups.get(r.komoditiId).push(r);
-    });
-    const newest = (a, b) => (a.tarikh < b.tarikh ? 1 : a.tarikh > b.tarikh ? -1 : b.id - a.id);
-    groups.forEach((g) => g.sort(newest));
+    const items = museItems();
+    const pages = Math.max(1, Math.ceil(items.length / MUSE_PAGE));
+    ms.page = Math.min(Math.max(0, ms.page), pages - 1);
     const stale =
       d.latestDate && museNow() - Date.parse(d.latestDate + 'T00:00:00+08:00') > MUSE_STALE_MS;
     let h = '';
@@ -2850,54 +2847,167 @@
     if (d.status === 'sebahagian')
       h +=
         '<div class="iv-note" id="ivMusePart">Sebahagian folder Drive gagal dimuat turun; data mungkin tidak lengkap.</div>';
-    const view = ms.view;
     h += `<div class="iv-mu-bar">
   <div class="iv-mu-nav"><span class="iv-sec">MINGGU ANALISIS</span><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="prev" aria-label="Minggu sebelum" ${idx <= 0 ? 'disabled' : ''}>◀</button><b id="ivWeekLbl">${fmtWeek(ws)}</b><button type="button" class="button tiny ghost" data-iv-act="museWeek" data-iv-arg="next" aria-label="Minggu seterusnya" ${idx < 0 || idx >= tersedia.length - 1 ? 'disabled' : ''}>▶</button><button type="button" class="button tiny" data-iv-act="museWeek" data-iv-arg="now">Minggu ini</button></div>
-  <div class="iv-mu-last">${groups.size ? `<span class="iv-mu-n" id="ivMuseCount">${groups.size} komoditi</span><span aria-hidden="true">|</span>` : ''}<span title="Minggu Isnin hingga Ahad, waktu Malaysia (UTC+8)">Tarikh data terakhir</span><b>${d.latestDate ? fmtDate(d.latestDate) : '—'}</b></div>
-  <div class="iv-mu-toggle" role="group" aria-label="Paparan berita"><button type="button" class="button tiny ${view === 'komoditi' ? '' : 'ghost'}" data-iv-act="museView" data-iv-arg="komoditi" aria-pressed="${view === 'komoditi'}">Ikut komoditi</button><button type="button" class="button tiny ${view === 'hari' ? '' : 'ghost'}" data-iv-act="museView" data-iv-arg="hari" aria-pressed="${view === 'hari'}">Ikut hari</button></div>
-  </div><div style="margin-top:12px" id="ivMuseCards">`;
-    if (!list.length) {
+  <div class="iv-mu-last">${items.length ? `<span class="iv-mu-n" id="ivMuseCount">${museSummary(items)}</span><span aria-hidden="true">|</span>` : ''}<span title="Minggu Isnin hingga Ahad, waktu Malaysia (UTC+8)">Tarikh data terakhir</span><b>${d.latestDate ? fmtDate(d.latestDate) : '—'}</b></div>
+  </div><div id="ivMuseCards">`;
+    if (!items.length) {
       h += '<div class="iv-empty" id="ivMuseEmpty">Tiada berita AI Muse untuk minggu ini</div>';
-    } else if (view === 'hari') {
-      const days = [...new Set(list.map((r) => r.tarikh))].sort().reverse();
-      days.forEach((day) => {
-        const rows = list.filter((r) => r.tarikh === day).sort(museSortLokasi);
-        h += `<h4 class="iv-mu-day">${fmtDate(day)} <span class="iv-mc-date">${rows.length} komoditi</span></h4>`;
-        rows.forEach((r) => {
-          h += museCard(r, {
-            id: r.komoditiId + '|' + r.tarikh,
-            open: ms.expandedId === r.komoditiId + '|' + r.tarikh,
-          });
-        });
-      });
     } else {
-      const utama = [...groups.values()].map((g) => g[0]).sort(museSortLokasi);
-      const kumpul = new Map();
-      utama.forEach((r) => {
-        const n = museNegeriUtama(r) || '';
-        if (!kumpul.has(n)) kumpul.set(n, []);
-        kumpul.get(n).push(r);
-      });
-      [...kumpul.keys()]
-        .sort((a, b) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, 'ms')))
-        .forEach((n) => {
-          const rows = kumpul.get(n);
-          h += `<h4 class="iv-mu-grp" data-negeri="${E(n)}">${n ? E(n) : 'Lokasi tidak dinyatakan'} (${rows.length})</h4>`;
-          rows.forEach((r) => {
-            h += museCard(r, {
-              id: r.komoditiId,
-              open: ms.expandedId === r.komoditiId,
-              timeline: groups.get(r.komoditiId),
-              sembunyiKosong: true,
-            });
-          });
-        });
+      const mula = ms.page * MUSE_PAGE;
+      h += `<ul class="iv-mrows" id="ivMuseList" aria-label="Senarai komoditi AI Muse">${items
+        .slice(mula, mula + MUSE_PAGE)
+        .map(museRow)
+        .join('')}</ul>`;
+      h += `<div class="iv-mu-pg" id="ivMusePager" ${pages > 1 ? '' : 'hidden'}><button type="button" class="button tiny ghost" data-iv-act="musePage" data-iv-arg="prev" ${ms.page <= 0 ? 'disabled' : ''}>Sebelum</button><span id="ivMusePgLbl">Halaman ${ms.page + 1} daripada ${pages}</span><button type="button" class="button tiny ghost" data-iv-act="musePage" data-iv-arg="next" ${ms.page >= pages - 1 ? 'disabled' : ''}>Seterusnya</button></div>`;
     }
     h +=
       '</div><details class="iv-crit" id="ivMuseCrit"><summary>Maklumat paparan</summary><p>Sumber ialah fail db-curated JSON sahaja (Google Drive). Minggu dikira Isnin hingga Ahad mengikut waktu Malaysia. Lokasi diekstrak daripada teks nota dan mungkin tidak lengkap.</p></details>';
     body.innerHTML = h;
+    if (ms.detailKey) museMdFill();
   }
 
+  /* ----- Dialog Baca lagi ----- */
+  function museMdFill() {
+    const ms = ivState.muse,
+      items = museItems();
+    const i = items.findIndex((x) => x.komoditiId === ms.detailKey);
+    if (i < 0) {
+      museMdClose(false);
+      return;
+    }
+    const r = items[i];
+    const tl = museData.rekod
+      .filter((x) => x.komoditiId === r.komoditiId && museMatch(x))
+      .sort(museNewest);
+    $i('ivMuseMdT').textContent = r.komoditiLabel;
+    $i('ivMuseMdCtx').innerHTML =
+      museRiskChip(r) + chip(fmtDate(r.tarikh), 'grey') + (r.awal ? chip('Awal', 'warn') : '');
+    const lk = r.lokasi || [];
+    $i('ivMuseMdBody').innerHTML =
+      `<div class="iv-kv" id="ivMuseMdRisk"><span>Risiko sebelum<b>${r.risikoSebelum}</b></span><span>Risiko semasa<b>${r.risikoSemasa}</b></span><span>Risiko hadapan<b>${r.risikoHadapan}</b></span><span>Perubahan<b>${sgn(r.risikoSemasa - r.risikoSebelum, 0)}</b></span></div>
+<div><div class="iv-sec">NOTA PENGANALISIS</div><p class="iv-mc-ins" id="ivMuseMdNota">${E(r.nota)}</p></div>
+<div><div class="iv-sec">LOKASI</div><div class="iv-chips">${lk.length ? lk.map((l) => chip(museLokLabel(l))).join('') : '<span class="iv-note">Lokasi tidak dinyatakan dalam nota</span>'}</div></div>
+${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
+<div class="iv-kv"><span>Indeks sentimen<b>${f2(r.indeksSentimen)}</b></span><span>Bilangan sampel<b>${r.bilSampel}</b></span><span>Data awal<b>${r.awal ? 'Ya' : 'Tidak'}</b></span><span>Sumber<b>${E(r.sumberFail ? r.sumberFail.nama + ' (' + fmtDate(r.sumberFail.tarikh) + ')' : '—')}</b></span></div>
+<div><div class="iv-sec">REKOD HARIAN MINGGU INI</div><table class="iv-mm-tl" id="ivMuseMdTl"><thead><tr><th scope="col">Tarikh</th><th scope="col">Tahap</th><th scope="col">Nota ringkas</th></tr></thead><tbody>${tl
+        .map(
+          (t) =>
+            `<tr><td>${museShortDate(t.tarikh)}</td><td>${chip(t.band, MUSE_BAND[t.band].cls)}</td><td>${E(museTajuk(t.nota))}</td></tr>`,
+        )
+        .join('')}</tbody></table></div>`;
+    $i('ivMuseMdBody').scrollTop = 0;
+    $i('ivMuseMdPos').textContent = i + 1 + ' daripada ' + items.length;
+    $i('ivMuseMdPrev').disabled = i <= 0;
+    $i('ivMuseMdNext').disabled = i >= items.length - 1;
+    const pg = Math.floor(i / MUSE_PAGE);
+    if (pg !== ms.page) {
+      ms.page = pg;
+      ivRender(['muse']);
+    }
+    const ac = document.activeElement;
+    if (MM.open && (!ac || ac === document.body || ac.disabled)) $i('ivMuseMdClose').focus();
+  }
+  function museMdOpen(key, opener) {
+    if (!museItems().some((x) => x.komoditiId === key)) return;
+    ivState.muse.detailKey = key;
+    museMdFill();
+    if (MM.open) return;
+    clearTimeout(MM.timer);
+    MM.opener = opener || null;
+    MM.open = true;
+    const back = $i('ivMuseMd');
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    MM.prevOv = document.body.style.overflow;
+    MM.prevPad = document.body.style.paddingRight;
+    document.body.style.overflow = 'hidden';
+    if (sbw > 0) document.body.style.paddingRight = sbw + 'px';
+    document.body.classList.add('iv-md-open');
+    back.hidden = false;
+    void back.offsetWidth;
+    back.classList.add('open');
+    $i('ivMuseMdClose').focus({ preventScroll: true });
+  }
+  function museMdClose(restore) {
+    const key = ivState.muse.detailKey;
+    ivState.muse.detailKey = null;
+    if (!MM.open) return;
+    MM.open = false;
+    const back = $i('ivMuseMd');
+    back.classList.remove('open');
+    document.body.style.overflow = MM.prevOv;
+    document.body.style.paddingRight = MM.prevPad;
+    document.body.classList.remove('iv-md-open');
+    const fin = () => {
+      if (!MM.open) back.hidden = true;
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) fin();
+    else MM.timer = setTimeout(fin, 200);
+    if (restore !== false) {
+      let o = key
+        ? document.querySelector(
+            `#ivMuseBody [data-iv-act="museOpen"][data-iv-arg="${CSS.escape(key)}"]`,
+          )
+        : null;
+      if (!o && MM.opener && MM.opener.isConnected) o = MM.opener;
+      if (o && o.focus) o.focus({ preventScroll: true });
+    }
+  }
+  function museMdNav(dir) {
+    const ms = ivState.muse,
+      items = museItems();
+    const i = items.findIndex((x) => x.komoditiId === ms.detailKey);
+    const j = dir === 'prev' ? i - 1 : i + 1;
+    if (i < 0 || j < 0 || j >= items.length) return;
+    ms.detailKey = items[j].komoditiId;
+    museMdFill();
+  }
+  (function () {
+    let down = false;
+    const back = $i('ivMuseMd'),
+      dlg = $i('ivMuseMdDlg');
+    $i('ivMuseMdClose').addEventListener('click', () => museMdClose());
+    back.addEventListener('pointerdown', (e) => {
+      down = e.target === back;
+    });
+    back.addEventListener('click', (e) => {
+      if (e.target === back && (down || e.detail === 0)) museMdClose();
+      down = false;
+    });
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (!MM.open) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          museMdClose();
+          return;
+        }
+        if (e.key !== 'Tab') return;
+        const f = [...dlg.querySelectorAll('button:not([disabled])')].filter(
+          (x) => x.offsetParent !== null,
+        );
+        if (!f.length) {
+          e.preventDefault();
+          dlg.focus();
+          return;
+        }
+        const first = f[0],
+          last = f[f.length - 1],
+          ac = document.activeElement,
+          inside = dlg.contains(ac) && ac !== dlg;
+        if (e.shiftKey && (!inside || ac === first)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && (!inside || ac === last)) {
+          e.preventDefault();
+          first.focus();
+        }
+      },
+      true,
+    );
+  })();
   /* ===== Render ===== */
   const _pan = {
     filters: ivRenderFilters,
@@ -3263,11 +3373,14 @@
       case 'museWeek':
         ivDispatch('museWeek', arg);
         break;
-      case 'museExp':
-        ivDispatch('museExpand', arg);
+      case 'musePage':
+        ivDispatch('musePage', arg);
         break;
-      case 'museView':
-        ivDispatch('museView', arg);
+      case 'museOpen':
+        museMdOpen(arg, el);
+        break;
+      case 'museNav':
+        museMdNav(arg);
         break;
       case 'museRetry':
         ivLoadMuse(ivState.muse.weekStart || undefined);
