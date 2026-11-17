@@ -546,15 +546,16 @@ function renderWeather() {
 const AMARAN_MET = 'MET Malaysia';
 const AMARAN_JPS = 'JPS Malaysia (Public Info Banjir)';
 const AMARAN_HAD = 7;
+const AMARAN_TAHAP_NILAI = { BAHAYA: 4, BURUK: 3, WASPADA: 2, UMUM: 1 };
 const amaranTahap = (a) => {
   const cari = (t) => {
     const u = String(t || '').toUpperCase();
-    if (/\bBERBAHAYA\b|\bBAHAYA\b/.test(u)) return 'BAHAYA';
-    if (/\bBURUK\b/.test(u)) return 'BURUK';
-    if (/\bWASPADA\b/.test(u)) return 'WASPADA';
+    if (/\bBERBAHAYA\b|\bBAHAYA\b|\bDANGER\b|KATEGORI KETIGA/.test(u)) return 'BAHAYA';
+    if (/\bBURUK\b|\bWARNING\b|KATEGORI KEDUA/.test(u)) return 'BURUK';
+    if (/\bWASPADA\b|\bALERT\b|KATEGORI PERTAMA/.test(u)) return 'WASPADA';
     return '';
   };
-  return a.sumber === AMARAN_MET ? cari(a.tajuk) || cari(String(a.teks || '').slice(0, 160)) : '';
+  return cari(a.tajuk) || cari(String(a.teks || '').slice(0, 160)) || 'UMUM';
 };
 const amaranDaerah = (a) => {
   const m = a.sumber === AMARAN_MET && /\(([^()]{3,70})\)/.exec(a.teks || '');
@@ -590,13 +591,24 @@ function senaraiAmaranRasmi(kini = Date.now()) {
     );
   }
   const masa = (a) => Date.parse(a.dikeluarkan) || 0;
-  return senarai
+  const lengkap = senarai
     .sort((x, y) => masa(y) - masa(x))
-    .slice(0, AMARAN_HAD)
     .map((a) => {
       const t = Date.parse(a.sahHingga);
-      return { ...a, aktif: Number.isNaN(t) ? !!a.bendera : t >= kini };
+      const tahap = amaranTahap(a);
+      return {
+        ...a,
+        tahap,
+        nilai: AMARAN_TAHAP_NILAI[tahap],
+        aktif: Number.isNaN(t) ? !!a.bendera : t >= kini,
+      };
     });
+  // 7 terkini + mana-mana amaran aktif di luar 7 itu (amaran aktif tidak pernah disembunyikan)
+  const dipilih = lengkap.filter((a, i) => i < AMARAN_HAD || a.aktif);
+  return [
+    ...dipilih.filter((a) => a.aktif).sort((x, y) => y.nilai - x.nilai || masa(y) - masa(x)),
+    ...dipilih.filter((a) => !a.aktif).sort((x, y) => masa(y) - masa(x)),
+  ];
 }
 const amaranItemHTML = (a, i) => {
   const lok = a.negeri.length
@@ -605,10 +617,10 @@ const amaranItemHTML = (a, i) => {
       : a.negeri.join(', ')
     : '';
   const daerah = amaranDaerah(a);
-  const tahap = amaranTahap(a);
+  const tahap = a.tahap;
   const sah = a.sahHingga ? ' · Sah hingga ' + cuacaMasa(a.sahHingga) : '';
   const panjang = String(a.teks || '').length > 110;
-  return `<div class="alert-item${a.aktif ? '' : ' tamat'}" data-amaran="${i}"><div class="alert-top"><b>${esc(a.tajuk)}</b>${tahap ? `<span class="alert-tahap t-${esc(tahap.toLowerCase())}">${esc(tahap)}</span>` : ''}<span class="alert-chip ${a.aktif ? 'aktif' : 'tamat'}">${a.aktif ? 'Aktif' : 'Tamat'}</span></div>${lok || daerah ? `<div class="alert-lok">${esc(lok)}${lok && daerah ? ' · ' : ''}${esc(daerah)}</div>` : ''}<p class="alert-teks">${esc(a.teks)}</p>${panjang ? '<button type="button" class="alert-more" data-act="amaran-lagi" aria-expanded="false">Lihat lagi</button>' : ''}<p class="alert-meta">${esc(a.sumber)} · Dikeluarkan ${esc(a.dikeluarkan ? cuacaMasa(a.dikeluarkan) : '-')}${esc(sah)}</p></div>`;
+  return `<div class="alert-item${a.aktif ? '' : ' tamat'}" data-amaran="${i}"><div class="alert-top"><b>${esc(a.tajuk)}</b><span class="alert-tahap t-${esc(tahap.toLowerCase())}">${esc(tahap)}</span><span class="alert-chip ${a.aktif ? 'aktif' : 'tamat'}">${a.aktif ? 'Aktif' : 'Tamat'}</span></div>${lok || daerah ? `<div class="alert-lok">${esc(lok)}${lok && daerah ? ' · ' : ''}${esc(daerah)}</div>` : ''}<p class="alert-teks">${esc(a.teks)}</p>${panjang ? '<button type="button" class="alert-more" data-act="amaran-lagi" aria-expanded="false">Lihat lagi</button>' : ''}<p class="alert-meta">${esc(a.sumber)} · Dikeluarkan ${esc(a.dikeluarkan ? cuacaMasa(a.dikeluarkan) : '-')}${esc(sah)}</p></div>`;
 };
 const renderMetAlerts = () => {
   const body = $('metAlertBody');
@@ -703,6 +715,147 @@ document.addEventListener('click', (ev) => {
   b.textContent = buka ? 'Kurangkan' : 'Lihat lagi';
 });
 
+/* ===== Kualiti udara sebenar (JAS MyEQMS) =====
+   Dimuat daripada /api/kualiti-udara (same-origin). IPU stesen terdekat bagi setiap PO. */
+const IPU = {
+  promise: null,
+  load(force) {
+    if (force) IPU.promise = null;
+    if (!IPU.promise) {
+      IPU.promise = (async () => {
+        if (location.protocol === 'file:') {
+          const e = new Error('Memerlukan pelayan');
+          e.kind = 'file';
+          throw e;
+        }
+        let res;
+        for (let cuba = 0; ; cuba++) {
+          res = await fetch('/api/kualiti-udara', { cache: 'no-store' });
+          const bd = res.status === 503 && cuba < 6 ? await res.json().catch(() => null) : null;
+          if (bd && bd.sedangDikemaskini) {
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          break;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        if (!j || !Array.isArray(j.po)) throw new Error('Format data kualiti udara tidak sah');
+        return j;
+      })();
+      IPU.promise.catch(() => {
+        IPU.promise = null;
+      });
+    }
+    return IPU.promise;
+  },
+  staleHours: 3,
+};
+let ipuState = { status: 'memuat', data: null };
+const IPU_JALUR = [
+  ['baik', 'Baik', '0–50'],
+  ['sederhana', 'Sederhana', '51–100'],
+  ['tidak_sihat', 'Tidak Sihat', '101–200'],
+  ['sangat_tidak_sihat', 'Sangat Tidak Sihat', '201–300'],
+  ['berbahaya', 'Berbahaya', '301+'],
+];
+const ipuRetryBtn = () =>
+  ' <button type="button" class="button tiny" data-act="ipu-retry">Cuba semula</button>';
+const ipuLapuk = (d) => {
+  const t = Date.parse(d && d.fetchedAt);
+  return Number.isNaN(t) || (Date.now() - t) / 36e5 > IPU.staleHours;
+};
+const ipuJam = (iso) => {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return '-';
+  const p = Object.fromEntries(cuacaFmt.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  return `${p.hour}:${p.minute}`;
+};
+const ipuBandKelas = (b) => (IPU_JALUR.some((j) => j[0] === b) ? b : 'tiada_data');
+function renderIPU() {
+  const list = $('ipuList');
+  const banner = $('ipuStatus');
+  const note = $('ipuNote');
+  const legend = $('ipuLegend');
+  if (!list) return;
+  legend.innerHTML = IPU_JALUR.map(
+    (j) =>
+      `<span class="ipu-leg"><i class="ipu-dot ipu-${j[0]}" aria-hidden="true"></i>${esc(j[1])} <small>${esc(j[2])}</small></span>`,
+  ).join('');
+  const s = ipuState;
+  let msg = '';
+  let kind = '';
+  if (s.status === 'memuat') note.textContent = 'Memuatkan data kualiti udara…';
+  else if (s.status === 'file') {
+    note.textContent = 'Data kualiti udara sebenar tidak tersedia';
+    msg = 'Data kualiti udara sebenar memerlukan pelayan (npm start)';
+  } else if (s.status === 'error') {
+    note.textContent = 'Data kualiti udara tidak tersedia';
+    msg = 'Data kualiti udara tidak dapat dimuatkan.' + ipuRetryBtn();
+    kind = 'err';
+  }
+  if (s.status !== 'ready') {
+    list.innerHTML = '';
+    banner.hidden = !msg;
+    banner.className = 'weather-banner' + (kind ? ' ' + kind : '');
+    banner.innerHTML = msg;
+    return;
+  }
+  const d = s.data;
+  note.textContent = 'Dikemas kini ' + cuacaMasa(d.fetchedAt);
+  const sumberGagal = ['stesenPeta', 'jam']
+    .filter((k) => d.sumber && d.sumber[k] && d.sumber[k].status === 'gagal')
+    .map((k) => (k === 'jam' ? 'bacaan jam' : 'senarai stesen'));
+  if (ipuLapuk(d)) {
+    msg = 'Data lapuk: kemas kini terakhir ' + cuacaMasa(d.fetchedAt);
+    kind = 'err';
+  } else if (sumberGagal.length) {
+    msg =
+      'Sumber tidak dapat dikemas kini: ' + sumberGagal.join(', ') + ' (data terakhir dipaparkan)';
+    kind = 'err';
+  }
+  banner.hidden = !msg;
+  banner.className = 'weather-banner' + (kind ? ' ' + kind : '');
+  banner.textContent = msg;
+  const baris = d.po
+    .slice()
+    .sort(
+      (a, b) =>
+        (b.api == null ? -1 : b.api) - (a.api == null ? -1 : a.api) ||
+        String(a.nama).localeCompare(String(b.nama)),
+    );
+  list.innerHTML = baris
+    .map((p) => {
+      const kelas = ipuBandKelas(p.band);
+      const label = p.band && kelas !== 'tiada_data' ? p.bandLabel : 'Tiada data';
+      const stesen = p.stesenNama
+        ? `${esc(p.stesenNama)} · ${p.jarakKm == null ? '-' : esc(Number(p.jarakKm).toFixed(1))} km${p.jauh ? ' <span class="ipu-tanda">jauh</span>' : ''}`
+        : 'Tiada stesen sah berhampiran';
+      const masa = p.masaBacaan
+        ? `${esc(ipuJam(p.masaBacaan))} MYT${p.lapuk ? ' <span class="ipu-tanda lapuk">lapuk</span>' : ''}`
+        : '-';
+      return `<div class="ipu-row" data-po="${esc(p.poId)}" data-band="${esc(kelas)}"><div class="ipu-main"><span class="ipu-nama" title="${esc(p.nama)}">${esc(p.nama)}</span><span class="ipu-stesen" title="${esc(p.stesenNama || '')}">${stesen}</span></div><div class="ipu-val"><b class="ipu-api">${p.api == null ? '-' : esc(p.api)}</b><span class="ipu-chip ipu-${esc(kelas)}"><i class="ipu-dot" aria-hidden="true"></i>${esc(label)}</span><span class="ipu-masa">${masa}</span></div></div>`;
+    })
+    .join('');
+}
+const initIPU = (force) => {
+  ipuState = { status: 'memuat', data: null };
+  renderIPU();
+  return IPU.load(force).then(
+    (d) => {
+      ipuState = { status: 'ready', data: d };
+      renderIPU();
+    },
+    (e) => {
+      ipuState = { status: e && e.kind === 'file' ? 'file' : 'error', data: null };
+      renderIPU();
+    },
+  );
+};
+document.addEventListener('click', (ev) => {
+  if (!ev.target.closest('[data-act="ipu-retry"]')) return;
+  initIPU(true);
+});
 /* ===== Banjir sebenar (JPS Malaysia + JPS Selangor) =====
    Dimuat daripada /api/banjir (same-origin). Digunakan oleh kad amaran, senario AMS, lapisan peta dan Intervensi. */
 const BANJIR = {

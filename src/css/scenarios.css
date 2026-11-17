@@ -499,9 +499,9 @@
     padding: 11px 12px;
   }
 }
-/* Penempatan padat di dalam .bottom-grid (Cuaca | MET | AMS) */
+/* Penempatan padat di dalam .bottom-grid (Cuaca | Amaran / IPU | AMS) */
 .bottom-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 .bottom-grid > .ams-panel {
   display: flex;
@@ -599,12 +599,16 @@
   scroll-margin-top: 12px;
 }
 @media (min-width: 1251px) {
-  .bottom-grid > .ams-panel {
+  .bottom-grid > .ams-panel,
+  .bottom-grid > .ipu-panel {
     contain: size;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--b2a5b78) transparent;
+  }
+  .bottom-grid > .ipu-panel {
+    overflow: hidden;
   }
   .bottom-grid {
     grid-auto-rows: minmax(376px, auto);
@@ -614,7 +618,8 @@
   .bottom-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .bottom-grid > .ams-panel {
+  .bottom-grid > .ams-panel,
+  .bottom-grid > .ipu-panel {
     grid-column: 1/-1;
   }
 }
@@ -622,7 +627,8 @@
   .bottom-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .bottom-grid > .ams-panel {
+  .bottom-grid > .ams-panel,
+  .bottom-grid > .ipu-panel {
     grid-column: auto;
   }
 }

@@ -460,3 +460,21 @@ html[data-theme='cerah'] {
   --bj-fg-amaran: #9a4400;
   --bj-fg-bahaya: #aa0d20;
 }
+
+/* --- jalur IPU (teks chip pada latar panel; nisbah kontras >= 4.5:1) --- */
+:root {
+  --ipu-baik: #22d88a;
+  --ipu-sederhana: #ffd54a;
+  --ipu-tidak-sihat: #ff9f43;
+  --ipu-sangat: #ff7a8a;
+  --ipu-berbahaya: #e2a6ff;
+  --bj-fg-umum: #8fb5d8;
+}
+html[data-theme='cerah'] {
+  --ipu-baik: #146c46;
+  --ipu-sederhana: #7a5600;
+  --ipu-tidak-sihat: #9a4400;
+  --ipu-sangat: #aa0d20;
+  --ipu-berbahaya: #6b1f8f;
+  --bj-fg-umum: #35597c;
+}

@@ -1861,3 +1861,157 @@ select option {
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
+
+.alert-tahap.t-umum {
+  color: var(--bj-fg-umum);
+}
+.ipu-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0 17px 8px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.ipu-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.ipu-leg small {
+  opacity: 0.85;
+}
+.ipu-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.ipu-dot.ipu-baik,
+.ipu-chip.ipu-baik {
+  color: var(--ipu-baik);
+}
+.ipu-dot.ipu-sederhana,
+.ipu-chip.ipu-sederhana {
+  color: var(--ipu-sederhana);
+}
+.ipu-dot.ipu-tidak_sihat,
+.ipu-chip.ipu-tidak_sihat {
+  color: var(--ipu-tidak-sihat);
+}
+.ipu-dot.ipu-sangat_tidak_sihat,
+.ipu-chip.ipu-sangat_tidak_sihat {
+  color: var(--ipu-sangat);
+}
+.ipu-dot.ipu-berbahaya,
+.ipu-chip.ipu-berbahaya {
+  color: var(--ipu-berbahaya);
+}
+.ipu-chip.ipu-tiada_data {
+  color: var(--muted);
+}
+.ipu-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 17px;
+  scrollbar-width: thin;
+}
+.ipu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+.ipu-row:last-child {
+  border-bottom: 0;
+}
+.ipu-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.ipu-nama,
+.ipu-stesen {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ipu-nama {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ipu-stesen {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.ipu-val {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.ipu-api {
+  font-size: 14px;
+  min-width: 28px;
+  text-align: right;
+}
+.ipu-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: var(--panel2);
+  white-space: nowrap;
+}
+.ipu-masa {
+  font-size: 10px;
+  color: var(--muted);
+  min-width: 62px;
+  text-align: right;
+  white-space: nowrap;
+}
+.ipu-tanda {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--muted);
+}
+.ipu-tanda.lapuk {
+  color: var(--bj-fg-amaran);
+}
+@media (max-width: 480px) {
+  .ipu-row {
+    flex-wrap: wrap;
+  }
+  .ipu-val {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .ipu-api {
+    text-align: left;
+  }
+  .ipu-masa {
+    margin-left: auto;
+  }
+}
+
+.ipu-panel .weather-attrib {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}

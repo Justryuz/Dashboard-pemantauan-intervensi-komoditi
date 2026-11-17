@@ -1,6 +1,6 @@
 # Dashboard Pemantauan Intervensi Komoditi
 
-Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Data cuaca dan senario cuaca ialah data sebenar (MET Malaysia + Open-Meteo); selebihnya (harga, stok, AI Muse dll.) ialah data dummy/simulasi.
+Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Data cuaca, banjir dan kualiti udara serta senario yang dijana daripadanya ialah data sebenar (MET Malaysia, Open-Meteo, JPS Malaysia, JPS Selangor, JAS MyEQMS); selebihnya (harga, stok, AI Muse dll.) ialah data dummy/simulasi. Dashboard ialah alat sokongan keputusan, bukan sistem amaran rasmi.
 
 ## Struktur
 
@@ -29,9 +29,9 @@ Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Da
 ├── data/                       raw/ dan processed/ (diabaikan git)
 ├── docs/                       spesifikasi, rujukan, laporan, pembentangan (.pptx)
 ├── scripts/                    Skrip utiliti
-├── tests/                      api/cuaca-api.js, helpers/cuaca-fixture.js, frontend/ (smoke, click-all, cuaca, filter-bar, ams, startup-csp, snapshot, intervensi-test)
-scripts/ambil-cuaca.js        Skrip CLI ambil data cuaca (npm run cuaca:ambil)
-api/services/cuaca.js         Pengambil MET Malaysia + Open-Meteo, risiko cuaca, penjana senario, cache
+├── tests/                      api/ (cuaca-api, banjir-api, ipu-api), helpers/ (fixture, api-stub), fixtures/ (data contoh JPS/JAS), frontend/ (smoke, click-all, cuaca, banjir, ipu, filter-bar, ams, startup-csp, snapshot, intervensi-test)
+│                               scripts/ambil-cuaca.js, ambil-banjir.js, ambil-ipu.js  Skrip CLI ambil data (npm run cuaca:ambil / banjir:ambil / ipu:ambil)
+│                               api/services/cuaca.js, banjir.js, kualiti-udara.js, util-rangkaian.js  Pengambil, normalisasi, risiko, senario dan cache
 ├── .env.example                Templat pembolehubah persekitaran
 └── package.json
 ```
@@ -52,8 +52,10 @@ Perlu Node.js 20.12 atau lebih baharu.
 cp .env.example .env    # isi nilai jika perlu
 npm install             # hanya untuk prettier (dev)
 npm start               # http://127.0.0.1:3000
-npm test                # smoke, klik semua butang, API cuaca, kad cuaca, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
+npm test                # smoke, klik semua butang, API cuaca/banjir/IPU, kad cuaca, banjir, IPU, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
 npm run cuaca:ambil     # ambil data cuaca sebenar sekarang (MET + Open-Meteo)
+npm run banjir:ambil    # ambil data banjir sebenar sekarang (JPS Malaysia + JPS Selangor)
+npm run ipu:ambil       # ambil IPU sebenar sekarang (JAS MyEQMS)
 npm run format          # format kod dengan Prettier
 ```
 
@@ -68,9 +70,29 @@ Sumber: **MET Malaysia** (api.met.gov.my v2: ramalan negeri `FORECAST/GENERAL` d
 - Ambil secara manual: `npm run cuaca:ambil`. Alternatif Windows Task Scheduler (harian 06:00): `schtasks /Create /SC DAILY /ST 06:00 /TN "CuacaFAMA" /TR "cmd /c cd /d <laluan projek> && npm run cuaca:ambil"`.
 - `GET /api/cuaca` memulangkan cache (503 jika belum ada; pelayar mencuba semula sebentar bila pelayan sedang mengambil data). Selepas menambah laluan baharu, **mulakan semula** pelayan (proses lama akan membalas 404).
 - Risiko cuaca PO ialah anggaran sistem, bukan amaran rasmi. Ambang boleh ubah dalam `AMBANG` (`api/services/cuaca.js`): Tinggi jika hujan >= 30 mm atau (MET ribut petir/hujan lebat dan kebarangkalian >= 90%); Sederhana jika >= 10 mm, kebarangkalian >= 70% atau tiupan >= 40 km/j.
-- Senario AMS dijana di pelayan (`bangunSenario`): Hujan Lebat (>= 30 mm atau MET hujan lebat), Ribut Petir & Angin Kencang (MET ribut petir atau tiupan >= 40 km/j) dan Hujan Berterusan (>= 2 hari berturut-turut, kebarangkalian >= 70% dan hujan >= 1 mm). Tiada senario banjir kerana tiada sumber JPS ("Risiko banjir: data JPS belum disambungkan").
-- Kad "Amaran Rasmi MET Malaysia" hanya memaparkan amaran sebenar dataset `WARNING`.
+- Senario AMS dijana di pelayan (`bangunSenario`): Hujan Lebat (>= 30 mm atau MET hujan lebat), Ribut Petir & Angin Kencang (MET ribut petir atau tiupan >= 40 km/j) dan Hujan Berterusan (>= 2 hari berturut-turut, kebarangkalian >= 70% dan hujan >= 1 mm).
+- Kad "Amaran Rasmi (MET Malaysia & JPS)" memaparkan amaran sebenar sehingga 7 hari lepas. Amaran aktif dipaparkan dahulu, disusun ikut tahap (Bahaya, Buruk, Waspada, lain-lain) kemudian masa dikeluarkan; amaran Tamat menyusul, terbaharu dahulu. Amaran aktif di luar 7 terkini tidak disembunyikan.
 - Membuka `index.html` melalui `file://` tidak menyokong data sebenar (perlu `npm start`).
+
+## Data banjir (JPS) dan kualiti udara (JAS)
+
+**Banjir.** Sumber: Public Info Banjir JPS Malaysia (`latestreadingstrendabc.json` dan `getdisse.php`), JPS Selangor (`infobanjirjps.selangor.gov.my/JPSAPI/api/LatestAlert/Telemetry`) dan sejarah banjir 2024 Selangor (ArcGIS `BANJIR_2024`). Selang: banjir setiap 30 minit (`BANJIR_POLL_MIN`), sejarah setiap 7 hari. Cache: `data/processed/banjir-terkini.json` dan `banjir-sejarah.json` (diabaikan git). Endpoint: `GET /api/banjir`.
+
+**Kualiti udara.** Sumber: JAS MyEQMS (`eqms.doe.gov.my`, lapisan peta stesen dan `apitablehourly`). Selang: setiap 60 minit (`IPU_POLL_MIN`). Cache: `data/processed/kualiti-udara-terkini.json`. Endpoint: `GET /api/kualiti-udara`. Kad "Kualiti Udara (IPU) Berhampiran PO" memaparkan IPU stesen terdekat bagi setiap 15 PO, terburuk dahulu. Jalur: Baik (0-50), Sederhana (51-100), Tidak Sihat (101-200), Sangat Tidak Sihat (201-300), Berbahaya (301+). Stesen lebih 50 km ditanda "jauh"; bacaan lebih `IPU_STALE_JAM` (3 jam) ditanda "lapuk". Ini bacaan stesen terdekat, bukan di lokasi PO.
+
+**Pembolehubah persekitaran** (semua pilihan; lihat `.env.example`; tiada token diperlukan): `BANJIR_RADIUS_KM` (25), `BANJIR_POLL_MIN` (30), `BANJIR_DATA_MAX_JAM` (3), `IPU_POLL_MIN` (60), `IPU_STALE_JAM` (3), `BANJIR_AUTO` / `IPU_AUTO` (`0` mematikan pengambilan automatik), `BANJIR_CACHE_FILE`, `BANJIR_SEJARAH_FILE`, `IPU_CACHE_FILE`.
+
+**Peraturan penapis banjir.** Bacaan paras air (WL) dan hujan (RF) lebih tua daripada 3 jam dibuang secara berasingan. Bacaan Error/kosong dan `-9999` tidak sah. Status `Danger` dengan nilai paras `<= 0` dibuang sebagai palsu. Stesen JPS Selangor menggantikan stesen nasional yang sama (padan ikut id, atau nama dan jarak kurang 1 km).
+
+**Peraturan risiko banjir PO** (turutan tetap, radius `BANJIR_RADIUS_KM`): Tinggi jika ada stesen Bahaya atau Amaran, atau amaran rasmi aktif menyebut negeri PO; selain itu Tiada data jika tiada stesen paras air sah; Sederhana jika ada stesen Waspada atau hujan Lebat/Sangat lebat; selebihnya Rendah. Senario "Risiko Banjir" hanya wujud bila ada PO berisiko Tinggi. Risiko ini ialah anggaran sistem berdasarkan data JPS, bukan amaran rasmi.
+
+**Atribusi.** Setiap kad memaparkan sumber: "JPS Malaysia (Public Info Banjir)", "JPS Selangor" dan "JAS (MyEQMS)".
+
+**Had.** Selangor hanya melalui `LatestAlert/Telemetry` (tiada `StationRiverLevels`, `Announcements`, `Siren`). Data pusat pemindahan (PPS) tiada. Bentuk mesej `getdisse.php` belum disahkan semasa amaran sebenar (sentiasa `[]` ketika siasatan), jadi pengurai amaran JPS bersifat longgar. Sumber ialah data awam tanpa API rasmi berdokumen; strukturnya boleh berubah tanpa notis.
+
+**Kebenaran sebelum pengeluaran (production).** Tiada terma yang membenarkan capaian automatik dinyatakan oleh JPS atau JAS. Kebenaran bertulis daripada JPS (Malaysia dan Selangor) dan JAS diperlukan sebelum dashboard ini digunakan di production. Prototaip ini menghantar `User-Agent: FAMA-dashboard-prototype`, selang yang jarang dan GET sahaja.
+
+**Penafian.** Dashboard ini ialah penyokong keputusan, bukan sistem amaran rasmi. Rujuk MET Malaysia, JPS dan JAS untuk amaran dan status rasmi.
 
 ## Fungsi dashboard
 

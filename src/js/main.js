@@ -2,6 +2,7 @@ initControls();
 renderAll();
 initCuaca();
 initBanjir();
+initIPU();
 initFloodLayer();
 window.famaScenariosReady = initScenarios();
 window.DASHBOARD_TEST = {

@@ -171,8 +171,9 @@ function amaranCampur() {
           chip: (x.querySelector('.alert-chip') || {}).innerText,
         })),
       );
-      const urutan = ['M0', 'J0', 'M1', 'J1', 'M2', 'J2', 'M3'];
-      ok('(iii) tepat 7 amaran dipaparkan', item.length === 7, item.length);
+      // semua tahap UMUM: aktif dahulu (terbaharu dahulu), kemudian Tamat (terbaharu dahulu)
+      const urutan = ['M0', 'J0', 'M2', 'M4', 'M1', 'J1', 'J2', 'M3'];
+      ok('(iii) 7 terkini + M4 aktif di luar 7 = 8 amaran', item.length === 8, item.length);
       ok(
         '(iii) susunan terbaharu dahulu (MET + JPS bercampur)',
         urutan.every(
@@ -181,13 +182,10 @@ function amaranCampur() {
         ),
         item.map((x) => x.teks.slice(0, 40)),
       );
-      ok(
-        '(iii) M4 dan J3 (tertua) tidak dipaparkan',
-        !item.some((x) => /AMARAN MET M4|Teks M4|Teks J3/.test(x.teks)),
-      );
+      ok('(iii) J3 (tertua dan Tamat) tidak dipaparkan', !item.some((x) => /Teks J3/.test(x.teks)));
       ok(
         '(iii) chip Aktif/Tamat betul',
-        item.map((x) => x.chip).join() === 'Aktif,Aktif,Tamat,Tamat,Aktif,Tamat,Tamat',
+        item.map((x) => x.chip).join() === 'Aktif,Aktif,Aktif,Aktif,Tamat,Tamat,Tamat,Tamat',
         item.map((x) => x.chip),
       );
       ok(
@@ -196,8 +194,8 @@ function amaranCampur() {
       );
       const tag = await teks(page, '#metAlertTag');
       ok(
-        '(iii) pengepala "3 aktif · 7 terkini"',
-        tag.replace(/\s+/g, ' ').trim() === '3 aktif · 7 terkini',
+        '(iii) pengepala "4 aktif · 8 terkini"',
+        tag.replace(/\s+/g, ' ').trim() === '4 aktif · 8 terkini',
         tag,
       );
       ok(
@@ -240,6 +238,69 @@ function amaranCampur() {
         (await r.page.$$('#metAlertBody .alert-item')).length === 2,
       );
       await r.page.close();
+    }
+    // (iii-c) susunan tahap: aktif BAHAYA > BURUK > WASPADA > UMUM, kemudian Tamat (walaupun lebih baharu)
+    {
+      const cuaca = buatFixture();
+      const mk = (tajuk, jamLalu, aktif) => ({
+        jenis: 'hujan',
+        tajuk,
+        teks: 'Teks ' + tajuk,
+        negeri: ['Pahang'],
+        dikeluarkan: jam(jamLalu),
+        sah_dari: jam(jamLalu),
+        sah_hingga: new Date(Date.now() + (aktif ? 1 : -1) * 36e5).toISOString(),
+        aktif,
+      });
+      cuaca.amaran = [
+        mk('AMARAN CUACA BAHAYA TAMAT', 1, false),
+        mk('AMARAN CUACA WASPADA AKTIF', 3, true),
+        mk('AMARAN CUACA BURUK AKTIF', 5, true),
+        mk('AMARAN RIBUT PETIR AKTIF', 2, true),
+      ];
+      const bj = buatFixtureBanjir();
+      bj.amaranSejarah = [
+        {
+          sumber: 'JPS Malaysia (Public Info Banjir)',
+          mesej: 'Status Danger di Sg. Contoh',
+          dikeluarkan: jam(7),
+          anggaranTamat: null,
+          negeri: ['Kelantan'],
+          dilihat: jam(7),
+          aktif: true,
+        },
+      ];
+      bj.amaran = bj.amaranSejarah;
+      const { page, masalah } = await buka({ cuaca, banjir: bj });
+      const item = await page.$$eval('#metAlertBody .alert-item', (e) =>
+        e.map((x) => ({
+          teks: x.innerText,
+          chip: (x.querySelector('.alert-chip') || {}).innerText,
+          tahap: (x.querySelector('.alert-tahap') || {}).innerText,
+        })),
+      );
+      ok(
+        '(iii-c) urutan: Danger JPS, BURUK, WASPADA, ribut petir (aktif), kemudian BAHAYA Tamat',
+        item.length === 5 &&
+          /Danger/.test(item[0].teks) &&
+          /BURUK AKTIF/.test(item[1].teks) &&
+          /WASPADA AKTIF/.test(item[2].teks) &&
+          /RIBUT PETIR AKTIF/.test(item[3].teks) &&
+          /BAHAYA TAMAT/.test(item[4].teks),
+        item.map((x) => x.teks.slice(0, 40)),
+      );
+      ok(
+        '(iii-c) chip Aktif/Tamat dan tahap',
+        item.map((x) => x.chip + '/' + x.tahap).join() ===
+          'Aktif/BAHAYA,Aktif/BURUK,Aktif/WASPADA,Aktif/UMUM,Tamat/BAHAYA',
+        item.map((x) => x.chip + '/' + x.tahap),
+      );
+      ok(
+        '(iii-c) pengepala "4 aktif · 5 terkini"',
+        (await teks(page, '#metAlertTag')).replace(/\s+/g, ' ').trim() === '4 aktif · 5 terkini',
+      );
+      ok('(iii-c) tiada ralat konsol/CSP', masalah.length === 0, masalah);
+      await page.close();
     }
     // (iii-b) tiada amaran langsung
     {
