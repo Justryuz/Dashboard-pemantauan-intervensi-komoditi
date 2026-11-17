@@ -1,6 +1,6 @@
 # Dashboard Pemantauan Intervensi Komoditi
 
-Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Data cuaca, banjir dan kualiti udara serta senario yang dijana daripadanya ialah data sebenar (MET Malaysia, Open-Meteo, JPS Malaysia, JPS Selangor, JAS MyEQMS); selebihnya (harga, stok, AI Muse dll.) ialah data dummy/simulasi. Dashboard ialah alat sokongan keputusan, bukan sistem amaran rasmi.
+Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Data cuaca, banjir dan kualiti udara serta senario yang dijana daripadanya ialah data sebenar (MET Malaysia, Open-Meteo, JPS Malaysia, JPS Selangor, JAS MyEQMS) dan berita AI Muse (Google Drive db-curated) ialah data sebenar; selebihnya (harga, stok dll.) ialah data dummy/simulasi. Dashboard ialah alat sokongan keputusan, bukan sistem amaran rasmi.
 
 ## Struktur
 
@@ -29,9 +29,9 @@ Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Da
 ├── data/                       raw/ dan processed/ (diabaikan git)
 ├── docs/                       spesifikasi, rujukan, laporan, pembentangan (.pptx)
 ├── scripts/                    Skrip utiliti
-├── tests/                      api/ (cuaca-api, banjir-api, ipu-api), helpers/ (fixture, api-stub), fixtures/ (data contoh JPS/JAS), frontend/ (smoke, click-all, cuaca, banjir, ipu, filter-bar, ams, startup-csp, snapshot, intervensi-test)
-│                               scripts/ambil-cuaca.js, ambil-banjir.js, ambil-ipu.js  Skrip CLI ambil data (npm run cuaca:ambil / banjir:ambil / ipu:ambil)
-│                               api/services/cuaca.js, banjir.js, kualiti-udara.js, util-rangkaian.js  Pengambil, normalisasi, risiko, senario dan cache
+├── tests/                      api/ (cuaca-api, banjir-api, ipu-api, muse-api), helpers/ (fixture, api-stub), fixtures/ (data contoh JPS/JAS/Muse), frontend/ (smoke, click-all, cuaca, banjir, ipu, muse, filter-bar, ams, startup-csp, snapshot, intervensi-test)
+│                               scripts/ambil-cuaca.js, ambil-banjir.js, ambil-ipu.js, ambil-muse.js  Skrip CLI ambil data (npm run cuaca:ambil / banjir:ambil / ipu:ambil / muse:ambil)
+│                               api/services/cuaca.js, banjir.js, kualiti-udara.js, muse.js, muse-lokasi.js, util-rangkaian.js  Pengambil, normalisasi, risiko, senario, cache dan berita AI Muse
 ├── .env.example                Templat pembolehubah persekitaran
 └── package.json
 ```
@@ -52,10 +52,11 @@ Perlu Node.js 20.12 atau lebih baharu.
 cp .env.example .env    # isi nilai jika perlu
 npm install             # hanya untuk prettier (dev)
 npm start               # http://127.0.0.1:3000
-npm test                # smoke, klik semua butang, API cuaca/banjir/IPU, kad cuaca, banjir, IPU, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
+npm test                # smoke, klik semua butang, API cuaca/banjir/IPU/Muse, kad cuaca, banjir, IPU, AI Muse, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
 npm run cuaca:ambil     # ambil data cuaca sebenar sekarang (MET + Open-Meteo)
 npm run banjir:ambil    # ambil data banjir sebenar sekarang (JPS Malaysia + JPS Selangor)
 npm run ipu:ambil       # ambil IPU sebenar sekarang (JAS MyEQMS)
+npm run muse:ambil      # ambil berita AI Muse sekarang (Google Drive db-curated)
 npm run format          # format kod dengan Prettier
 ```
 
@@ -94,6 +95,40 @@ Sumber: **MET Malaysia** (api.met.gov.my v2: ramalan negeri `FORECAST/GENERAL` d
 
 **Penafian.** Dashboard ini ialah penyokong keputusan, bukan sistem amaran rasmi. Rujuk MET Malaysia, JPS dan JAS untuk amaran dan status rasmi.
 
+## AI Muse (Google Drive db-curated)
+
+**Sumber.** Folder Google Drive awam `1wXNm0nG7dUOvNWkepN9ev3BcgwFZEn8M`. Hanya fail `db-curated-YYYY-MM-DD.json` dibaca; fail lain diabaikan. Data folder dikemas kini dari semasa ke semasa, jadi sistem mengambilnya secara berjadual.
+
+**Paparan.** Ruangan "AI Muse - Gambaran Mingguan Komoditi" memaparkan berita seminggu sahaja, Isnin hingga Ahad mengikut waktu Malaysia (MYT). Minggu lalai ialah minggu `latestDate` dalam data; minggu lain boleh dipilih.
+
+**Penjadual.** Pelayan mengambil data semasa permulaan, kemudian setiap 6 jam (`MUSE_POLL_JAM`). Ambil secara manual dengan `npm run muse:ambil`.
+
+**Pembolehubah persekitaran** (lihat `.env.example`):
+
+- `GOOGLE_API_KEY`: pilihan. Jika diisi, Drive API digunakan; jika kosong, paparan folder HTML digunakan. Jangan commit `.env`.
+- `MUSE_DRIVE_FOLDER_ID`: ID folder Drive (lalai folder di atas).
+- `MUSE_WEEKS`: bilangan minggu dikekalkan (lalai 8).
+- `MUSE_POLL_JAM`: selang semakan dalam jam (lalai 6).
+- `MUSE_AUTO`: `0` mematikan pengambilan automatik.
+
+**Endpoint.** `GET /api/muse?minggu=YYYY-MM-DD`. Tarikh disesuaikan ke Isnin minggu itu; tanpa `minggu`, minggu `latestDate` digunakan. Respons turut menyenaraikan minggu yang tersedia.
+
+**Cache.** `data/processed/muse-curated.json` (boleh ditukar dengan `MUSE_CACHE_FILE`) dan folder `data/processed/muse/` (`MUSE_DIR`). Kedua-duanya diabaikan git.
+
+**Penjadual luaran.** Windows Task Scheduler (harian 06:00):
+
+```
+schtasks /Create /SC DAILY /ST 06:00 /TN "MuseFAMA" /TR "cmd /c cd /d <laluan projek> && npm run muse:ambil"
+```
+
+Linux cron (setiap 6 jam):
+
+```
+0 */6 * * * cd /laluan/projek && npm run muse:ambil
+```
+
+**Had.** Lokasi berita diekstrak daripada teks nota, jadi sesetengah berita mungkin tiada lokasi. Struktur fail Drive bukan API rasmi berdokumen dan boleh berubah tanpa notis.
+
 ## Fungsi dashboard
 
 **Tab Pemantauan Komoditi**
@@ -110,7 +145,7 @@ Sumber: **MET Malaysia** (api.met.gov.my v2: ramalan negeri `FORECAST/GENERAL` d
 
 - Peta outlet dan daerah, senarai keutamaan isu dan paparan logistik PO.
 - Mobilisasi Stok Pintar: cadangan PO sumber/destinasi dan draf cadangan intervensi.
-- Simulasi Margin & Harga, serta AI Muse (ringkasan berita/isu dummy).
+- Simulasi Margin & Harga, serta AI Muse (berita mingguan sebenar daripada Google Drive db-curated).
 
 ## Penambahbaikan yang telah dibuat
 
