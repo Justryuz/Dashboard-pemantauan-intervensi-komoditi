@@ -1,0 +1,12 @@
+const fs=require('fs');
+const a=fs.readFileSync('.agents/tasks/original-before-ai-panel.html','utf8').split('\n');
+const b=fs.readFileSync('Dashboard_FAMA_Pemetaan_15_PO_Interaktif.html','utf8').split('\n');
+const ia=a.findIndex(l=>l.includes('const DATA = {')),ib=b.findIndex(l=>l.includes('const DATA = {'));
+console.log('DATA same',a[ia]===b[ib],a.length,b.length);
+const s=new Set(b);
+a.filter(l=>!s.has(l)).forEach(l=>console.log('MODIFIED/REMOVED:',l.slice(0,180)));
+const h=b.join('\n');
+const ids=[...h.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]);
+console.log('dup ids:',ids.filter((x,i)=>ids.indexOf(x)!==i));
+const t='Hujan berterusan di Kelantan, Terengganu dan Pahang berpotensi mengganggu aktiviti penuaian, pengumpulan hasil serta penghantaran komoditi pertanian. PO Kota Baharu dan PO Kuantan turut dikaitkan dengan senario amaran banjir S03, yang meningkatkan keperluan pemantauan akses logistik dan bekalan.';
+console.log('S01 exact', h.includes(t));

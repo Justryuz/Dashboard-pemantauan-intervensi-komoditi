@@ -1,0 +1,17 @@
+const fs=require('fs'),path=require('path');const T=path.resolve(__dirname,'..');
+let t=fs.readFileSync(path.join(T,'intervensi-test.js'),'utf8').replace(/^\uFEFF/,'');
+const R=(a,b)=>{if(!t.includes(a))console.log('TIADA:',a.slice(0,50));t=t.replace(a,b)};
+R('Jasin \u00c2\u00b7 Tiada','Jasin \u00b7 Tiada');
+R('Borong Jual \u00e2\u02c6\u2019 Harg','Borong Jual \u2212 Harg');
+R("document.getElementById('ivExcluded').innerText.includes","document.getElementById('ivExcluded').textContent.includes");
+R('#ivPriList [data-iv-arg="pengguna:kelantan','#ivPriList [data-iv-act=tindakan][data-iv-arg="pengguna:kelantan');
+R("includes('21.60')","includes('24.40')");
+R("await ev(()=>document.querySelector('.iv-muse-card').click());await sleep(200);","await ev(()=>{[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa')).click()});await sleep(200);");
+R('clicked>20','clicked>=15');
+fs.writeFileSync(path.join(T,'intervensi-test.js'),t);
+let s=fs.readFileSync(path.join(__dirname,'iv-2.js'),'utf8');
+s=s.replace('const o={text:res.text,ai:res.ai};_aiCache[key]=o;','const o={text:res.text,ai:res.ai};if(res.ai)_aiCache[key]=o;');
+fs.writeFileSync(path.join(__dirname,'iv-2.js'),s);
+let u=fs.readFileSync(path.join(__dirname,'iv-3.js'),'utf8');
+u=u.replace("if(r){ivState.selectedInterventionId=r.id;ivRender(['pri'])}break}","if(r){ivState.selectedInterventionId=r.id;ivRender(['log','pri','mob','mar'])}break}");
+fs.writeFileSync(path.join(__dirname,'iv-3.js'),u);

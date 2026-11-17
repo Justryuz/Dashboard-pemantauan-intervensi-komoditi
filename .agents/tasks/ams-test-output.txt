@@ -1,0 +1,104 @@
+﻿PASS default: 3 cards
+PASS default: KPIs 3/6/2
+PASS default: KPI labels
+PASS default: detail hidden
+PASS default: badge DATA DUMMY
+PASS default: titles
+PASS default: brain icon svg
+PASS default: no ring
+PASS default: stats()
+PASS default: no state msg
+[{"t":"S01 ┬╖ Hujan Berterusan","l":["Kelantan, Terengganu & Pahang","3 PO berkaitan ┬╖ MET Malaysia"],"r":"Risiko Sederhana","ae":"false","ac":"amsDetail","svg":true,"chev":true,"col":"rgb(255, 159, 67)"},{"t":"S02 ┬╖ Ribut Petir & Angin Kencang","l":["Johor & Melaka","3 PO berkaitan ┬╖ MET Malaysia"],"r":"Risiko Sederhana","ae":"false","ac":"amsDetail","svg":true,"chev":true,"col":"rgb(255, 159, 67)"},{"t":"S03 ┬╖ Amaran Banjir","l":["Kelantan & Pahang","2 PO berkaitan ┬╖ JPS Malaysia"],"r":"Risiko Tinggi","ae":"false","ac":"amsDetail","svg":true,"chev":true,"col":"rgb(255, 78, 99)"}]
+PASS cards content
+PASS cards a11y/icons
+PASS card risk colours (orange/orange/red)
+PASS placement above bottom-grid, after main
+PASS S01 sel+expanded
+PASS S01 header
+PASS S01 risk pill orange
+PASS S01 PO rows
+PASS S01 pill classes
+PASS S01 PO YANG BERKAITAN
+PASS S01 exact insight
+PASS S01 Komoditi
+PASS S01 Cadangan
+PASS S01 AI title + chip + buttons
+PASS S01 no hash/url change
+PASS S01 rings = 3 POs
+PASS S01 status classes unchanged
+PASS S01 detail visible in viewport
+PASS S02 only one sel; S01 replaced
+PASS S02 PO rows
+PASS S02 exact insight
+PASS S02 cadangan+komoditi
+PASS S02 pills muted
+PASS S02 header Sederhana
+PASS S02 rings
+PASS S03 PO rows
+PASS S03 exact insight
+PASS S03 cadangan
+PASS S03 Risiko Tinggi red
+PASS S03 selected card red border
+PASS S03 rings = 2
+PASS S03 status classes unchanged
+PASS ring pseudo present
+PO Kota BaharuTutup NEGERIKelantan SENARIO TERLIBATS01, S03 KOMODITI SENARIOCili Merah, Sawi dan Timun RISIKO CUACAS01 ┬╖ Hujan berterusan: Risiko SederhanaS03 ┬╖ Banjir: Risiko Tinggi Kenderaan9 buahMuatan30.39 MTBilik sejuk2 unitKapasiti simpanan10.1 MT Status bekalan/harga komoditi (berasingan daripada amaran cuaca)Cili Merah: ΓùÅ StabilSawi: Data harga tidak tersedia (dummy)Timun: Data harga tidak tersedia (dummy) Amaran cuaca tidak menukar status PO kepada merah. Status merah/kuning/hijau pada peta kekal berdasarkan data harga dan bekalan sahaja. TINDAKAN DICADANGKANUtamakan semakan akses logistikSemak stok komoditi di PO terlibatNilai keperluan mobilisasi dari PO lain dalam zon Lihat harga komoditi PO ini
+PASS drawer opens
+PASS drawer scenario ids
+PASS drawer logistics values
+PASS drawer union commodities
+PASS drawer separate price block
+PASS drawer separation note
+PASS drawer actions + button
+PASS one drawer at a time
+PASS switch drawer to Kuantan
+PASS drawer closed when switching scenario
+PASS shared logistics: Angka gabungan
+PASS Tomato maps to Tomato Bulat
+PASS Sayur Berdaun no price data
+PASS Escape closes drawer
+PASS Tutup closes drawer
+PASS Lihat harga: selectPO + commodity synced, panel stays open
+PASS status classes with PO filter still only status-*
+PASS reset clears filters, keeps scenario
+Konteks senario S03 ┬╖ Amaran Banjir ┬╖ PO Kota Baharu ┬╖ Komoditi: Cili Merah, Sawi dan Timun
+PASS interv modal opens prefilled (S03)
+PASS modal shows an existing Borong record title
+PASS cancel: localStorage unchanged
+PASS interv with selected PO uses that PO
+PASS existing queue "Tindakan" opens modal with empty note
+PASS fallback toast + modal
+PASS fallback: nothing saved
+PASS 4th scenario: 4 cards, KPI recomputed
+PASS 4th scenario detail renders (fallback insight, 2 pills)
+PASS restored: 3 cards, 3/6/2, S04 gone
+PASS error state message + dummy fallback
+PASS empty state
+PASS loading state
+PASS recovered to 3 cards
+PASS ScenarioService.validateScenario rejects bad
+PASS fetchAIInsight stub source dummy
+PASS click selected collapses
+PASS Kembali ke Senarai Senario returns to overview
+PASS Kembali scrolls panel top into view
+PASS Enter opens S01
+PASS Space selects S02
+PASS focus ring visible
+PASS Enter on PO row opens drawer
+PASS PO row focus retained after open
+PASS filter select works & scenario stays
+PASS filterState selects PO (existing)
+PASS #backMap works
+PASS hover popup shows
+PASS map marker click selects PO and scenario panel intact
+PASS reset works
+PASS hidden panels still hidden
+PASS layout regression: existing panel sizes equal original @1440
+PASS no console errors / page errors
+PASS no horizontal page scroll @1440
+PASS no horizontal page scroll @1024
+PASS no horizontal page scroll @390
+PASS no console errors after resize/screens
+PASS reduced-motion: selection works
+
+RESULT pass=99 fail=0

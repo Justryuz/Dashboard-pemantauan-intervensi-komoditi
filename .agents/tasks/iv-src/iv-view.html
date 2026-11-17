@@ -1,0 +1,67 @@
+<div id="viewIntervensi" class="iv-view" role="tabpanel" aria-labelledby="ivTabIv" hidden>
+ <section class="iv-head" aria-label="Tajuk halaman">
+  <h2>Dashboard Intervensi Komoditi</h2>
+  <div class="iv-sub">Pemantauan Harga, Bekalan dan Cadangan Intervensi Pasaran</div>
+  <div class="iv-badge-row"><span class="iv-tag real">Data sedia ada</span><span>nama PO, lokasi anggaran bandar dan angka logistik maksimum (infografik)</span><span class="iv-tag dummy">DATA DUMMY</span><span>harga, bekalan, outlet, pemetaan daerah, simulasi AI dan isu mingguan ialah data prototaip</span></div>
+ </section>
+ <section class="iv-filters iv-collapsed" id="ivFilters" aria-label="Penapis dashboard intervensi">
+  <button type="button" class="button ghost iv-fbtn" id="ivFilterToggle" aria-expanded="false" aria-controls="ivFilters">☰ Penapis</button>
+  <div class="ctrl"><span>Komoditi</span><select id="ivFKomoditi" data-iv-sel="komoditi" aria-label="Komoditi"></select></div>
+  <div class="ctrl"><span>Negeri</span><select id="ivFNegeri" data-iv-sel="negeri" aria-label="Negeri"></select></div>
+  <div class="ctrl"><span>Pusat Operasi</span><select id="ivFPO" data-iv-sel="po" aria-label="Pusat Operasi"></select></div>
+  <div class="ctrl"><span>Daerah</span><select id="ivFDaerah" data-iv-sel="daerah" aria-label="Daerah"></select></div>
+  <div class="ctrl"><span>Tarikh / Tempoh Analisis</span><select id="ivFTempoh" data-iv-sel="tempoh" aria-label="Tarikh / Tempoh Analisis"><option value="7">7 hari</option><option value="14">14 hari</option><option value="30" selected>30 hari</option></select><small>Tempoh purata harga asas. Siri harga tiada tarikh.</small></div>
+  <div class="ctrl"><span>Tahap Risiko</span><select id="ivFRisiko" data-iv-sel="risiko" aria-label="Tahap Risiko"><option value="all">Semua tahap</option><option value="kritikal">Kritikal</option><option value="waspada">Waspada</option><option value="normal">Normal</option></select></div>
+  <div class="filter-actions iv-reset-wrap"><button type="button" class="button ghost" id="ivReset" data-iv-act="reset">↺ Set Semula</button></div>
+ </section>
+ <details class="iv-thr" id="ivThr"><summary>Tetapan Ambang (prototaip, boleh ditetapkan)</summary>
+  <div class="iv-thr-grid">
+   <label>Pengeluar: amaran harga turun (%)<input type="number" id="ivThrPW" data-iv-thr="pengeluar.warn" step="1"></label>
+   <label>Pengeluar: kritikal harga turun (%)<input type="number" id="ivThrPC" data-iv-thr="pengeluar.crit" step="1"></label>
+   <label>Pengguna: amaran harga naik (%)<input type="number" id="ivThrGW" data-iv-thr="pengguna.warn" step="1"></label>
+   <label>Pengguna: kritikal harga naik (%)<input type="number" id="ivThrGC" data-iv-thr="pengguna.crit" step="1"></label>
+  </div>
+  <div class="iv-err" id="ivThrErr" role="alert"></div>
+  <div class="iv-note">Ambang amaran antara 1 hingga 50. Ambang kritikal mesti lebih besar daripada ambang amaran dan tidak melebihi 90. Ambang ini ialah ambang prototaip, bukan dasar rasmi.</div>
+ </details>
+ <div class="iv-grid-top">
+  <section class="panel iv-panel" id="ivMapPanel" aria-labelledby="ivMapT">
+   <div class="iv-ptitle"><div><h3 id="ivMapT">Paparan 1 · Peta Geospatial Malaysia</h3><div class="note">Semenanjung, Sabah dan Sarawak. Klik PO untuk zum, kawasan daerah dan outlet intervensi.</div></div><div class="iv-chips" id="ivMapChips"></div></div>
+   <div class="iv-map-frame">
+    <div id="ivMap" role="region" aria-label="Peta Malaysia interaktif untuk dashboard intervensi"></div>
+    <div class="iv-map-tabs"><div class="iv-mtabs" role="tablist" aria-label="Mod intervensi"><button type="button" class="iv-mtab" role="tab" id="ivModePengeluar" data-mode="pengeluar" data-iv-act="mode" data-iv-arg="pengeluar" aria-selected="true">PENGELUAR</button><button type="button" class="iv-mtab" role="tab" id="ivModePengguna" data-mode="pengguna" data-iv-act="mode" data-iv-arg="pengguna" aria-selected="false">PENGGUNA</button></div><div class="iv-mhint" id="ivMapHint"></div></div>
+    <button type="button" class="button ghost iv-map-back" id="ivMapBack" data-iv-act="backMY" hidden>← Malaysia</button>
+    <div class="iv-map-skel" id="ivMapSkel">Memuatkan peta…</div>
+    <div class="iv-map-fallback" id="ivMapFallback" hidden></div>
+   </div>
+   <div class="iv-map-tools">
+    <div id="ivMapBanner"></div>
+    <div class="iv-chips" id="ivOutletChips" aria-label="Penapis kategori outlet"></div>
+    <div class="iv-legend" id="ivLegend"></div>
+    <div class="iv-chips iv-scroll" id="ivDistChips" aria-label="Daerah di bawah seliaan PO"></div>
+    <div class="iv-note">Lokasi PO ialah anggaran bandar, bukan koordinat bangunan PO. Kawasan daerah ialah bulatan anggaran (bukan sempadan rasmi); tiada data sempadan tersedia. Outlet di sini ialah data dummy yang berasingan daripada outlet contoh dalam tab Pemantauan Komoditi.</div>
+    <details id="ivUnmapped"><summary class="iv-note" style="cursor:pointer">Outlet tanpa PO penyelia disahkan (dummy)</summary><div id="ivUnmappedList" class="iv-note"></div></details>
+   </div>
+  </section>
+  <section class="panel iv-panel" id="ivLogPanel" aria-labelledby="ivLogT">
+   <div class="iv-ptitle"><div><h3 id="ivLogT">Paparan 2 · Kesiapsiagaan Logistik Pusat Operasi</h3><div class="note">Kenderaan, muatan, bilik sejuk dan simpanan PO terpilih.</div></div><div class="iv-chips" id="ivLogChips"></div></div>
+   <div class="iv-pbody" id="ivLogBody"></div>
+  </section>
+  <section class="panel iv-panel" id="ivPriPanel" aria-labelledby="ivPriT">
+   <div class="iv-ptitle"><div><h3 id="ivPriT">Paparan 3 · Senarai Keutamaan Intervensi</h3><div class="note">Isu kritikal dan amaran mengikut lokasi serta komoditi, disusun mengikut skor keutamaan.</div></div><div class="iv-chips" id="ivPriChips"></div></div>
+   <div class="iv-pbody"><div id="ivPriBanner"></div><div class="iv-pri-list" id="ivPriList"></div><div id="ivPriFoot" class="iv-note"></div></div>
+  </section>
+ </div>
+ <section class="panel iv-panel" id="ivMobPanel" aria-labelledby="ivMobT">
+  <div class="iv-ptitle"><div><h3 id="ivMobT">Paparan 4 · AI Smart Stock Mobilisation</h3><div class="note">Cadangan Pintar Mobilisasi Bekalan Komoditi. Pengiraan ialah enjin deterministik; ringkasan AI ialah simulasi.</div></div><div class="iv-chips" id="ivMobChips"></div></div>
+  <div class="iv-pbody"><div id="ivMobHead"></div><div id="ivMobCtl"></div><div id="ivMobRes" aria-live="polite"></div><div id="ivDraftBox"></div></div>
+ </section>
+ <section class="panel iv-panel" id="ivMarPanel" aria-labelledby="ivMarT">
+  <div class="iv-ptitle"><div><h3 id="ivMarT">Paparan 5 · AI Margin &amp; Price Simulation</h3><div class="note">Simulasi Margin dan Cadangan Harga PO. Julat dicadangkan, bukan nilai optimum.</div></div><div class="iv-chips" id="ivMarChips"></div></div>
+  <div class="iv-pbody"><div id="ivMarDefs"></div><div id="ivMarCtl"></div><div id="ivMarRes" aria-live="polite"></div></div>
+ </section>
+ <section class="panel iv-panel" id="ivMusePanel" aria-labelledby="ivMuseT">
+  <div class="iv-ptitle"><div><h3 id="ivMuseT">Paparan 6 · AI Muse - Weekly Commodity Insight</h3><div class="note">Isu Komoditi Mengikut Lokasi dan Minggu. Kemas kini secara kelompok harian, bukan masa nyata.</div></div><div class="iv-chips" id="ivMuseChips"></div></div>
+  <div class="iv-pbody" id="ivMuseBody" aria-live="polite"></div>
+ </section>
+</div>

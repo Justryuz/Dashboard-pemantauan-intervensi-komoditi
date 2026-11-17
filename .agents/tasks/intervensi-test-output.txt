@@ -1,0 +1,312 @@
+PASS node --check ivScript
+PASS 1 baseline dimuatkan
+PASS 2 tab lama kelihatan, 15 penanda
+PASS 3c kunci window tambahan
+PASS 3 tab baharu dibuka
+PASS 3 tajuk dan subtajuk
+PASS 3c hook terlarang tiada
+PASS badge data pada setiap paparan
+PASS 3d 15 PO: lat/lng betul, penanda DOM tepat pada map.project, dalam bekas peta
+PASS 3d Kota Baharu di utara Kuantan (pantai timur) dan di barat longitud Kuantan
+PASS 3d Kangar paling utara antara PO Semenanjung
+PASS 3 kembali ke tab lama
+PASS 3 peta lama masih berfungsi
+PASS 3c ivState tidak berubah oleh tab lama
+PASS 4 mod ubah warna penanda dan senarai
+PASS 4 baris disusun mengikut skor
+PASS 4 T4 Kangar tiada merah
+PASS 4 T5 Serian lapuk
+PASS 4 T7 harga sahaja waspada
+PASS 6b label T1 Kluang
+PASS 6b label T4 tanpa akhiran
+PASS 6b semua label sah
+PASS unit: pure fixtures
+PASS unit: margin fixture
+PASS unit: minggu
+PASS 5 nota kumpulan selangor
+PASS 5b selangor ketersediaan semasa disembunyikan
+PASS 5 nota kumpulan selayang
+PASS 5b selayang ketersediaan semasa disembunyikan
+PASS 5b Ayer Keroh Sedia
+PASS 5b Kota Baharu Kritikal
+PASS 5 nota kumpulan johor
+PASS 5b johor 26.98 Terhad
+PASS 5 nota kumpulan simpangrenggam
+PASS 5b simpangrenggam 26.98 Terhad
+PASS 5 Kota Kinabalu 6/16.31/6/59.90
+PASS 5 klik 15 PO: zum, daerah, outlet, panel
+PASS 5 chip outlet menapis
+PASS 5 legenda 4 kategori
+PASS 5 popup outlet lengkap
+PASS 5c outlet stat
+PASS 5c outlet Kluang dinamakan
+PASS 5 Jasin tiada outlet
+PASS 5 PO tanpa pemetaan daerah
+PASS 5c PO di luar penapis
+PASS 11 set semula
+PASS P2 jumlah: keadaan awal
+PASS P2 jumlah 4 penunjuk = jumlah data (dedupe kumpulan)
+PASS P2 jumlah: liputan 15 daripada 15 PO
+PASS P2 jumlah: nota kumpulan tidak digandakan
+PASS P2 jumlah: tidak dikira berganda (< jumlah mentah)
+PASS P2 jumlah: Ketersediaan Semasa disembunyikan
+PASS P2 jumlah: petunjuk pilih PO + kesiapsiagaan koheren
+PASS P2 pecahan mengikut PO disembunyikan
+PASS P2 pilih PO (per-PO)
+PASS P2 set semula kembali ke jumlah
+PASS P2 penapis Negeri: jumlah negeri
+PASS 3 penapis komoditi
+PASS 3 penapis negeri cascade PO
+PASS 3 penapis PO
+PASS 3 penapis daerah
+PASS 3 penapis tempoh
+PASS 3 penapis risiko
+PASS thr ambang boleh ditetapkan
+PASS thr set semula ambang
+PASS P1 pop-up tersembunyi pada mulanya
+PASS P1 AI Muse tepat di bawah grid atas, tanpa jurang besar
+PASS 6 Tindakan pilih PO, banner, kekal pada tab
+PASS 6 Tindakan baris kuning
+PASS P2 baris Tindakan Simpang Renggam / Cili Merah / pengeluar wujud
+PASS P2 Tindakan membuka pop-up (role=dialog, aria-modal, aria-labelledby, kelihatan)
+PASS P2 tab Mobilisasi aktif secara lalai dengan Top 5 (1 dalam, 2 luar) kelihatan
+PASS P2 konteks pada pengepala (PO, komoditi, mod)
+PASS P2 latar belakang kabur: backdrop-filter blur dan lapisan malap
+PASS P2 latar menutup seluruh viewport dan berada di atas peta/pengepala
+PASS P2 skrol halaman dikunci semasa pop-up dibuka
+PASS P2 fokus dipindahkan ke dalam dialog
+PASS P2 perangkap fokus (Tab / Shift+Tab kekal dalam dialog)
+PASS P3 tab Margin: kawalan dan hasil kelihatan, Mobilisasi tersembunyi
+PASS P3 tab dalam tablist/tabpanel dengan aria-controls
+PASS P3 navigasi anak panah antara tab
+PASS P4 Esc menutup pop-up, skrol dipulihkan, fokus kembali ke butang Tindakan
+PASS P5 butang banner "Buka Mobilisasi Stok" membuka pop-up
+PASS P5 label banner tanpa "Paparan N"
+PASS P5 tiada rujukan "Paparan N" dalam tab Intervensi
+PASS P6 klik latar menutup pop-up dan fokus kembali ke Tindakan
+PASS P6 klik di dalam dialog tidak menutup
+PASS P7 butang tutup aria-label="Tutup"
+PASS P7 butang X menutup pop-up dan fokus kembali ke Tindakan
+PASS P8 memilih PO pada peta / penapis tidak membuka pop-up
+PASS P9 tiada ID pendua dan panel Mobilisasi/Margin berada dalam pop-up
+PASS 7 T1 senarai
+PASS 7 tiada sabah/sarawak untuk jangkar Semenanjung
+PASS 7 T1 tiada teks kos/jurang harga bersih
+PASS 7 T1 ranking Simpang Renggam: dalam/luar berbeza, Top-5
+PASS 7 label wajaran jarak (%)
+PASS 7 UI dua senarai
+PASS 7 wajaran jumlah 100
+PASS 7 butiran calon
+PASS 7 draf dibuat tanpa duplikasi
+PASS 7 draf baharu tanpa medan kos/jurang
+PASS 7 draf kekal selepas muat semula (termasuk draf lama bermedan kos, tidak ranap)
+PASS 7 padam draf
+PASS 7 T2 senarai
+PASS 7 T2 pahang/kelantan ditapis
+PASS 7 UI ditapis keluar
+PASS 7 T2 tiada teks kos/jurang harga bersih
+PASS 7 T2 ranking Johor Bahru: dalam/luar berbeza, Top-5
+PASS 7 pahang layak dengan Waspada banjir selepas S03 tamat
+PASS 7b tanpa AMS pahang layak
+PASS 7b pemulihan AMS
+PASS 7b chip AMS dimuatkan
+PASS 7 sabah pengguna kosong
+PASS 7c Tindakan Pasir Mas membuka pop-up
+PASS 7c T3 banner dan struktur
+PASS 7c baris risiko banjir pada butiran
+PASS 7c Samarahan T5 mesej tiada senarai
+PASS 8 tab Margin dalam pop-up: kawalan dan hasil kelihatan
+PASS 8 nilai lalai tetap
+PASS 8 hasil tetap
+PASS 8 UI nilai
+PASS 8 definisi verbatim
+PASS 8 kira semula serta-merta
+PASS 8 sasaran 99
+PASS 8 hasil terakhir dikekalkan
+PASS 8 sasaran 95.5
+PASS 8 sasaran 100
+PASS 8 sasaran negatif
+PASS 8 tidak layak teks tepat
+PASS 8 tiada NaN/Infinity
+PASS 8 S=0 tiada NaN
+PASS 8 amaran beli > jual
+PASS 8 pandangan AI margin
+PASS 8 sejarah tidak mencukupi
+PASS 9 minggu ini 3 kad (kad ringkasan dibuang)
+PASS 9 kad: komoditi, chip lokasi, satu chip risiko, trend ringkas
+PASS 9 insight bersih (tiada ; hujung, tiada awalan komoditi)
+PASS 9 blok Tindakan disyorkan wujud
+PASS 9 label metrik lama tidak kelihatan ketika kad ditutup
+PASS 9 kad disusun mengikut keterukan
+PASS 9 butang Buka Tindakan Intervensi hanya untuk PO sah
+PASS 9 kriteria isu dalam details tertutup, bilangan isu ringkas
+PASS 9 minggu lepas Kelapa Tua tiada butang pindah
+PASS 9 tiada butang pindah (daerah tidak dipetakan)
+PASS 9 minggu kosong teks tepat
+PASS 9 butiran dibuka: metrik sekunder kelihatan + DATA DUMMY
+PASS 9 kontras teks kad Muse (gelap) >=4.5
+PASS 9 kontras teks kad Muse (cerah) >=4.5
+PASS 9 bukti togol
+PASS 9 pindah konteks M02
+PASS 9 hantar konteks membuka pop-up pada tab Mobilisasi
+PASS 9 next dilumpuhkan pada minggu semasa
+PASS 10 AI gagal guna templat
+PASS 10 map failNext fallback
+PASS 14 tiada mesej konsol baharu (selain suntikan kegagalan yang dijangka)
+Mesej konsol asal (baseline): []
+Mesej dijangka daripada suntikan kegagalan: []
+PASS 3b pautan dalam #intervensi
+PASS 3b peta lama selepas pautan dalam
+PASS 7b selepas settle: pahang tiada dalam T2
+PASS 3b tiada mesej baharu
+PASS 10 peta gagal: senarai fallback
+PASS 10 fallback masih memilih PO
+PASS 10 Muse gagal tunjuk ralat
+PASS 10 Muse cuba semula
+PASS 10 sapuan semua butang tanpa pageerror (24/30)
+PASS 12 1440 tiada skrol mendatar
+PASS 12 1440 peta dan lajur kanan sebelah menyebelah
+PASS 12 1440 atas sama, bawah dalam 4px
+PASS 12 1440 lajur kanan: logistik di atas keutamaan
+PASS 12 1440 tiada limpahan anak melebihi panel (log/keutamaan/peta)
+PASS 12 1440 senarai keutamaan skrol dalaman (overflow-y auto)
+PASS 12 1440 halaman tidak membesar apabila baris bertambah
+PASS 12 1440 tinggi senarai terhad (sepadan lajur)
+PASS 12 1440 sasaran sentuh tab >= 40px
+PASS M 1440 Tindakan Case 1 membuka pop-up
+PASS M 1440 pop-up muat dalam paparan
+PASS M 1440 tiada limpahan mendatar (halaman, dialog, badan)
+PASS M 1440 tiada limpahan anak (tab Mobilisasi)
+PASS M 1440 Top 5 Dalam/Luar Negeri sebelah menyebelah
+PASS M 1440 tab Margin tiada limpahan mendatar
+PASS M 1440 Margin: KPI 4 lajur satu baris
+PASS M 1440 Margin: dua kad hasil sebelah menyebelah
+PASS L 1440 tiada limpahan mendatar halaman
+PASS L 1440 AI Muse lebar penuh dan tepat di bawah grid atas (tiada jurang besar)
+PASS L 1440 anak Muse tidak melimpah
+PASS 12 1440 tab lama: skrol mendatar sama seperti baseline atau tiada
+PASS 12 1440 mesej konsol baharu
+PASS 12 1024 tiada skrol mendatar
+PASS 12 1024 tablet: peta di atas, tinggi 460
+PASS 12 1024 tiada limpahan anak melebihi panel (log/keutamaan/peta)
+PASS 12 1024 senarai keutamaan skrol dalaman (overflow-y auto)
+PASS 12 1024 halaman tidak membesar apabila baris bertambah
+PASS 12 1024 tinggi senarai terhad (maks 520)
+PASS 12 1024 sasaran sentuh tab >= 40px
+PASS M 1024 Tindakan Case 1 membuka pop-up
+PASS M 1024 pop-up muat dalam paparan
+PASS M 1024 tiada limpahan mendatar (halaman, dialog, badan)
+PASS M 1024 tiada limpahan anak (tab Mobilisasi)
+PASS M 1024 tab Margin tiada limpahan mendatar
+PASS L 1024 tiada limpahan mendatar halaman
+PASS L 1024 AI Muse lebar penuh dan tepat di bawah grid atas (tiada jurang besar)
+PASS L 1024 anak Muse tidak melimpah
+PASS 12 1024 tab lama: skrol mendatar sama seperti baseline atau tiada
+PASS 12 1024 mesej konsol baharu
+PASS 12 390 tiada skrol mendatar
+PASS 12 390 mudah alih: disusun menegak, peta 380
+PASS 12 390 tiada limpahan anak melebihi panel (log/keutamaan/peta)
+PASS 12 390 senarai keutamaan skrol dalaman (overflow-y auto)
+PASS 12 390 halaman tidak membesar apabila baris bertambah
+PASS 12 390 tinggi senarai terhad (maks 520)
+PASS 12 390 sasaran sentuh tab >= 40px
+PASS M 390 Tindakan Case 1 membuka pop-up
+PASS M 390 pop-up muat dalam paparan
+PASS M 390 tiada limpahan mendatar (halaman, dialog, badan)
+PASS M 390 tiada limpahan anak (tab Mobilisasi)
+PASS M 390 Top 5 disusun menegak
+PASS M 390 tab Margin tiada limpahan mendatar
+PASS M 390 Margin: kad hasil menegak
+PASS L 390 tiada limpahan mendatar halaman
+PASS L 390 AI Muse lebar penuh dan tepat di bawah grid atas (tiada jurang besar)
+PASS L 390 anak Muse tidak melimpah
+PASS 12 390 tab lama: skrol mendatar sama seperti baseline atau tiada
+PASS 12 390 mesej konsol baharu
+PASS 15 tema lalai = gelap (tiada simpanan), sebelum cat pertama
+PASS 15 togol wujud (Gelap | Cerah, aria-pressed)
+PASS 15 klik Cerah: data-theme=cerah, aria-pressed, localStorage
+PASS 15 togol tidak set semula keadaan (PO dipilih, mod, penapis, tiada muat semula)
+PASS 15 papan kekunci: Enter pada Gelap menukar semula
+PASS 15 tema cerah kekal selepas muat semula (sebelum cat)
+PASS 15 butang Cerah aria-pressed selepas muat semula
+PASS 15 nilai simpanan tidak sah -> gelap
+PASS 15 tiada ralat konsol/halaman semasa togol
+PASS 15 gelap 1440 data-theme dari simpanan
+PASS 15 gelap 1440 tiada skrol mendatar (pemantauan)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (pemantauan)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (pemantauan + senario AMS)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (modal rekod)
+PASS 15 gelap 1440 tiada skrol mendatar (intervensi lalai)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (intervensi lalai)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (intervensi PO dipilih (pengguna))
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (intervensi mod pengeluar)
+PASS 15 gelap 1440 tiada skrol mendatar (intervensi pengeluar)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (intervensi margin + muse + calon)
+PASS 15 gelap 1440 tiada skrol mendatar (intervensi penuh)
+PASS 15 gelap 1440 tiada ralat halaman semasa kitaran
+PASS 15 gelap 1440 pop-up dibuka daripada Tindakan
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (pop-up Mobilisasi)
+PASS 15 gelap 1440 tiada skrol mendatar (pop-up Mobilisasi)
+PASS 15 gelap 1440 kontras teks tiada regresi vs asal (pop-up Margin)
+PASS 15 gelap 1440 tiada skrol mendatar (pop-up Margin)
+PASS 15 gelap 390 data-theme dari simpanan
+PASS 15 gelap 390 tiada skrol mendatar (pemantauan)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (pemantauan)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (pemantauan + senario AMS)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (modal rekod)
+PASS 15 gelap 390 tiada skrol mendatar (intervensi lalai)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (intervensi lalai)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (intervensi PO dipilih (pengguna))
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (intervensi mod pengeluar)
+PASS 15 gelap 390 tiada skrol mendatar (intervensi pengeluar)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (intervensi margin + muse + calon)
+PASS 15 gelap 390 tiada skrol mendatar (intervensi penuh)
+PASS 15 gelap 390 tiada ralat halaman semasa kitaran
+PASS 15 gelap 390 pop-up dibuka daripada Tindakan
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (pop-up Mobilisasi)
+PASS 15 gelap 390 tiada skrol mendatar (pop-up Mobilisasi)
+PASS 15 gelap 390 kontras teks tiada regresi vs asal (pop-up Margin)
+PASS 15 gelap 390 tiada skrol mendatar (pop-up Margin)
+PASS 15 cerah 1440 data-theme dari simpanan
+PASS 15 cerah 1440 tiada skrol mendatar (pemantauan)
+PASS 15 cerah 1440 kontras teks WCAG AA (pemantauan)
+PASS 15 cerah 1440 kontras teks WCAG AA (pemantauan + senario AMS)
+PASS 15 cerah 1440 kontras teks WCAG AA (modal rekod)
+PASS 15 cerah 1440 tiada skrol mendatar (intervensi lalai)
+PASS 15 cerah 1440 kontras teks WCAG AA (intervensi lalai)
+PASS 15 cerah 1440 kontras teks WCAG AA (intervensi PO dipilih (pengguna))
+PASS 15 cerah 1440 kontras teks WCAG AA (intervensi mod pengeluar)
+PASS 15 cerah 1440 tiada skrol mendatar (intervensi pengeluar)
+PASS 15 cerah 1440 kontras teks WCAG AA (intervensi margin + muse + calon)
+PASS 15 cerah 1440 tiada skrol mendatar (intervensi penuh)
+PASS 15 cerah 1440 tiada ralat halaman semasa kitaran
+PASS 15 cerah 1440 pop-up dibuka daripada Tindakan
+PASS 15 cerah 1440 kontras teks WCAG AA (pop-up Mobilisasi)
+PASS 15 cerah 1440 tiada skrol mendatar (pop-up Mobilisasi)
+PASS 15 cerah 1440 kontras teks WCAG AA (pop-up Margin)
+PASS 15 cerah 1440 tiada skrol mendatar (pop-up Margin)
+PASS 15 cerah 390 data-theme dari simpanan
+PASS 15 cerah 390 tiada skrol mendatar (pemantauan)
+PASS 15 cerah 390 kontras teks WCAG AA (pemantauan)
+PASS 15 cerah 390 kontras teks WCAG AA (pemantauan + senario AMS)
+PASS 15 cerah 390 kontras teks WCAG AA (modal rekod)
+PASS 15 cerah 390 tiada skrol mendatar (intervensi lalai)
+PASS 15 cerah 390 kontras teks WCAG AA (intervensi lalai)
+PASS 15 cerah 390 kontras teks WCAG AA (intervensi PO dipilih (pengguna))
+PASS 15 cerah 390 kontras teks WCAG AA (intervensi mod pengeluar)
+PASS 15 cerah 390 tiada skrol mendatar (intervensi pengeluar)
+PASS 15 cerah 390 kontras teks WCAG AA (intervensi margin + muse + calon)
+PASS 15 cerah 390 tiada skrol mendatar (intervensi penuh)
+PASS 15 cerah 390 tiada ralat halaman semasa kitaran
+PASS 15 cerah 390 pop-up dibuka daripada Tindakan
+PASS 15 cerah 390 kontras teks WCAG AA (pop-up Mobilisasi)
+PASS 15 cerah 390 tiada skrol mendatar (pop-up Mobilisasi)
+PASS 15 cerah 390 kontras teks WCAG AA (pop-up Margin)
+PASS 15 cerah 390 tiada skrol mendatar (pop-up Margin)
+PASS 13 #filterCommodity sama seperti baseline
+PASS 13 #floodToggle
+PASS 13 #showLogs
+PASS 13 klik senario AMS
+PASS 13 mesej konsol tab lama
+
+JUMLAH GAGAL: 0

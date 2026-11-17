@@ -1,0 +1,11 @@
+﻿/* --- pemboleh ubah carta & togol --- */
+:root{--ch-bg:#0b2442;--ch-ok:#174536;--ch-warn:#7d6822;--ch-pt:#4fb8ff;--ch-pt-stroke:#08213c;--tm-on-bg:#34d2ed;--tm-on-fg:#061126}
+html[data-theme="cerah"]{--ch-bg:#f3f7fc;--ch-ok:#3aa876;--ch-warn:#e0a82e;--ch-pt:#1f6fd1;--ch-pt-stroke:#ffffff;--tm-on-bg:#0e6c7c;--tm-on-fg:#ffffff}
+.tema-toggle{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:999px;background:var(--panel2);border:1px solid var(--line2)}
+.tema-toggle button{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:transparent;color:var(--muted);padding:6px 13px;font-size:12px;font-weight:700;line-height:1.2}
+.tema-toggle button:hover{color:var(--white)}
+.tema-toggle button[aria-pressed="true"]{background:var(--tm-on-bg);color:var(--tm-on-fg)}
+html[data-theme="cerah"] .modal-back{background:#0f254080}
+html[data-theme="cerah"] body{background:radial-gradient(1000px 500px at 55% -200px,#dbe8f5 0,transparent 100%),var(--bg)}
+html[data-theme="cerah"] .alert-head{color:#fff}
+html[data-theme="cerah"] .button:not(.ghost):not(.danger){background:linear-gradient(135deg,#126a9e,#14509a);border-color:#0f5a8a;color:#fff}

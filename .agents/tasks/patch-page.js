@@ -1,0 +1,20 @@
+const fs = require('fs');
+const f = 'Dashboard_FAMA_Pemetaan_15_PO_Interaktif.html';
+let t = fs.readFileSync(f, 'utf8');
+const nl = t.includes('\r\n') ? '\r\n' : '\n';
+function R(a, b) { if (!t.includes(a)) throw new Error('missing: ' + a.slice(0, 70)); t = t.split(a).join(b); }
+R('data-sid="${esc(s.scenarioId)}" aria-expanded="false" aria-controls="amsDetail">', 'data-sid="${esc(s.scenarioId)}" aria-pressed="false">');
+R("b.setAttribute('aria-expanded',on?'true':'false');", "b.setAttribute('aria-pressed',on?'true':'false');");
+R('.ams-card[aria-expanded="true"] .ams-chev{', '.ams-card[aria-pressed="true"] .ams-chev{');
+R('const sig=sc?JSON.stringify([sc,state.scenarioPO,INSIGHT_CACHE[sc.scenarioId],poScenarioMap()]):', 'const sig=sc?JSON.stringify([sc,state.scenarioPO,INSIGHT_CACHE[sc.scenarioId],poScenarioMap(),SCEN_LIST.map(s=>s.scenarioId)]):');
+R('box.innerHTML=`<div class="ams-det-head">', 'box.innerHTML=`<div class="ams-topbar"><button type="button" class="button ghost ams-back" data-act="back">← Kembali ke Senarai Senario</button><span class="ams-crumb">Senarai › <b>${esc(sc.scenarioId)}</b></span><span class="ams-chips" role="group" aria-label="Tukar senario">${SCEN_LIST.map(s=>`<button type="button" class="ams-chip risk-${esc(s.riskLevel)}" data-sid="${esc(s.scenarioId)}"${s.scenarioId===sc.scenarioId?\' aria-current="true"\':\'\'}>${esc(s.scenarioId)}</button>`).join(\'\')}</span></div><div class="ams-det-head">');
+R('<div class="ams-actions"><button type="button" class="button ghost" data-act="back">Kembali ke Senarai Senario</button><button', '<div class="ams-actions"><button');
+R('renderScenarioKpis();renderScenarioList();renderScenarioDetail();' + nl + '}', "renderScenarioKpis();renderScenarioList();renderScenarioDetail();" + nl + " const pg=state.scenario&&scenarioById(state.scenario)?'detail':'list';" + nl + " $('amsPanel').dataset.page=pg;$('amsOverview').hidden=pg==='detail';" + nl + '}');
+R("if(open){fitScenarioPOs(scenarioById(id).affectedPOIds);const el=$('amsDetail');amsScroll(el,el.getBoundingClientRect().height>innerHeight?'start':'nearest');}", "if(open){fitScenarioPOs(scenarioById(id).affectedPOIds);const d=$('amsDetail');d.scrollTop=0;$('amsPanel').scrollTop=0;const b=d.querySelector('.ams-back');if(b)b.focus({preventScroll:true});}");
+R("amsScroll($('amsPanel'),'start');", "$('amsPanel').scrollTop=0;");
+R("const d=$('amsPoDrawer');amsScroll(d,'nearest');}", "const d=$('amsPoDrawer');if(d)d.scrollIntoView({block:'nearest',behavior:amsReduced()?'instant':'smooth'});}");
+R("function amsScroll(el,block){if(el&&el.scrollIntoView)el.scrollIntoView({block,behavior:amsReduced()?'instant':'smooth'});}" + nl, '');
+R("if(ev.key==='Escape'&&state.scenarioPO){ev.preventDefault();closeScenarioPO();}", "if(ev.key!=='Escape')return;if(state.scenarioPO){ev.preventDefault();closeScenarioPO();}else if(state.scenario){ev.preventDefault();backToScenarioList();}");
+R("$('amsDetail').setAttribute('aria-label','Butiran senario dipilih');", "$('amsDetail').setAttribute('aria-label','Butiran senario dipilih');$('amsDetail').tabIndex=-1;");
+fs.writeFileSync(f, t);
+console.log('ok');
