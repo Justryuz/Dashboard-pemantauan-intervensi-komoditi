@@ -17,3 +17,12 @@ Rekod `jps-nasional.json` yang disunting (bukan sebenar sepenuhnya):
 - `3016002_LEBAT`: kategori hujan `Heavy` (65 mm hari ini).
 
 Masa rujukan (`sekarang`) untuk ujian unit: nasional `2026-11-17T04:30:00Z`, Selangor `2026-11-17T07:10:00Z`, IPU `2026-11-17T06:30:00Z`.
+
+## Fixture AI Muse (Google Drive db-curated)
+
+| Fail                              | Asal                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `muse/folder-akar.html`           | Dibina tangan meniru markup sebenar `embeddedfolderview`: folder harian, `Historical`, tarikh tidak sah dan satu fail.                      |
+| `muse/folder-harian.html`         | Dibina tangan; `{{TARIKH}}` diganti oleh ujian. Ada `.json` db-curated, `.csv`, `cleansed` dan `raw` (hanya db-curated boleh dimuat turun). |
+| `muse/db-curated-2026-11-15.json` | 5 rekod sebenar daripada `db-curated-2026-11-15.json` (Drive), diambil 2026-11-17.                                                          |
+| `muse/db-curated-invalid.json`    | Sintetik: rekod tidak sah, baris tiada data, nombor sebagai rentetan, pendua.                                                               |

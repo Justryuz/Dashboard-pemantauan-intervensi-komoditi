@@ -33,6 +33,39 @@ async function fetchJson(
   throw ralat;
 }
 
+// Ambil badan mentah (Buffer) + status + content-type. Status bukan 2xx dibaca juga (pemanggil memutuskan);
+// ralat rangkaian/tamat masa dicuba semula.
+async function fetchTeks(
+  url,
+  { headers = {}, timeoutMs = 20000, retries = 1, backoffMs = 1500 } = {},
+) {
+  let ralat;
+  for (let cuba = 0; cuba <= retries; cuba++) {
+    if (cuba > 0) await new Promise((r) => setTimeout(r, backoffMs));
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': UA, ...headers },
+        signal: ac.signal,
+      });
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (res.status >= 500 && cuba < retries) {
+        ralat = new Error('HTTP ' + res.status);
+        continue;
+      }
+      return { status: res.status, tipe: res.headers.get('content-type') || '', buf };
+    } catch (e) {
+      ralat = new Error(
+        e && e.name === 'AbortError' ? 'Tamat masa' : String((e && e.message) || e),
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw ralat;
+}
+
 function haversineKm(lat1, lon1, lat2, lon2) {
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;
@@ -106,6 +139,7 @@ function parseMasaMYT(nilai) {
 module.exports = {
   UA,
   fetchJson,
+  fetchTeks,
   haversineKm,
   tulisJsonAtomik,
   bacaJson,

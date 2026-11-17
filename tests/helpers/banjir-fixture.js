@@ -8,6 +8,7 @@ const banjir = require('../../api/services/banjir.js');
 const ipu = require('../../api/services/kualiti-udara.js');
 const { muatPO } = require('../../api/services/cuaca.js');
 const { buatFixture, pasangCache } = require('./cuaca-fixture.js');
+const { buatFixtureMuse, pasangCacheMuse } = require('./muse-fixture.js');
 
 const DIR = path.join(__dirname, '..', 'fixtures');
 const baca = (n) => JSON.parse(fs.readFileSync(path.join(DIR, n), 'utf8'));
@@ -130,12 +131,13 @@ function pasangCacheIPU(obj) {
   process.env.IPU_CACHE_FILE = f;
   return f;
 }
-// Cuaca + banjir (lalai normal) + IPU.
+// Cuaca + banjir (lalai normal) + IPU + AI Muse.
 function pasangSemuaCache(opsyen = {}) {
   return {
     cuaca: pasangCache(opsyen.cuaca || buatFixture()),
     banjir: pasangCacheBanjir(opsyen.banjir || buatFixtureBanjir()),
     ipu: pasangCacheIPU(opsyen.ipu || buatFixtureIPU()),
+    muse: pasangCacheMuse(opsyen.muse || buatFixtureMuse()),
   };
 }
 

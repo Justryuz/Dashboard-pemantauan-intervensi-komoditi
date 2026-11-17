@@ -38,6 +38,7 @@ const { CSP } = require('../config/security.js');
 const cuaca = require('./services/cuaca.js');
 const banjir = require('./services/banjir.js');
 const kualitiUdara = require('./services/kualiti-udara.js');
+const muse = require('./services/muse.js');
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP + "; frame-ancestors 'none'",
@@ -111,6 +112,35 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  if (pathname === '/api/muse') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const minggu = new URL(req.url, 'http://localhost').searchParams.get('minggu');
+    if (minggu !== null && !muse.tarikhSah(minggu))
+      return send(
+        res,
+        400,
+        JSON.stringify({ ralat: 'Parameter minggu tidak sah; guna format YYYY-MM-DD' }),
+        JSON_HDR,
+      );
+    const cache = muse.bacaCache();
+    if (!cache)
+      return send(
+        res,
+        503,
+        JSON.stringify({
+          ralat: 'Data AI Muse belum tersedia',
+          sedangDikemaskini: muse.sedangAmbil(),
+        }),
+        JSON_HDR,
+      );
+    return send(
+      res,
+      200,
+      req.method === 'HEAD' ? '' : JSON.stringify(muse.kumpulMinggu(cache, minggu)),
+      JSON_HDR,
+    );
+  }
+
   const API_CACHE = {
     '/api/cuaca': [cuaca, 'cuaca'],
     '/api/banjir': [banjir, 'banjir'],
@@ -158,6 +188,7 @@ if (require.main === module) {
     cuaca.mulaPenjadual();
     banjir.mulaPenjadual();
     kualitiUdara.mulaPenjadual();
+    muse.mulaPenjadual();
   });
 }
 module.exports = server;
