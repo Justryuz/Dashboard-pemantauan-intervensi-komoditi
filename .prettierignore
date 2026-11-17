@@ -1,0 +1,6 @@
+node_modules
+.agents
+data
+docs
+src/data/dashboard-data.js
+tests/frontend/intervensi-test.js
