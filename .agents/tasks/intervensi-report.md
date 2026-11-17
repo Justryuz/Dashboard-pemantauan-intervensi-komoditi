@@ -120,3 +120,7 @@ etGapPerKg dibuang (draf lama dalam localStorage diabaikan tanpa ranap). Apabila
 - Tutup: butang X, Esc, klik latar. Perangkap fokus, fokus kembali ke butang asal, skrol halaman dikunci. Anak panah/Home/End menukar tab.
 - Susun atur halaman: grid atas (peta/logistik/keutamaan) kemudian AI Muse lebar penuh; .iv-grid-mid dibuang.
 - Ujian: .agents/tasks/intervensi-test.js dikemas kini (JUMLAH GAGAL: 0). Tangkapan skrin: intervensi-popup-{gelap,cerah}-{1440,390}-{mobilisasi,margin,tutup}.png. Sandaran: backup-before-popup.html.
+## Jalur isu dalam pop-up Tindakan
+- Pengepala pop-up kini memaparkan kotak 'Isu memerlukan intervensi': tahap risiko, jenis isu, daerah/negeri, harga semasa ? forecast (+%), lebihan/kekurangan bekalan, jenis intervensi dan label DATA DUMMY. Data diambil daripada rekod senarai keutamaan yang sama (issueLabel, intervType, priCmp).
+- Jika dibuka tanpa baris (banner), isu keutamaan tertinggi bagi PO + komoditi + mod dipaparkan; jika tiada: 'Tiada isu keutamaan direkodkan untuk PO dan komoditi ini'. Dikemas kini semula apabila mod/PO/komoditi berubah.
+- intervensi-test.js: tambah penegasan jalur isu (Kes 1, Kes 2, mesej kosong), penegasan blok tindakan AI Muse disembunyikan. JUMLAH GAGAL: 0.

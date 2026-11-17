@@ -213,6 +213,12 @@ async function panelShots(pg,n){
    ok('P2 Tindakan membuka pop-up (role=dialog, aria-modal, aria-labelledby, kelihatan)',!S.hidden&&S.vis==='visible'&&+S.op===1&&S.role==='dialog'&&S.am==='true'&&/Mobilisasi/.test(S.lt||'')&&S.dlgW>300,S);
    ok('P2 tab Mobilisasi aktif secara lalai dengan Top 5 (1 dalam, 2 luar) kelihatan',S.tabMob==='true'&&S.mobVis&&S.marHidden&&S.dal===1&&S.luar===2&&S.listVis,S);
    ok('P2 konteks pada pengepala (PO, komoditi, mod)',/Simpang Renggam/.test(S.ctx)&&/Cili Merah/.test(S.ctx)&&/Pengeluar/.test(S.ctx),S.ctx);
+   {const I=await ev(()=>{const el=document.getElementById('ivMdIssue'),r=el.getBoundingClientRect(),h=document.querySelector('#ivMdDlg .iv-md-head').getBoundingClientRect(),row=document.querySelector('#ivPriList .iv-row[aria-pressed=true]');return {t:el.innerText,vis:el.offsetParent!==null&&r.height>20,inHead:r.bottom<=h.bottom+1&&r.left>=h.left-1,l1:el.querySelector('.iv-iss-l1')&&el.querySelector('.iv-iss-l1').innerText,l2:el.querySelector('.iv-iss-l2')&&el.querySelector('.iv-iss-l2').innerText,lv:el.querySelector('.iv-lv')&&el.querySelector('.iv-lv').className,rowT:row?row.innerText:''}});
+    const priceTxt=(I.rowT.match(/Harga semasa (RM [\d.]+) → forecast (RM [\d.]+) · sisihan ([+-][\d.]+)%/)||[]);
+    ok('P2b jalur isu kelihatan dalam pengepala pop-up',I.vis&&I.inHead&&/isu memerlukan intervensi/i.test(I.t),I);
+    ok('P2b isu: Harga ladang jatuh, Kluang, Johor, tahap risiko dan DATA DUMMY',/Harga ladang jatuh/.test(I.l1)&&/Kluang, Johor/.test(I.l1)&&/(Kritikal|Waspada)/.test(I.l1)&&/DATA DUMMY/.test(I.l1)&&/iv-lv (kritikal|waspada)/.test(I.lv),I);
+    ok('P2b harga ladang semasa → forecast dan % sama dengan baris keutamaan (sumber tunggal)',priceTxt.length===4&&I.l2.includes('Harga Ladang:')&&I.l2.includes(priceTxt[1]+' → forecast '+priceTxt[2])&&I.l2.includes('('+priceTxt[3]+'%)'),[I.l2,priceTxt]);
+    ok('P2b jenis intervensi disyorkan dipaparkan',/Intervensi: (Pengumpulan dan pengedaran semula bekalan|Pantau dan sedia pembelian lebihan)/.test(I.l2)&&/Lebihan bekalan: [\d.]+ MT/.test(I.l2),I.l2);}
    ok('P2 latar belakang kabur: backdrop-filter blur dan lapisan malap',/blur\((6|7|8)px\)/.test(S.bf)&&S.bg==='rgba(5, 12, 28, 0.55)',[S.bf,S.bg]);
    ok('P2 latar menutup seluruh viewport dan berada di atas peta/pengepala',S.pos==='fixed'&&S.br.x===0&&S.br.y===0&&Math.abs(S.br.w-S.iw)<=1&&Math.abs(S.br.h-S.ih)<=1&&S.cover&&+S.z>=1000,S);
    ok('P2 skrol halaman dikunci semasa pop-up dibuka',S.bodyOv==='hidden',S.bodyOv);
@@ -239,9 +245,28 @@ async function panelShots(pg,n){
    // butang banner
    await pg.click('#ivPriBanner [data-iv-act=openMob]');await sleep(500);
    ok('P5 butang banner "Buka Mobilisasi Stok" membuka pop-up',await ev(()=>!document.getElementById('ivMd').hidden&&document.getElementById('ivMdTabMob').getAttribute('aria-selected')==='true'));
+   ok('P5 banner: jalur isu tunjuk isu PO+komoditi semasa (Simpang Renggam, bukan mesej kosong)',await ev(()=>/Harga ladang jatuh/.test(document.getElementById('ivMdIssue').innerText)&&!/Tiada isu keutamaan/.test(document.getElementById('ivMdIssue').innerText)));
    await pg.keyboard.press('Escape');await sleep(400);
    ok('P5 label banner tanpa "Paparan N"',await ev(()=>/Buka Mobilisasi Stok/.test(document.getElementById('ivPriBanner').innerText)&&!/Paparan \d|Lompat/.test(document.getElementById('ivPriBanner').innerText)));
    ok('P5 tiada rujukan "Paparan N" dalam tab Intervensi',await ev(()=>{const c=document.getElementById('viewIntervensi').cloneNode(true);const f=c.querySelector('footer');if(f)f.remove();return !/Paparan \d/.test(c.textContent)}));
+   // Kes Ujian 2: pengguna, Johor Bahru, Cili Merah
+   {await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setMode','pengguna')});await sleep(400);
+    await ev(()=>{if(!document.querySelector('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:johor:"][data-iv-arg$=":cili-merah"]')){const b=document.querySelector('[data-iv-act=showAll]');if(b)b.click()}});await sleep(300);
+    const h2=await pg.$('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:johor:"][data-iv-arg$=":cili-merah"]');
+    ok('P2c baris Tindakan Johor Bahru / Cili Merah / pengguna wujud',!!h2);
+    if(h2){await h2.evaluate(e=>{e.scrollIntoView({block:'center'});e.click()});await sleep(900);
+     const I2=await ev(()=>{const el=document.getElementById('ivMdIssue');const row=document.querySelector('#ivPriList .iv-row[aria-pressed=true]');return {l1:el.querySelector('.iv-iss-l1')&&el.querySelector('.iv-iss-l1').innerText,l2:el.querySelector('.iv-iss-l2')&&el.querySelector('.iv-iss-l2').innerText,rowT:row?row.innerText:'',ctx:document.getElementById('ivMdCtx').innerText}});
+     const pt=(I2.rowT.match(/Harga semasa (RM [\d.]+) → forecast (RM [\d.]+) · sisihan ([+-][\d.]+)%/)||[]);
+     ok('P2c pengguna: isu pengguna (Kenaikan harga runcit / Ramalan di atas ambang), daerah, negeri, tahap, DATA DUMMY',/(Kenaikan harga runcit|Ramalan di atas ambang)/.test(I2.l1)&&/Johor/.test(I2.l1)&&/(Kritikal|Waspada)/.test(I2.l1)&&/DATA DUMMY/.test(I2.l1)&&!/Harga ladang jatuh/.test(I2.l1),I2);
+     ok('P2c pengguna: Harga Runcit, harga semasa → forecast sama dengan baris, intervensi pengguna',pt.length===4&&I2.l2.includes('Harga Runcit:')&&I2.l2.includes(pt[1]+' → forecast '+pt[2])&&I2.l2.includes('('+pt[3]+'%)')&&/Intervensi: (Mobilisasi stok tambahan|Pantau bekalan dan sedia stok sokongan)/.test(I2.l2),[I2.l2,pt]);
+     // konteks berubah semasa pop-up dibuka: jalur disemak semula
+     await ev(()=>IV_TEST.dispatch('setMode','pengeluar'));await sleep(500);
+     const I3=await ev(()=>({t:document.getElementById('ivMdIssue').innerText,ctx:document.getElementById('ivMdCtx').innerText}));
+     ok('P2c tukar mod semasa pop-up dibuka: jalur disemak semula mengikut mod (tiada isu direka)',/Pengeluar/.test(I3.ctx)&&!/Harga Runcit/.test(I3.t)&&(/Harga Ladang/.test(I3.t)||/Tiada isu keutamaan direkodkan untuk PO dan komoditi ini/.test(I3.t)),I3);
+     await ev(()=>{IV_TEST.dispatch('selectPO','kedah');IV_TEST.dispatch('setFilter',['komoditi','cili-hijau'])});await sleep(500);
+     const I4=await ev(()=>document.getElementById('ivMdIssue').innerText);
+     ok('P2c tiada isu sepadan: mesej tiada isu keutamaan dipaparkan',I4.trim()==='Tiada isu keutamaan direkodkan untuk PO dan komoditi ini',I4);
+     await closeMd();}}
    // klik latar
    await openCase1();await pg.mouse.click(6,6);await sleep(400);
    const E2=await ev(()=>({hidden:document.getElementById('ivMd').hidden,bo:getComputedStyle(document.body).overflow,act:document.activeElement.dataset.ivAct}));
@@ -368,19 +393,19 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  let m0=await mu();
  ok('9 minggu ini 3 kad (kad ringkasan dibuang)',m0.cards===3&&!/Kelapa/.test(m0.t),m0);
  {const q=await ev(()=>{const cs=[...document.querySelectorAll('.iv-muse-card')];const k=cs.find(c=>c.innerText.includes('Kluang'));const vis=(c,t)=>c.innerText.includes(t);
-  return {n:cs.length,bands:cs.map(c=>c.dataset.band),komo:!!k.querySelector('.iv-mc-t')&&k.querySelector('.iv-mc-t').textContent==='Cili Merah',loc:[...k.querySelectorAll('.iv-chip')].some(x=>x.textContent==='Kluang, Johor'),riskChips:[...k.querySelectorAll('.iv-chip')].filter(x=>/^Risiko/.test(x.textContent)).length,trend:k.querySelector('.iv-tr').textContent,ins:k.querySelector('.iv-mc-ins').textContent,act:/Tindakan disyorkan/.test(k.querySelector('.iv-mc-act').textContent),
+  return {n:cs.length,bands:cs.map(c=>c.dataset.band),komo:!!k.querySelector('.iv-mc-t')&&k.querySelector('.iv-mc-t').textContent==='Cili Merah',loc:[...k.querySelectorAll('.iv-chip')].some(x=>x.textContent==='Kluang, Johor'),riskChips:[...k.querySelectorAll('.iv-chip')].filter(x=>/^Risiko/.test(x.textContent)).length,trend:k.querySelector('.iv-tr').textContent,ins:k.querySelector('.iv-mc-ins').textContent,act:!!k.querySelector('.iv-mc-act')||/Tindakan disyorkan|Buka Tindakan Intervensi/.test(k.innerText),
    old:['Bilangan sampel','Indeks sentimen','Risiko sebelum','Sentimen negatif'].filter(t=>vis(k,t)),xfer:cs.map(c=>!!c.querySelector('[data-iv-act=museXfer]')),exp:k.querySelector('.iv-mc-head').getAttribute('aria-expanded'),hasX:!!k.querySelector('.iv-muse-x'),crit:(document.getElementById('ivMuseCrit')||{}).open,count:(document.getElementById('ivMuseCount')||{}).textContent}});
   ok('9 kad: komoditi, chip lokasi, satu chip risiko, trend ringkas',q.komo&&q.loc&&q.riskChips===1&&/^38 .\s?\+26$/.test(q.trend),q);
   ok('9 insight bersih (tiada ; hujung, tiada awalan komoditi)',/^Harga ladang cili merah jatuh di Kluang, Johor akibat lebihan bekalan \(12 Nov 2026\)\.$/.test(q.ins),q.ins);
-  ok('9 blok Tindakan disyorkan wujud',q.act,q);
+  ok('9 blok Tindakan disyorkan tidak dipaparkan (insight sahaja)',!q.act,q);
   ok('9 label metrik lama tidak kelihatan ketika kad ditutup',q.old.length===0&&q.exp==='false'&&!q.hasX,q);
   ok('9 kad disusun mengikut keterukan',q.bands.every((b,i,a)=>i===0||({merah:0,kuning:1,hijau:2}[a[i-1]]<={merah:0,kuning:1,hijau:2}[b])),q.bands);
-  ok('9 butang Buka Tindakan Intervensi hanya untuk PO sah',q.xfer.filter(Boolean).length>=1&&q.xfer.length===3,q.xfer);
+  ok('9 butang Buka Tindakan Intervensi tidak dipaparkan',q.xfer.every(x=>!x)&&q.xfer.length===3,q.xfer);
   ok('9 kriteria isu dalam details tertutup, bilangan isu ringkas',q.crit===false&&/^3 isu/.test(q.count||''),[q.crit,q.count]);}
  await pg.click('[data-iv-act=museWeek][data-iv-arg=prev]');await sleep(300);m0=await mu();
  ok('9 minggu lepas Kelapa Tua tiada butang pindah',m0.cards===2&&/Kelapa/.test(m0.t));
  await ev(()=>{[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa')).querySelector('.iv-mc-head').click()});await sleep(200);
- ok('9 tiada butang pindah (daerah tidak dipetakan)',await ev(()=>{const k=[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa'));return !k.querySelector('[data-iv-act=museXfer]')&&/PO belum disahkan/.test(k.innerText)&&document.querySelector('.iv-muse-x').innerText.includes('Padanan daerah kepada PO masih memerlukan pengesahan.')}));
+ ok('9 tiada butang pindah (daerah tidak dipetakan)',await ev(()=>{const k=[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kelapa'));return !k.querySelector('[data-iv-act=museXfer]')&&!/PO belum disahkan|Tindakan disyorkan/.test(k.innerText)&&!!document.querySelector('.iv-muse-x')}));
  await pg.click('[data-iv-act=museWeek][data-iv-arg=prev]');await sleep(300);m0=await mu();
  ok('9 minggu kosong teks tepat',m0.empty==='Tiada isu sentimen berlokasi yang memenuhi kriteria minggu ini',m0);
  await pg.click('[data-iv-act=museWeek][data-iv-arg=now]');await sleep(300);
@@ -389,16 +414,13 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
   {const x=await ev(()=>{const k=[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kluang'));const x=k.querySelector('.iv-muse-x');const all=[...document.querySelectorAll('.iv-mc-head,.iv-mc-more')].filter(b=>k.contains(b));return {exp:all.map(b=>b.getAttribute('aria-expanded')),t:x?x.innerText:'',inK:!!x&&k.contains(x)}});
   ok('9 butiran dibuka: metrik sekunder kelihatan + DATA DUMMY',x.inK&&['Bilangan sampel','Indeks sentimen','Negatif','Risiko sebelum','Sumber','DATA DUMMY','Lihat Butiran Bukti'].every(t=>x.t.includes(t))&&x.exp.every(v=>v==='true'),x);}
  {const cc=async th=>ev(t=>{document.documentElement.setAttribute('data-theme',t);const k=document.querySelector('.iv-muse-card');const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);const L=c=>{const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)};return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2])};
-   const bg=getComputedStyle(k).backgroundColor,bgA=getComputedStyle(k.querySelector('.iv-mc-act')).backgroundColor;const r=(el,b)=>{const a=L(rgb(getComputedStyle(el).color)),d=L(rgb(b));return (Math.max(a,d)+.05)/(Math.min(a,d)+.05)};
-   return [['ins',r(k.querySelector('.iv-mc-ins'),bg)],['t',r(k.querySelector('.iv-mc-t'),bg)],['date',r(k.querySelector('.iv-mc-date'),bg)],['h4',r(k.querySelector('.iv-mc-act h4'),bgA)],['li',r(k.querySelector('.iv-mc-act li'),bgA)],['po',r(k.querySelector('.iv-mc-po'),bgA)]].filter(a=>a[1]<4.5).map(a=>a[0]+' '+a[1].toFixed(2))},th);
+   const bg=getComputedStyle(k).backgroundColor;const r=(el,b)=>{const a=L(rgb(getComputedStyle(el).color)),d=L(rgb(b));return (Math.max(a,d)+.05)/(Math.min(a,d)+.05)};
+   return [['ins',r(k.querySelector('.iv-mc-ins'),bg)],['t',r(k.querySelector('.iv-mc-t'),bg)],['date',r(k.querySelector('.iv-mc-date'),bg)]].filter(a=>a[1]<4.5).map(a=>a[0]+' '+a[1].toFixed(2))},th);
   const g=await cc('gelap'),c2=await cc('cerah');await cc('gelap');
   ok('9 kontras teks kad Muse (gelap) >=4.5',g.length===0,g);ok('9 kontras teks kad Muse (cerah) >=4.5',c2.length===0,c2);}
  const e0=await ev1();await pg.click('[data-iv-act=museEv]');await sleep(150);const e1=await ev1();await pg.click('[data-iv-act=museEv]');await sleep(150);const e2=await ev1();
  ok('9 bukti togol',!e0&&e1&&!e2);
- await ev(()=>{[...document.querySelectorAll('.iv-muse-card')].find(c=>c.innerText.includes('Kluang')).querySelector('[data-iv-act=museXfer]').click()});await sleep(900);
- ok('9 pindah konteks M02',await ev(()=>{const s=IV_TEST.state();return s.selectedPOId==='simpangrenggam'&&s.selectedCommodityId==='cili-merah'&&document.getElementById('ivMobHead').innerText.includes('Simpang Renggam')}));
-  ok('9 hantar konteks membuka pop-up pada tab Mobilisasi',await ev(()=>!document.getElementById('ivMd').hidden&&document.getElementById('ivMdTabMob').getAttribute('aria-selected')==='true'&&/Simpang Renggam/.test(document.getElementById('ivMdCtx').innerText)));
-  await closeMd();
+ ok('9 kad Muse tiada butang pindah konteks dan tiada blok tindakan (IV_MUSE_SHOW_ACTION=false)',await ev(()=>!document.querySelector('[data-iv-act=museXfer]')&&!document.querySelector('.iv-mc-act')));
  ok('9 next dilumpuhkan pada minggu semasa',await ev(()=>document.querySelector('[data-iv-act=museWeek][data-iv-arg=next]').disabled));
  // 10 failure injection
  await ev(()=>IV_TEST.failNext('muse'));await pg.click('[data-iv-act=museWeek][data-iv-arg=now]').catch(()=>{});

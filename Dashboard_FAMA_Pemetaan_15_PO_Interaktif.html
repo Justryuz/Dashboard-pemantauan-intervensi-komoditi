@@ -443,6 +443,11 @@ html[data-theme="cerah"] .iv-md{box-shadow:0 24px 60px rgba(15,37,64,.28)}
 .iv-md-hd{min-width:0;display:flex;flex-direction:column;gap:8px}
 .iv-md-hd h2{margin:0;font-size:18px;line-height:1.25}
 .iv-md-ctx{display:flex;flex-wrap:wrap;gap:6px 8px}
+.iv-iss{border:1px solid var(--line2);border-left:3px solid var(--yellow);background:var(--panel2);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.4;min-width:0}
+.iv-iss-l1,.iv-iss-l2{display:flex;flex-wrap:wrap;align-items:center;gap:3px 12px;min-width:0}
+.iv-iss-h{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.iv-iss-t{font-size:13.5px}.iv-iss-loc,.iv-iss-i{color:var(--muted)}.iv-iss-i b{color:var(--white)}
+.iv-iss-none{color:var(--muted);font-style:italic}
 .iv-md-x{flex:0 0 auto;width:40px;height:40px;display:inline-grid;place-items:center;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--white);font-size:22px;line-height:1;cursor:pointer;padding:0}
 .iv-md-x:hover{background:var(--panel3);border-color:var(--cyan)}
 .iv-md button:focus-visible,.iv-md input:focus-visible,.iv-md select:focus-visible,.iv-md summary:focus-visible,.iv-md [tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -693,7 +698,7 @@ html[data-theme="cerah"] .button:not(.ghost):not(.danger){background:linear-grad
  <div class="iv-md-back" id="ivMd" hidden>
   <div class="iv-md" id="ivMdDlg" role="dialog" aria-modal="true" aria-labelledby="ivMdT" tabindex="-1">
    <div class="iv-md-head">
-    <div class="iv-md-hd"><h2 id="ivMdT">Mobilisasi Stok &amp; Simulasi Margin</h2><div class="iv-md-ctx" id="ivMdCtx"></div></div>
+    <div class="iv-md-hd"><h2 id="ivMdT">Mobilisasi Stok &amp; Simulasi Margin</h2><div class="iv-md-ctx" id="ivMdCtx"></div><div class="iv-iss" id="ivMdIssue" aria-live="polite"></div></div>
     <button type="button" class="iv-md-x" id="ivMdClose" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
    </div>
    <div class="iv-md-tabs" role="tablist" aria-label="Pilih paparan">
@@ -1482,10 +1487,11 @@ function poLevel(poId){let l='normal';recsForPO(poId).forEach(r=>{l=worst(l,r.cl
 function districtLevel(did){let l='normal',any=false;recsNow().forEach(r=>{if(r.districtId===did&&(!ivState.selectedCommodityId||r.commodityId===ivState.selectedCommodityId)){any=true;l=worst(l,r.cls.level)}});return any?l:'tiada'}
 const STATUS_CLS={normal:'hijau',waspada:'kuning',kritikal:'merah'};
 function poPasses(p,lvl){const s=ivState;return (!s.selectedStateId||p.stateId===s.selectedStateId)&&(s.selectedRisk==='all'||lvl===s.selectedRisk)}
+const priCmp=(a,b)=>b.score-a.score||LV_W[b.cls.level]-LV_W[a.cls.level]||b.comp.S-a.comp.S||a.poName.localeCompare(b.poName)||a.district.localeCompare(b.district);
 function priRows(){
  const s=ivState;
  return recsNow().filter(r=>r.cls.level!=='normal'&&(s.selectedRisk==='all'||r.cls.level===s.selectedRisk)&&(!s.selectedCommodityId||r.commodityId===s.selectedCommodityId)&&(!s.selectedStateId||r.stateId===s.selectedStateId)&&(!s.selectedPOId||r.poId===s.selectedPOId)&&(!s.selectedDistrictId||r.districtId===s.selectedDistrictId))
-  .sort((a,b)=>b.score-a.score||LV_W[b.cls.level]-LV_W[a.cls.level]||b.comp.S-a.comp.S||a.poName.localeCompare(b.poName)||a.district.localeCompare(b.district));
+  .sort(priCmp);
 }
 function issueLabel(r){
  const m=r.mode;const base=r.cls.priceLevel!=='normal'?(m==='pengeluar'?'Harga ladang jatuh':'Kenaikan harga runcit'):(m==='pengeluar'?'Ramalan di bawah ambang':'Ramalan di atas ambang');
@@ -2031,6 +2037,7 @@ function museInsightText(i){
  return x+(dt?' ('+dt+')':'')+'.';
 }
 function museShortDate(ds){const [y,m,d]=ds.split('-').map(Number);return d+' '+MY_MONTHS[m-1].slice(0,3)}
+const IV_MUSE_SHOW_ACTION=false; // ubah kepada true untuk papar semula "Tindakan disyorkan", PO berkaitan dan butang Buka Tindakan Intervensi / Butiran
 function museSentLbl(v){return v<-0.15?'Negatif':v>0.15?'Positif':'Neutral'}
 function ivRenderMuse(){
  const s=ivState,body=$i('ivMuseBody'),ms=s.muse;
@@ -2062,8 +2069,8 @@ function ivRenderMuse(){
   h+=`<article class="iv-muse-card" data-band="${i.riskBand}" data-open="${open}" data-id="${id}" aria-label="${E(i.commodityLabel)}, Risiko ${bandL}">
   <button type="button" class="iv-mc-head" aria-expanded="${open}" data-iv-act="museExp" data-iv-arg="${id}"><span class="iv-mc-t">${E(i.commodityLabel)}</span>${chip(i.location.label)}<span class="iv-chip ${bc}">Risiko ${bandL} <span class="iv-tr ${dir}">${i.riskCurrent} ${arr} ${sgn(ch,0)}</span></span><span class="iv-mc-date">tarikh acara ${museShortDate(i.eventDate)}</span></button>
   <p class="iv-mc-ins">${E(museInsightText(i))}</p>
-  <div class="iv-mc-act"><h4>Tindakan disyorkan</h4><ul>${i.suggestedActions.slice(0,2).map(a=>`<li>${E(a)}</li>`).join('')}</ul><div class="iv-mc-po">${canX?`PO berkaitan: <b>${E(poName(i.matchedPOId))}</b>`:'PO belum disahkan'}</div>
-  <div class="iv-mc-btns">${canX?`<button type="button" class="button" data-iv-act="museXfer" data-iv-arg="${id}">Buka Tindakan Intervensi</button>`:''}<button type="button" class="button tiny ghost iv-mc-more" data-iv-act="museExp" data-iv-arg="${id}" aria-expanded="${open}">${open?'Tutup butiran':'Butiran'}</button></div></div>`;
+  ${IV_MUSE_SHOW_ACTION?`<div class="iv-mc-act"><h4>Tindakan disyorkan</h4><ul>${i.suggestedActions.slice(0,2).map(a=>`<li>${E(a)}</li>`).join('')}</ul><div class="iv-mc-po">${canX?`PO berkaitan: <b>${E(poName(i.matchedPOId))}</b>`:'PO belum disahkan'}</div>
+  <div class="iv-mc-btns">${canX?`<button type="button" class="button" data-iv-act="museXfer" data-iv-arg="${id}">Buka Tindakan Intervensi</button>`:''}<button type="button" class="button tiny ghost iv-mc-more" data-iv-act="museExp" data-iv-arg="${id}" aria-expanded="${open}">${open?'Tutup butiran':'Butiran'}</button></div></div>`:''}`;
   if(open){
    h+=`<div class="iv-muse-x"><div class="iv-kv"><span>Risiko sebelum → semasa<b>${i.riskBefore} → ${i.riskCurrent} (${sgn(ch,0)})</b></span><span>Indeks sentimen<b>${f2(i.sentimentIndex)} (${museSentLbl(i.sentimentIndex)})</b></span><span>Bilangan sampel<b>${i.sampleCount}</b></span><span>Jenis lokasi<b>${ltl} (${Math.round(i.locationConfidence*100)}%)</b></span><span>Sumber<b>${E(i.sourceName)}</b></span><span>PO berkaitan<b>${i.matchedPOId?E(poName(i.matchedPOId)):'Belum disahkan'}</b></span></div>
    ${dummy?tagD:''}<div class="iv-note">${E(i.explanation)}</div><div class="iv-sec">TREND RISIKO</div>${sparkline(i)}
@@ -2110,6 +2117,20 @@ function mdCtx(){
  const host=$i('ivMdCtx');if(!host)return;
  const po=effPO(),cm=effCommodity();
  host.innerHTML=chip(po?'PO terpilih: '+poName(po):'PO belum dipilih',po?'info':'grey')+chip('Komoditi: '+commName(cm.id),'info')+chip('Mod: '+modeLbl(ivState.selectedMode),'grey');
+ const ie=$i('ivMdIssue');if(ie)ie.innerHTML=mdIssueHTML(mdIssueRow(po,cm));
+}
+function mdIssueRow(po,cm){
+ const s=ivState,all=recsNow();
+ const sel=all.find(x=>x.id===s.selectedInterventionId);
+ if(sel&&sel.cls.level!=='normal'&&sel.poId===po&&sel.commodityId===cm.id)return sel;
+ return all.filter(r=>r.cls.level!=='normal'&&r.poId===po&&r.commodityId===cm.id).sort(priCmp)[0]||null;
+}
+function mdIssueHTML(r){
+ if(!r)return '<div class="iv-iss-none">Tiada isu keutamaan direkodkan untuk PO dan komoditi ini</div>';
+ const lv=r.cls.level,m=r.mode,rw=r.row;let sup='';
+ if(rw&&isKg(r.commodityId)){const v=m==='pengeluar'?rw.surplusMT:rw.shortageMT;if(v>0)sup=`<span class="iv-iss-i"><b>${m==='pengeluar'?'Lebihan':'Kekurangan'} bekalan:</b> ${f2(v)} MT (${r.cls.supply.state==='disahkan'?'disahkan':'belum disahkan'})</span>`}
+ return `<div class="iv-iss-l1"><b class="iv-iss-h">Isu memerlukan intervensi</b><span class="iv-lv ${lv}">${LV_LABEL[lv]}</span><b class="iv-iss-t">${E(issueLabel(r))}</b><span class="iv-iss-loc">${E(r.district)}, ${E(r.negeri)}</span>${tagD}</div>
+ <div class="iv-iss-l2"><span class="iv-iss-i"><b>Harga ${MODE_STAGE[m]}:</b> ${rmAny(r.price.actual)} → forecast ${rmAny(r.price.forecast)} (${sgn(r.price.devPct,1)}%)</span>${sup}<span class="iv-iss-i"><b>Intervensi:</b> ${E(intervType(r))}</span></div>`;
 }
 function mdOpen(tab,opener){
  const back=$i('ivMd');
