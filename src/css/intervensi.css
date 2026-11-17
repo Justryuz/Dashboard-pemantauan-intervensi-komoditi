@@ -1557,6 +1557,47 @@ html[data-theme='cerah'] .iv-md {
   flex-wrap: wrap;
   gap: 6px 8px;
 }
+.iv-iss {
+  border: 1px solid var(--line2);
+  border-left: 3px solid var(--yellow);
+  background: var(--panel2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  min-width: 0;
+}
+.iv-iss-l1,
+.iv-iss-l2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 12px;
+  min-width: 0;
+}
+.iv-iss-h {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.iv-iss-t {
+  font-size: 13.5px;
+}
+.iv-iss-loc,
+.iv-iss-i {
+  color: var(--muted);
+}
+.iv-iss-i b {
+  color: var(--white);
+}
+.iv-iss-none {
+  color: var(--muted);
+  font-style: italic;
+}
 .iv-md-x {
   flex: 0 0 auto;
   width: 40px;

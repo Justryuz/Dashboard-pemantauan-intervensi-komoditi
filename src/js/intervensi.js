@@ -1514,6 +1514,12 @@
       (s.selectedRisk === 'all' || lvl === s.selectedRisk)
     );
   }
+  const priCmp = (a, b) =>
+    b.score - a.score ||
+    LV_W[b.cls.level] - LV_W[a.cls.level] ||
+    b.comp.S - a.comp.S ||
+    a.poName.localeCompare(b.poName) ||
+    a.district.localeCompare(b.district);
   function priRows() {
     const s = ivState;
     return recsNow()
@@ -1526,14 +1532,7 @@
           (!s.selectedPOId || r.poId === s.selectedPOId) &&
           (!s.selectedDistrictId || r.districtId === s.selectedDistrictId),
       )
-      .sort(
-        (a, b) =>
-          b.score - a.score ||
-          LV_W[b.cls.level] - LV_W[a.cls.level] ||
-          b.comp.S - a.comp.S ||
-          a.poName.localeCompare(b.poName) ||
-          a.district.localeCompare(b.district),
-      );
+      .sort(priCmp);
   }
   function issueLabel(r) {
     const m = r.mode;
@@ -3042,6 +3041,8 @@
     const [y, m, d] = ds.split('-').map(Number);
     return d + ' ' + MY_MONTHS[m - 1].slice(0, 3);
   }
+  // ubah kepada true untuk papar semula "Tindakan disyorkan", PO berkaitan dan butang Buka Tindakan Intervensi / Butiran
+  const IV_MUSE_SHOW_ACTION = false;
   function museSentLbl(v) {
     return v < -0.15 ? 'Negatif' : v > 0.15 ? 'Positif' : 'Neutral';
   }
@@ -3110,13 +3111,17 @@
       h += `<article class="iv-muse-card" data-band="${i.riskBand}" data-open="${open}" data-id="${id}" aria-label="${E(i.commodityLabel)}, Risiko ${bandL}">
   <button type="button" class="iv-mc-head" aria-expanded="${open}" data-iv-act="museExp" data-iv-arg="${id}"><span class="iv-mc-t">${E(i.commodityLabel)}</span>${chip(i.location.label)}<span class="iv-chip ${bc}">Risiko ${bandL} <span class="iv-tr ${dir}">${i.riskCurrent} ${arr} ${sgn(ch, 0)}</span></span><span class="iv-mc-date">tarikh acara ${museShortDate(i.eventDate)}</span></button>
   <p class="iv-mc-ins">${E(museInsightText(i))}</p>
-  <div class="iv-mc-act"><h4>Tindakan disyorkan</h4><ul>${i.suggestedActions
-    .slice(0, 2)
-    .map((a) => `<li>${E(a)}</li>`)
-    .join(
-      '',
-    )}</ul><div class="iv-mc-po">${canX ? `PO berkaitan: <b>${E(poName(i.matchedPOId))}</b>` : 'PO belum disahkan'}</div>
-  <div class="iv-mc-btns">${canX ? `<button type="button" class="button" data-iv-act="museXfer" data-iv-arg="${id}">Buka Tindakan Intervensi</button>` : ''}<button type="button" class="button tiny ghost iv-mc-more" data-iv-act="museExp" data-iv-arg="${id}" aria-expanded="${open}">${open ? 'Tutup butiran' : 'Butiran'}</button></div></div>`;
+  ${
+    IV_MUSE_SHOW_ACTION
+      ? `<div class="iv-mc-act"><h4>Tindakan disyorkan</h4><ul>${i.suggestedActions
+          .slice(0, 2)
+          .map((a) => `<li>${E(a)}</li>`)
+          .join(
+            '',
+          )}</ul><div class="iv-mc-po">${canX ? `PO berkaitan: <b>${E(poName(i.matchedPOId))}</b>` : 'PO belum disahkan'}</div>
+  <div class="iv-mc-btns">${canX ? `<button type="button" class="button" data-iv-act="museXfer" data-iv-arg="${id}">Buka Tindakan Intervensi</button>` : ''}<button type="button" class="button tiny ghost iv-mc-more" data-iv-act="museExp" data-iv-arg="${id}" aria-expanded="${open}">${open ? 'Tutup butiran' : 'Butiran'}</button></div></div>`
+      : ''
+  }`;
       if (open) {
         h += `<div class="iv-muse-x"><div class="iv-kv"><span>Risiko sebelum → semasa<b>${i.riskBefore} → ${i.riskCurrent} (${sgn(ch, 0)})</b></span><span>Indeks sentimen<b>${f2(i.sentimentIndex)} (${museSentLbl(i.sentimentIndex)})</b></span><span>Bilangan sampel<b>${i.sampleCount}</b></span><span>Jenis lokasi<b>${ltl} (${Math.round(i.locationConfidence * 100)}%)</b></span><span>Sumber<b>${E(i.sourceName)}</b></span><span>PO berkaitan<b>${i.matchedPOId ? E(poName(i.matchedPOId)) : 'Belum disahkan'}</b></span></div>
    ${dummy ? tagD : ''}<div class="iv-note">${E(i.explanation)}</div><div class="iv-sec">TREND RISIKO</div>${sparkline(i)}
@@ -3257,6 +3262,35 @@
       chip(po ? 'PO terpilih: ' + poName(po) : 'PO belum dipilih', po ? 'info' : 'grey') +
       chip('Komoditi: ' + commName(cm.id), 'info') +
       chip('Mod: ' + modeLbl(ivState.selectedMode), 'grey');
+    const ie = $i('ivMdIssue');
+    if (ie) ie.innerHTML = mdIssueHTML(mdIssueRow(po, cm));
+  }
+  function mdIssueRow(po, cm) {
+    const s = ivState,
+      all = recsNow();
+    const sel = all.find((x) => x.id === s.selectedInterventionId);
+    if (sel && sel.cls.level !== 'normal' && sel.poId === po && sel.commodityId === cm.id)
+      return sel;
+    return (
+      all
+        .filter((r) => r.cls.level !== 'normal' && r.poId === po && r.commodityId === cm.id)
+        .sort(priCmp)[0] || null
+    );
+  }
+  function mdIssueHTML(r) {
+    if (!r)
+      return '<div class="iv-iss-none">Tiada isu keutamaan direkodkan untuk PO dan komoditi ini</div>';
+    const lv = r.cls.level,
+      m = r.mode,
+      rw = r.row;
+    let sup = '';
+    if (rw && isKg(r.commodityId)) {
+      const v = m === 'pengeluar' ? rw.surplusMT : rw.shortageMT;
+      if (v > 0)
+        sup = `<span class="iv-iss-i"><b>${m === 'pengeluar' ? 'Lebihan' : 'Kekurangan'} bekalan:</b> ${f2(v)} MT (${r.cls.supply.state === 'disahkan' ? 'disahkan' : 'belum disahkan'})</span>`;
+    }
+    return `<div class="iv-iss-l1"><b class="iv-iss-h">Isu memerlukan intervensi</b><span class="iv-lv ${lv}">${LV_LABEL[lv]}</span><b class="iv-iss-t">${E(issueLabel(r))}</b><span class="iv-iss-loc">${E(r.district)}, ${E(r.negeri)}</span>${tagD}</div>
+ <div class="iv-iss-l2"><span class="iv-iss-i"><b>Harga ${MODE_STAGE[m]}:</b> ${rmAny(r.price.actual)} → forecast ${rmAny(r.price.forecast)} (${sgn(r.price.devPct, 1)}%)</span>${sup}<span class="iv-iss-i"><b>Intervensi:</b> ${E(intervType(r))}</span></div>`;
   }
   function mdOpen(tab, opener) {
     const back = $i('ivMd');
