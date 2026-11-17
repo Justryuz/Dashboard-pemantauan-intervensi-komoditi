@@ -36,6 +36,8 @@ const MIME = {
 
 const { CSP } = require('../config/security.js');
 const cuaca = require('./services/cuaca.js');
+const banjir = require('./services/banjir.js');
+const kualitiUdara = require('./services/kualiti-udara.js');
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP + "; frame-ancestors 'none'",
@@ -109,21 +111,27 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  if (pathname === '/api/cuaca') {
-    const cache = cuaca.bacaCache();
+  const API_CACHE = {
+    '/api/cuaca': [cuaca, 'cuaca'],
+    '/api/banjir': [banjir, 'banjir'],
+    '/api/kualiti-udara': [kualitiUdara, 'kualiti udara'],
+  };
+  if (Object.hasOwn(API_CACHE, pathname)) {
+    const [servis, label] = API_CACHE[pathname];
+    const cache = servis.bacaCache();
     if (!cache)
       return send(
         res,
         503,
         JSON.stringify({
-          ralat: 'Data cuaca belum tersedia',
-          sedangDikemaskini: cuaca.sedangAmbil(),
+          ralat: `Data ${label} belum tersedia`,
+          sedangDikemaskini: servis.sedangAmbil(),
         }),
         {
           'Content-Type': 'application/json; charset=utf-8',
         },
       );
-    const umur = cuaca.umurJam(cache);
+    const umur = servis.umurJam(cache);
     return send(
       res,
       200,
@@ -148,6 +156,8 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => {
     console.log(`Dashboard: http://${HOST}:${PORT}`);
     cuaca.mulaPenjadual();
+    banjir.mulaPenjadual();
+    kualitiUdara.mulaPenjadual();
   });
 }
 module.exports = server;

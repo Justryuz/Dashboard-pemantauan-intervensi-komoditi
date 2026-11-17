@@ -1,0 +1,305 @@
+{
+  "displayFieldName": "STATE_NAME",
+  "features": [
+    {
+      "attributes": {
+        "STATION_ID": "CA01R",
+        "DATETIME": 1794924000000,
+        "API": 46,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Kangar, PERLIS",
+        "LONGITUDE": 100.210937,
+        "LATITUDE": 6.429928,
+        "PLACE": "Institut Latihan Perindustrian (Kangar)",
+        "LOT_INFO": "Lot 2003 PA 100863",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "Perlis",
+        "REGION_NAME": "Northern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA03K",
+        "DATETIME": 1794924000000,
+        "API": 45,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Alor Setar, KEDAH",
+        "LONGITUDE": 100.346857,
+        "LATITUDE": 6.13713,
+        "PLACE": "Sek. Men. Agama Kedah (Kedah)",
+        "LOT_INFO": "Lot 8899 PA61006 Bandar Alor Setar Daerah Kota Setar",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "Kedah",
+        "REGION_NAME": "Northern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA06P",
+        "DATETIME": 1794924000000,
+        "API": 47,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Seberang Jaya, PULAU PINANG",
+        "LONGITUDE": 100.403976,
+        "LATITUDE": 5.398419,
+        "PLACE": "Sek.Keb. Seberang Jaya II (Penang)",
+        "LOT_INFO": "Lot 5291 PA 19531 Mukim 1 Daerah Seberang Perai Tengah",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Pulau Pinang",
+        "REGION_NAME": "Northern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA11A",
+        "DATETIME": 1794924000000,
+        "API": 69,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Moderate",
+        "STATION_LOCATION": "Tasek Ipoh, PERAK",
+        "LONGITUDE": 101.116669,
+        "LATITUDE": 4.629462,
+        "PLACE": "Sek.Men. Keb. Jalan Tasek (PERAK)",
+        "LOT_INFO": "Lot 100092 PA 55055 Mukim Hulu Kinta Daerah Kinta",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Perak",
+        "REGION_NAME": "Northern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA15W",
+        "DATETIME": 1794924000000,
+        "API": 47,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Batu Muda, W.P. KUALA LUMPUR",
+        "LONGITUDE": 101.682218,
+        "LATITUDE": 3.212429,
+        "PLACE": "Sek. Keb. Batu Muda",
+        "LOT_INFO": "Lot 81062 (PT26861) Status Survey Mukim Batu Daerah Kuala Lumpur",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "WP Kuala Lumpur",
+        "REGION_NAME": "Central"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA17W",
+        "DATETIME": 1794924000000,
+        "API": 61,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Moderate",
+        "STATION_LOCATION": "Putrajaya, W.P. PUTRAJAYA",
+        "LONGITUDE": 101.690946,
+        "LATITUDE": 2.915793,
+        "PLACE": "Sekolah Kebangsaan Putrajaya Presint 18 (2)",
+        "LOT_INFO": "Lot 532 PA 1240 Bandar Putrajaya Daerah Putrajaya",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "WP Putrajaya",
+        "REGION_NAME": "Central"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA24N",
+        "DATETIME": 1794924000000,
+        "API": 38,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Seremban, NEGERI SEMBILAN",
+        "LONGITUDE": 101.968395,
+        "LATITUDE": 2.723441,
+        "PLACE": " Sek. Men. Teknik Tuanku Jaafar",
+        "LOT_INFO": "Lot 11052 PA 20035 Bandar Seremban Daerah Seremban",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Negeri Sembilan",
+        "REGION_NAME": "Central"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA28M",
+        "DATETIME": 1794924000000,
+        "API": 35,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Bandaraya Melaka, MELAKA",
+        "LONGITUDE": 102.257066,
+        "LATITUDE": 2.190929,
+        "PLACE": "Sek. Men. Keb Tinggi Melaka",
+        "LOT_INFO": "Lot 502 PA 20330 Bandar Melaka Daerah Melaka Tengah",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Melaka",
+        "REGION_NAME": "Southern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA32J",
+        "DATETIME": 1794924000000,
+        "API": 35,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Kluang, JOHOR",
+        "LONGITUDE": 103.312179,
+        "LATITUDE": 2.036936,
+        "PLACE": "Kolej Kejururawatan Kluang Johor",
+        "LOT_INFO": "Lot 11368 PA 149325 Mukim Kluang Daerah Kluang",
+        "STATION_CATEGORY": "Rural",
+        "STATE_NAME": "Johor",
+        "REGION_NAME": "Southern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA33J",
+        "DATETIME": 1794924000000,
+        "API": null,
+        "API_PM10": null,
+        "PARAM_SELECTED": null,
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": null,
+        "STATION_LOCATION": "Larkin, JOHOR",
+        "LONGITUDE": 103.735922,
+        "LATITUDE": 1.494616,
+        "PLACE": "Institut Perguruan Temenggung Ibrahim Larkin Johor",
+        "LOT_INFO": "Tiada Lot Bandar Johor Bahru Daerah Johor Bahru",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Johor",
+        "REGION_NAME": "Southern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA40C",
+        "DATETIME": 1794924000000,
+        "API": 29,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Indera Mahkota Kuantan, PAHANG",
+        "LONGITUDE": 103.296553,
+        "LATITUDE": 3.819228,
+        "PLACE": "SK Indera Mahkota , Bandar Indera Mahkota 25200 Kuantan Pahang",
+        "LOT_INFO": "Lot 38500 PA 75550 Mukim Kuala Kuantan Daerah Kuantan",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "Pahang",
+        "REGION_NAME": "Eastern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA44T",
+        "DATETIME": 1794924000000,
+        "API": null,
+        "API_PM10": null,
+        "PARAM_SELECTED": null,
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": null,
+        "STATION_LOCATION": "Kuala Terengganu, TERENGGANU",
+        "LONGITUDE": 103.120435,
+        "LATITUDE": 5.308144,
+        "PLACE": "SK Pusat Chabang Tiga, Kampung Tok Ku 21000 Kuala Terengganu, Terengganu",
+        "LOT_INFO": "Lot 3338 PA 105400 Mukim Cabang Tiga Daerah Kuala Terangganu",
+        "STATION_CATEGORY": "Urban",
+        "STATE_NAME": "Terengganu",
+        "REGION_NAME": "Eastern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA47D",
+        "DATETIME": 1794924000000,
+        "API": 37,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Kota Bharu, KELANTAN",
+        "LONGITUDE": 102.249233,
+        "LATITUDE": 6.147439,
+        "PLACE": "SMK Tanjung Chat, Jalan Tengku Ahmad Panglima Kota Bharu,15400 Kelantan",
+        "LOT_INFO": "Lot 2119 PA 106190 Mukim Tanjung Chat Daerah Kota Bharu",
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "Kelantan",
+        "REGION_NAME": "Eastern"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA50S",
+        "DATETIME": 1794924000000,
+        "API": 40,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Kota Kinabalu, SABAH",
+        "LONGITUDE": 116.056388,
+        "LATITUDE": 5.879672,
+        "PLACE": "SMK TanSau, Kota kinabalu",
+        "LOT_INFO": null,
+        "STATION_CATEGORY": "Sub Urban",
+        "STATE_NAME": "Sabah",
+        "REGION_NAME": "Sabah"
+      }
+    },
+    {
+      "attributes": {
+        "STATION_ID": "CA64Q",
+        "DATETIME": 1794924000000,
+        "API": 23,
+        "API_PM10": null,
+        "PARAM_SELECTED": "PM2.5",
+        "PARAM_SYMBOL": "**",
+        "PARAM_SYMBOL_PM10": null,
+        "CLASS": "Good",
+        "STATION_LOCATION": "Samarahan, SARAWAK",
+        "LONGITUDE": 110.491506,
+        "LATITUDE": 1.454806,
+        "PLACE": "Pejabat Daerah Kota Samarahan",
+        "LOT_INFO": null,
+        "STATION_CATEGORY": "Rural",
+        "STATE_NAME": "Sarawak",
+        "REGION_NAME": "Sarawak"
+      }
+    }
+  ]
+}

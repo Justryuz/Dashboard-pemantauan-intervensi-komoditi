@@ -1,0 +1,165 @@
+{
+  "exceededTransferLimit": false,
+  "features": [
+    {
+      "attributes": {
+        "objectid": 154,
+        "bil": 154,
+        "kawasan_banjir": "Jalan 21,23 & 62 Selayang Baru",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Batu",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": 3.255297,
+        "longitude": 101.670425,
+        "jenis_banjir": "Kilat"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 157,
+        "bil": 157,
+        "kawasan_banjir": "Jalan 23 21 & 62 Selayang Baru",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Batu",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": " 3.253994",
+        "longitude": "101.670691\t",
+        "jenis_banjir": "Kilat"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 187,
+        "bil": 187,
+        "kawasan_banjir": "Selayang Indah (Pasar Borong Selayang)",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Setapak",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sungai Klang / Sungai Batu",
+        "sub_lembangan_sg": "TB",
+        "latitude": "3.24557 ",
+        "longitude": " 101.666",
+        "jenis_banjir": "Genang"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 153,
+        "bil": 153,
+        "kawasan_banjir": "Jalan 11C Selayang Baru",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Batu",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": "3.249431",
+        "longitude": "101.6699",
+        "jenis_banjir": "Kilat"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 158,
+        "bil": 158,
+        "kawasan_banjir": "Persimpangan Bukit Botak",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Batu",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": 3.260706,
+        "longitude": 101.673068,
+        "jenis_banjir": "Kilat"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 156,
+        "bil": 156,
+        "kawasan_banjir": "Taman Sri Selayang",
+        "negeri": "Selangor",
+        "daerah": "Gombak",
+        "mukim": "Batu",
+        "poskod": 68100,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Batu",
+        "latitude": 3.241028,
+        "longitude": 101.671556,
+        "jenis_banjir": "Kilat"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1,
+        "bil": 1,
+        "kawasan_banjir": "Kg. Teluk Gong",
+        "negeri": "Selangor",
+        "daerah": "Klang",
+        "mukim": "Kelang",
+        "poskod": 42009,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": 2.942503,
+        "longitude": 101.37729,
+        "jenis_banjir": "Monsun"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 2,
+        "bil": 2,
+        "kawasan_banjir": "Kg. Perigi Nenas, P.Indah",
+        "negeri": "Selangor",
+        "daerah": "Klang",
+        "mukim": "Kelang",
+        "poskod": 42920,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": 2.927169,
+        "longitude": 101.31191,
+        "jenis_banjir": "Monsun"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 3,
+        "bil": 3,
+        "kawasan_banjir": "Taman Sri Muda",
+        "negeri": "Selangor",
+        "daerah": "Klang",
+        "mukim": "Kelang",
+        "poskod": 41200,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Klang",
+        "latitude": 2.988931,
+        "longitude": 101.46554,
+        "jenis_banjir": "Monsun"
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 5,
+        "bil": 5,
+        "kawasan_banjir": "Kg. Delek",
+        "negeri": "Selangor",
+        "daerah": "Klang",
+        "mukim": "Kelang",
+        "poskod": 41250,
+        "lembangan_sg_rbmu": "Sg. Klang",
+        "sub_lembangan_sg": "Sg. Gadong Besar",
+        "latitude": 3.0248,
+        "longitude": 101.40598,
+        "jenis_banjir": "Monsun"
+      }
+    }
+  ]
+}
