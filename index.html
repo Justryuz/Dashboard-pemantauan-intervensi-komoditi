@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" id="metaScheme" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; font-src 'self' data:; connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="icon" href="data:," />
+    <script src="src/js/theme-init.js"></script>
+    <title>FAMA | Dashboard Pemantauan & Intervensi Komoditi (Data Dummy)</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script
+      src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+      integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="config/app.config.js"></script>
+    <link rel="stylesheet" href="src/css/base.css" />
+    <link rel="stylesheet" href="src/css/scenarios.css" />
+    <link rel="stylesheet" href="src/css/intervensi.css" />
+    <link rel="stylesheet" href="src/css/tema.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">F</div>
+          <div>
+            <div class="eyebrow">FAMA · PROTOTAIP OPERASI</div>
+            <h1>Dashboard Pemantauan &amp; Intervensi Komoditi</h1>
+            <div class="sub">
+              Pengesanan lokasi kritikal, pemantauan harga dan cadangan tindakan intervensi
+            </div>
+          </div>
+        </div>
+        <div class="head-right">
+          <div class="tema-toggle" role="group" aria-label="Tema paparan">
+            <button type="button" id="temaGelap" data-tema="gelap" aria-pressed="true">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" /></svg
+              >Gelap</button
+            ><button type="button" id="temaCerah" data-tema="cerah" aria-pressed="false">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="4" fill="currentColor" />
+                <path
+                  d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                /></svg
+              >Cerah
+            </button>
+          </div>
+          <span class="tag demo-badge">● SIMULASI · DATA DUMMY</span
+          ><button class="button ghost" id="downloadLogistik">↓ CSV Logistik PO</button
+          ><button class="button ghost" id="downloadCsv">↓ CSV Harga Dummy</button
+          ><button class="button ghost" id="showLogs">
+            ☷ Rekod Tindakan <span id="actionCount">0</span>
+          </button>
+        </div>
+      </header>
+      <nav class="iv-tabs" role="tablist" aria-label="Halaman dashboard">
+        <button
+          type="button"
+          class="iv-tab"
+          role="tab"
+          id="ivTabMonitor"
+          aria-selected="true"
+          aria-controls="viewMonitor"
+        >
+          Pemantauan Komoditi</button
+        ><button
+          type="button"
+          class="iv-tab"
+          role="tab"
+          id="ivTabIv"
+          aria-selected="false"
+          aria-controls="viewIntervensi"
+          tabindex="-1"
+        >
+          Dashboard Intervensi Komoditi
+        </button>
+      </nav>
+      <div id="viewMonitor" class="iv-view" role="tabpanel" aria-labelledby="ivTabMonitor">
+        <div class="source-strip">
+          <span class="source">◫ Lokasi PO: infografik</span
+          ><span class="source">◈ Harga Pasaran</span><span class="source">⌁ Harga Forecast</span
+          ><span class="source">◎ Threshold Harga</span
+          ><span class="source">⌂ Outlet Intervensi</span
+          ><span class="source">▰ Kapasiti Infrastruktur</span
+          ><span class="source">≋ JPS <b class="cyan">(simulasi)</b></span
+          ><span class="source">☁ MET Malaysia <b class="cyan">(simulasi)</b></span>
+        </div>
+        <section class="filterbar" aria-label="Penapis dashboard">
+          <div class="ctrl">
+            <span>Komoditi</span
+            ><select id="filterCommodity">
+              <option value="all">Semua komoditi</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <span>Pusat Operasi FAMA</span
+            ><select id="filterState">
+              <option value="all">Semua pusat operasi</option>
+            </select>
+          </div>
+          <div class="ctrl short">
+            <span>Indikator</span
+            ><select id="filterSeverity">
+              <option value="all">Semua tahap</option>
+              <option value="merah">🔴 Kritikal</option>
+              <option value="kuning">🟡 Berwaspada</option>
+              <option value="hijau">🟢 Stabil</option>
+            </select>
+          </div>
+          <div class="ctrl short">
+            <span>Mod senarai</span
+            ><select id="filterIssue">
+              <option value="true">Bermasalah sahaja</option>
+              <option value="false">Semua komoditi</option>
+            </select>
+          </div>
+          <div class="ctrl short">
+            <span>Julat tren</span
+            ><select id="filterDays">
+              <option value="30">30 hari</option>
+              <option value="14">14 hari</option>
+              <option value="7">7 hari</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="button ghost" id="resetFilters">↺ Reset</button>
+          </div>
+          <span class="filter-tip">Klik titik PO pada peta untuk zoom ke daerah seliaan.</span>
+        </section>
+        <section aria-label="Ringkasan logistik berdasarkan infografik">
+          <div class="logistik-head" hidden style="display: none">
+            <b>◈ Kesiapsiagaan Logistik · PO Utama Negeri</b
+            ><span>Angka logistik bersumberkan infografik · Status harga masih data dummy</span>
+          </div>
+          <div class="logistik-kpis" id="logistikKpis" hidden style="display: none"></div>
+          <div class="data-warning" id="dataQuality" hidden style="display: none"></div>
+        </section>
+        <section class="kpis" id="kpis"></section>
+        <main class="main-grid">
+          <div class="left-col">
+            <section class="panel map-panel" aria-label="Peta lokasi PO">
+              <div class="titlebar">
+                <div>
+                  <div class="panel-title">◉ Peta 15 Pusat Operasi FAMA</div>
+                  <div class="note" id="mapCaption">
+                    15 PO rujukan infografik · warna mengikut tahap risiko simulasi
+                  </div>
+                </div>
+                <div class="map-tools">
+                  <button class="button tiny ghost" id="floodToggle">≋ Banjir: Hidup</button
+                  ><button class="button tiny" id="backMap" style="display: none">
+                    ← Malaysia
+                  </button>
+                </div>
+              </div>
+              <div class="map-svg-frame">
+                <div
+                  id="map"
+                  role="region"
+                  aria-label="Peta Malaysia interaktif dengan penanda Pusat Operasi contoh"
+                ></div>
+                <div class="map-floating">
+                  <span>◉</span>
+                  <div>
+                    <div id="mapMode">PETA MALAYSIA</div>
+                    <span style="color: var(--t8eb2cd)" id="mapHint">Klik mana-mana PO</span>
+                  </div>
+                  <div class="num" id="mapPOCount">12</div>
+                </div>
+              </div>
+              <div class="map-legend">
+                <span class="legend-item"><i class="dot green"></i>Hijau: Stabil</span
+                ><span class="legend-item"><i class="dot yellow"></i>Kuning: Waspada</span
+                ><span class="legend-item"><i class="dot red"></i>Merah berkelip: Kritikal</span
+                ><span class="legend-item">≋ Banjir: JPS (dummy)</span
+                ><span class="legend-item" style="margin-left: auto">🔄 Peta ↔ Panel harga</span>
+              </div>
+              <div class="map-detail" id="mapDetail" hidden style="display: none"></div>
+              <div
+                class="po-directory"
+                id="poDirectory"
+                aria-label="Direktori 15 pusat operasi"
+                hidden
+                style="display: none"
+              ></div>
+            </section>
+            <div class="triple-row">
+              <div class="panel compare-panel">
+                <div class="list-head">
+                  <strong>▤ Perbandingan Negeri / Daerah</strong
+                  ><span class="note">+ Harga Forecast</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>NEGERI / DAERAH<br />KOMODITI</th>
+                        <th>MINGGU<br />SEBELUM</th>
+                        <th>MINGGU<br />TERKINI</th>
+                        <th>HARGA<br />FORECAST</th>
+                        <th>TREN<br />(%)</th>
+                        <th>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="compareBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="panel chart-panel">
+                <div class="titlebar">
+                  <div>
+                    <div class="panel-title">⌁ Trend Harga Purata Harian</div>
+                    <div class="note" id="chartSubject">
+                      Pergerakan harga 30 hari, julat sigma, harga lantai dan harga siling
+                    </div>
+                  </div>
+                  <span class="tag" style="font-size: 10px; padding: 5px 8px" id="chartStatus"
+                    >Forecast</span
+                  >
+                </div>
+                <svg
+                  id="priceChart"
+                  class="chart-svg"
+                  viewBox="0 0 600 420"
+                  role="img"
+                  aria-label="Graf trend harga purata harian"
+                ></svg>
+                <div class="chart-legend">
+                  <span style="color: var(--blue)">━ Harga harian</span
+                  ><span style="color: var(--green)">┄ Purata</span
+                  ><span style="color: var(--yellow)">┄ Amaran 1 · ±1σ</span
+                  ><span style="color: var(--red)">┄ Amaran 2 · ±2σ</span
+                  ><span>⚑ Lantai / siling</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="analytics-col">
+            <div class="analytics-header">
+              <div>
+                <h2>Analisis Harga &amp; Perbandingan</h2>
+                <div class="note" id="analyticsScope">
+                  Paparan lalai: komoditi bermasalah seluruh negara
+                </div>
+              </div>
+              <span class="tag" id="scopeChip">◉ Seluruh Malaysia</span>
+            </div>
+            <section class="panel" id="outletPanel" hidden style="display: none">
+              <div class="titlebar">
+                <div>
+                  <div class="panel-title">▰ Logistik PO &amp; Outlet Intervensi</div>
+                  <div class="note" id="outletSub">Pilih PO untuk cadangan operasi</div>
+                </div>
+              </div>
+              <div id="outletContent" style="padding: 0 15px 12px"></div>
+            </section>
+            <section class="grid-analytics">
+              <div class="panel risk-panel" hidden style="display: none">
+                <div class="risk-head">
+                  <div>
+                    <div class="panel-title">⚑ Senarai Keutamaan Intervensi</div>
+                    <div class="note">Isu kritikal &amp; amaran mengikut penapis</div>
+                  </div>
+                  <span class="tag" id="riskCount" style="font-size: 10px; padding: 5px 8px"
+                    >0 isu</span
+                  >
+                </div>
+                <div class="risk-feed" id="riskFeed"></div>
+              </div>
+              <div class="panel listpanel">
+                <div class="list-head">
+                  <strong style="color: var(--red)">↓ 5 Harga Terendah · Bekalan</strong
+                  ><select class="mini-select" id="lowStage">
+                    <option>Ladang</option>
+                    <option>Borong</option>
+                  </select>
+                </div>
+                <div class="listbody" id="lowestPrices"></div>
+              </div>
+              <div class="panel listpanel">
+                <div class="list-head">
+                  <strong style="color: var(--green)">↑ 5 Harga Tertinggi · Pasaran</strong
+                  ><select class="mini-select" id="highStage">
+                    <option>Borong</option>
+                    <option>Runcit</option>
+                  </select>
+                </div>
+                <div class="listbody" id="highestPrices"></div>
+              </div>
+            </section>
+          </aside>
+        </main>
+        <section class="bottom-grid">
+          <section class="panel">
+            <div class="titlebar">
+              <div>
+                <div class="panel-title">☁ Ramalan Cuaca Mengikut Negeri</div>
+                <div class="note">Maklumat simulasi — bukan API langsung</div>
+              </div>
+              <span class="tag" style="font-size: 10px; padding: 4px 8px">MET · Demo</span>
+            </div>
+            <div class="weather-grid" id="weatherGrid"></div>
+          </section>
+          <section class="panel">
+            <div class="alert-head">
+              ⚠ Amaran Rasmi MET Malaysia
+              <span style="margin-left: auto; font-size: 10px; font-weight: 400">CONTOH</span>
+            </div>
+            <div class="alert-body">
+              <div class="alert-item">
+                <b>Amaran ribut petir · Terengganu</b>
+                <p>Simulasi · Risiko hujan lebat di kawasan pengeluaran</p>
+              </div>
+              <div class="alert-item">
+                <b>Amaran hujan lebat · Johor</b>
+                <p>Simulasi · Semakan risiko gangguan bekalan</p>
+              </div>
+              <div class="alert-item">
+                <b>Amaran banjir · Kelantan / Pahang</b>
+                <p>Simulasi · Data JPS belum disambungkan</p>
+              </div>
+            </div>
+            <div class="right-note">
+              Sumber integrasi sasaran: API MET Malaysia &amp; JPS Malaysia.
+              <b>Bukan amaran sebenar.</b>
+            </div>
+          </section>
+          <section class="panel ams-panel" id="amsPanel" aria-labelledby="amsTitle">
+            <div class="ams-head">
+              <div class="ams-title-wrap">
+                <span class="ams-brain" aria-hidden="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M9 4.5a3 3 0 0 0-3 3 3 3 0 0 0-2 2.8 3 3 0 0 0 1.2 2.4A3.2 3.2 0 0 0 6 15a3 3 0 0 0 3 4.5 2.5 2.5 0 0 0 3-2V6.5a2.5 2.5 0 0 0-3-2z"
+                    />
+                    <path
+                      d="M15 4.5a3 3 0 0 1 3 3 3 3 0 0 1 2 2.8 3 3 0 0 1-1.2 2.4A3.2 3.2 0 0 1 18 15a3 3 0 0 1-3 4.5 2.5 2.5 0 0 1-3-2V6.5a2.5 2.5 0 0 1 3-2z"
+                    />
+                    <path d="M9 9.5h1.5M13.5 9.5H15M9 14h1.5M13.5 14H15" /></svg
+                ></span>
+                <div>
+                  <h2 id="amsTitle">AI Multi-Scenario Monitoring</h2>
+                  <div class="ams-sub">Pemantauan pelbagai senario dan PO terlibat</div>
+                </div>
+              </div>
+              <span class="tag ams-badge" id="amsBadge">DATA DUMMY</span>
+            </div>
+            <div class="ams-state" id="amsState" role="status" aria-live="polite"></div>
+            <div class="ams-overview" id="amsOverview">
+              <div class="ams-kpis" id="amsKpis"></div>
+              <h3 class="ams-section">Senario Cuaca yang Dikesan</h3>
+              <div id="amsList" class="ams-list"></div>
+            </div>
+            <div id="amsDetail" class="ams-detail" hidden></div>
+          </section>
+        </section>
+      </div>
+      <div id="viewIntervensi" class="iv-view" role="tabpanel" aria-labelledby="ivTabIv" hidden>
+        <section class="iv-head" aria-label="Tajuk halaman">
+          <h2>Dashboard Intervensi Komoditi</h2>
+          <div class="iv-sub">Pemantauan Harga, Bekalan dan Cadangan Intervensi Pasaran</div>
+          <div class="iv-badge-row">
+            <span class="iv-tag real">Data sedia ada</span
+            ><span>nama PO, lokasi anggaran bandar dan angka logistik maksimum (infografik)</span
+            ><span class="iv-tag dummy">DATA DUMMY</span
+            ><span
+              >harga, bekalan, outlet, pemetaan daerah, simulasi AI dan isu mingguan ialah data
+              prototaip</span
+            >
+          </div>
+        </section>
+        <section
+          class="iv-filters iv-collapsed"
+          id="ivFilters"
+          aria-label="Penapis dashboard intervensi"
+        >
+          <button
+            type="button"
+            class="button ghost iv-fbtn"
+            id="ivFilterToggle"
+            aria-expanded="false"
+            aria-controls="ivFilters"
+          >
+            ☰ Penapis
+          </button>
+          <div class="ctrl">
+            <span>Komoditi</span
+            ><select id="ivFKomoditi" data-iv-sel="komoditi" aria-label="Komoditi"></select>
+          </div>
+          <div class="ctrl">
+            <span>Negeri</span
+            ><select id="ivFNegeri" data-iv-sel="negeri" aria-label="Negeri"></select>
+          </div>
+          <div class="ctrl">
+            <span>Pusat Operasi</span
+            ><select id="ivFPO" data-iv-sel="po" aria-label="Pusat Operasi"></select>
+          </div>
+          <div class="ctrl">
+            <span>Daerah</span
+            ><select id="ivFDaerah" data-iv-sel="daerah" aria-label="Daerah"></select>
+          </div>
+          <div class="ctrl">
+            <span>Tarikh / Tempoh Analisis</span
+            ><select id="ivFTempoh" data-iv-sel="tempoh" aria-label="Tarikh / Tempoh Analisis">
+              <option value="7">7 hari</option>
+              <option value="14">14 hari</option>
+              <option value="30" selected>30 hari</option></select
+            ><small>Tempoh purata harga asas. Siri harga tiada tarikh.</small>
+          </div>
+          <div class="ctrl">
+            <span>Tahap Risiko</span
+            ><select id="ivFRisiko" data-iv-sel="risiko" aria-label="Tahap Risiko">
+              <option value="all">Semua tahap</option>
+              <option value="kritikal">Kritikal</option>
+              <option value="waspada">Waspada</option>
+              <option value="normal">Normal</option>
+            </select>
+          </div>
+          <div class="filter-actions iv-reset-wrap">
+            <button type="button" class="button ghost" id="ivReset" data-iv-act="reset">
+              ↺ Set Semula
+            </button>
+          </div>
+        </section>
+        <details class="iv-thr" id="ivThr">
+          <summary>Tetapan Ambang (prototaip, boleh ditetapkan)</summary>
+          <div class="iv-thr-grid">
+            <label
+              >Pengeluar: amaran harga turun (%)<input
+                type="number"
+                id="ivThrPW"
+                data-iv-thr="pengeluar.warn"
+                step="1"
+            /></label>
+            <label
+              >Pengeluar: kritikal harga turun (%)<input
+                type="number"
+                id="ivThrPC"
+                data-iv-thr="pengeluar.crit"
+                step="1"
+            /></label>
+            <label
+              >Pengguna: amaran harga naik (%)<input
+                type="number"
+                id="ivThrGW"
+                data-iv-thr="pengguna.warn"
+                step="1"
+            /></label>
+            <label
+              >Pengguna: kritikal harga naik (%)<input
+                type="number"
+                id="ivThrGC"
+                data-iv-thr="pengguna.crit"
+                step="1"
+            /></label>
+          </div>
+          <div class="iv-err" id="ivThrErr" role="alert"></div>
+          <div class="iv-note">
+            Ambang amaran antara 1 hingga 50. Ambang kritikal mesti lebih besar daripada ambang
+            amaran dan tidak melebihi 90. Ambang ini ialah ambang prototaip, bukan dasar rasmi.
+          </div>
+        </details>
+        <div class="iv-grid-top">
+          <section class="panel iv-panel" id="ivMapPanel" aria-labelledby="ivMapT">
+            <div class="iv-ptitle">
+              <div>
+                <h3 id="ivMapT">Peta Geospasial Malaysia</h3>
+                <div
+                  class="note"
+                  title="Semenanjung, Sabah dan Sarawak. Klik PO untuk zum, kawasan daerah dan outlet intervensi."
+                >
+                  Semenanjung, Sabah dan Sarawak. Klik PO untuk zum, kawasan daerah dan outlet
+                  intervensi.
+                </div>
+              </div>
+              <div class="iv-chips" id="ivMapChips"></div>
+            </div>
+            <div class="iv-map-tabs">
+              <div class="iv-mtabs" role="tablist" aria-label="Mod intervensi">
+                <button
+                  type="button"
+                  class="iv-mtab"
+                  role="tab"
+                  id="ivModePengeluar"
+                  data-mode="pengeluar"
+                  data-iv-act="mode"
+                  data-iv-arg="pengeluar"
+                  aria-selected="true"
+                >
+                  PENGELUAR</button
+                ><button
+                  type="button"
+                  class="iv-mtab"
+                  role="tab"
+                  id="ivModePengguna"
+                  data-mode="pengguna"
+                  data-iv-act="mode"
+                  data-iv-arg="pengguna"
+                  aria-selected="false"
+                >
+                  PENGGUNA
+                </button>
+              </div>
+              <div class="iv-mhint" id="ivMapHint"></div>
+            </div>
+            <div class="iv-map-frame">
+              <div
+                id="ivMap"
+                role="region"
+                aria-label="Peta Malaysia interaktif untuk dashboard intervensi"
+              ></div>
+              <button
+                type="button"
+                class="button ghost iv-map-back"
+                id="ivMapBack"
+                data-iv-act="backMY"
+                hidden
+              >
+                ← Malaysia
+              </button>
+              <div class="iv-map-skel" id="ivMapSkel">Memuatkan peta…</div>
+              <div class="iv-map-fallback" id="ivMapFallback" hidden></div>
+            </div>
+            <div class="iv-map-tools">
+              <div id="ivMapBanner"></div>
+              <div class="iv-chips" id="ivOutletChips" aria-label="Penapis kategori outlet"></div>
+              <div class="iv-legend" id="ivLegend"></div>
+              <div
+                class="iv-chips iv-scroll"
+                id="ivDistChips"
+                aria-label="Daerah di bawah seliaan PO"
+              ></div>
+              <div class="iv-note">
+                Lokasi PO ialah anggaran bandar, bukan koordinat bangunan PO. Kawasan daerah ialah
+                bulatan anggaran (bukan sempadan rasmi); tiada data sempadan tersedia. Outlet di
+                sini ialah data dummy yang berasingan daripada outlet contoh dalam tab Pemantauan
+                Komoditi.
+              </div>
+              <details id="ivUnmapped">
+                <summary class="iv-note" style="cursor: pointer">
+                  Outlet tanpa PO penyelia disahkan (dummy)
+                </summary>
+                <div id="ivUnmappedList" class="iv-note"></div>
+              </details>
+            </div>
+          </section>
+          <section class="panel iv-panel" id="ivLogPanel" aria-labelledby="ivLogT">
+            <div class="iv-ptitle">
+              <div>
+                <h3 id="ivLogT">Kesiapsiagaan Logistik Pusat Operasi</h3>
+                <div class="note" id="ivLogNote">
+                  Kenderaan, muatan, bilik sejuk dan simpanan PO terpilih.
+                </div>
+              </div>
+              <div class="iv-chips" id="ivLogChips"></div>
+            </div>
+            <div class="iv-pbody" id="ivLogBody"></div>
+          </section>
+          <section class="panel iv-panel" id="ivPriPanel" aria-labelledby="ivPriT">
+            <div class="iv-ptitle">
+              <div>
+                <h3 id="ivPriT">Senarai Keutamaan Intervensi</h3>
+                <div
+                  class="note"
+                  title="Isu kritikal dan amaran mengikut lokasi serta komoditi, disusun mengikut skor keutamaan."
+                >
+                  Isu kritikal dan amaran mengikut lokasi serta komoditi, disusun mengikut skor
+                  keutamaan.
+                </div>
+              </div>
+              <div class="iv-chips" id="ivPriChips"></div>
+            </div>
+            <div class="iv-pbody">
+              <div id="ivPriBanner"></div>
+              <div class="iv-pri-list" id="ivPriList"></div>
+              <div id="ivPriFoot" class="iv-note"></div>
+            </div>
+          </section>
+        </div>
+        <section class="panel iv-panel" id="ivMusePanel" aria-labelledby="ivMuseT">
+          <div class="iv-ptitle">
+            <div>
+              <h3 id="ivMuseT">AI Muse - Gambaran Mingguan Komoditi</h3>
+              <div class="note">
+                Isu Komoditi Mengikut Lokasi dan Minggu. Kemas kini secara kelompok harian, bukan
+                masa nyata.
+              </div>
+            </div>
+            <div class="iv-chips" id="ivMuseChips"></div>
+          </div>
+          <div class="iv-pbody" id="ivMuseBody" aria-live="polite"></div>
+        </section>
+        <div class="iv-md-back" id="ivMd" hidden>
+          <div
+            class="iv-md"
+            id="ivMdDlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ivMdT"
+            tabindex="-1"
+          >
+            <div class="iv-md-head">
+              <div class="iv-md-hd">
+                <h2 id="ivMdT">Mobilisasi Stok &amp; Simulasi Margin</h2>
+                <div class="iv-md-ctx" id="ivMdCtx"></div>
+              </div>
+              <button type="button" class="iv-md-x" id="ivMdClose" aria-label="Tutup">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="iv-md-tabs" role="tablist" aria-label="Pilih paparan">
+              <button
+                type="button"
+                role="tab"
+                class="iv-md-tab"
+                id="ivMdTabMob"
+                data-md-tab="mob"
+                aria-selected="true"
+                aria-controls="ivMobPanel"
+              >
+                Mobilisasi Stok Pintar AI
+              </button>
+              <button
+                type="button"
+                role="tab"
+                class="iv-md-tab"
+                id="ivMdTabMar"
+                data-md-tab="mar"
+                aria-selected="false"
+                aria-controls="ivMarPanel"
+                tabindex="-1"
+              >
+                Simulasi Margin &amp; Harga AI
+              </button>
+            </div>
+            <div class="iv-md-body" id="ivMdBody">
+              <div class="iv-md-pane" id="ivMobPanel" role="tabpanel" aria-labelledby="ivMdTabMob">
+                <h3 class="iv-sr" id="ivMobT">Mobilisasi Stok Pintar AI</h3>
+                <div class="iv-md-sub">
+                  <div class="note">
+                    Cadangan Pintar Mobilisasi Bekalan Komoditi. Pengiraan ialah enjin
+                    deterministik; ringkasan AI ialah simulasi.
+                  </div>
+                  <div class="iv-chips" id="ivMobChips"></div>
+                </div>
+                <div id="ivMobHead"></div>
+                <div id="ivMobCtl"></div>
+                <div id="ivMobRes" aria-live="polite"></div>
+                <div id="ivDraftBox"></div>
+              </div>
+              <div
+                class="iv-md-pane"
+                id="ivMarPanel"
+                role="tabpanel"
+                aria-labelledby="ivMdTabMar"
+                hidden
+              >
+                <h3 class="iv-sr" id="ivMarT">Simulasi Margin &amp; Harga AI</h3>
+                <div class="iv-md-sub">
+                  <div class="note">
+                    Simulasi Margin dan Cadangan Harga PO. Julat dicadangkan, bukan nilai optimum.
+                  </div>
+                  <div class="iv-chips" id="ivMarChips"></div>
+                </div>
+                <div id="ivMarDefs"></div>
+                <div id="ivMarCtl"></div>
+                <div id="ivMarRes" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div>
+            <b>SUMBER & HAD DATA:</b> Nama 15 PO dan angka logistik daripada infografik pengguna.
+            Kedudukan titik di peta ialah anggaran bandar, bukannya koordinat bangunan PO. Dua
+            kumpulan logistik ialah angka gabungan: Dengkil/Selayang dan Johor Baharu/Simpang
+            Renggam.
+            <b
+              >Daerah seliaan, rekod harga, forecast, status amaran, outlet, cuaca dan banjir ialah
+              simulasi</b
+            >. Tiada API sebenar digunakan. Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
+            <b>Ketakselarasan sumber:</b> 64 bilik sejuk dalam ringkasan berbanding 65 daripada
+            jumlah butiran.
+          </div>
+          <div>Rujukan paparan: <b>senarai data.pptx · Paparan 1–3</b></div>
+        </footer>
+      </div>
+      <div id="modalMount"></div>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+    <script src="src/data/dashboard-data.js"></script>
+    <script src="src/js/app.js"></script>
+    <script src="src/js/scenarios.js"></script>
+    <script src="src/js/main.js"></script>
+    <script src="src/js/intervensi.js"></script>
+    <script src="src/js/theme-toggle.js"></script>
+  </body>
+</html>

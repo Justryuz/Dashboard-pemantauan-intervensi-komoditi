@@ -1,0 +1,17 @@
+{
+  "name": "dashboard-pemantauan-intervensi-komoditi",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "start": "node api/server.js",
+    "test": "node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.10.1"
+  }
+}
