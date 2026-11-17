@@ -3,125 +3,49 @@
    state.scenarioPO, state.scenarioLoad) dan dirender semula daripada state oleh renderAll(). */
 Object.assign(state, { scenario: null, scenarioPO: null, scenarioLoad: 'loading' });
 let SCEN_LIST = []; // senario yang sah (dimuat melalui ScenarioService)
-const INSIGHT_CACHE = {}; // scenarioId -> insight AI (dummy sekarang, model AI kemudian)
+const INSIGHT_CACHE = {}; // scenarioId -> ringkasan dijana sistem daripada data cuaca (bukan model AI)
+let scenFetchedAt = ''; // masa data cuaca terakhir dikemas kini (untuk banner lapuk)
 let amsFitted = false; // true jika peta digerakkan oleh panel ini
 let amsListSig = '',
   amsDetailSig = '';
 
-/* --- Data dummy (UI dirender sepenuhnya daripada tatasusunan ini; senario ke-4 cukup ditambah di sini) --- */
-const SCENARIOS_DUMMY = [
-  {
-    scenarioId: 'S01',
-    scenarioName: 'Hujan Berterusan',
-    warningType: 'hujan_berterusan',
-    source: 'MET Malaysia',
-    issuedAt: '2026-11-14T06:00:00+08:00',
-    validFrom: '2026-11-14T08:00:00+08:00',
-    validUntil: '2026-11-16T20:00:00+08:00',
-    affectedStates: ['Kelantan', 'Terengganu', 'Pahang'],
-    affectedDistricts: ['Kota Bharu', 'Kuala Terengganu', 'Kuantan'],
-    affectedPOIds: ['kelantan', 'terengganu', 'pahang'],
-    riskLevel: 'sederhana',
-    affectedCommodities: ['Cili Merah', 'Sawi', 'Timun'],
-    recommendedActions: [
-      'Semak status pengeluaran dan stok komoditi di PO terlibat',
-      'Pantau laluan penghantaran yang berisiko',
-      'Sediakan pilihan mobilisasi bekalan daripada PO lain dalam zon yang sama',
-    ],
-    dataStatus: 'dummy',
-  },
-  {
-    scenarioId: 'S02',
-    scenarioName: 'Ribut Petir & Angin Kencang',
-    warningType: 'ribut_petir',
-    source: 'MET Malaysia',
-    issuedAt: '2026-11-14T07:00:00+08:00',
-    validFrom: '2026-11-14T14:00:00+08:00',
-    validUntil: '2026-11-14T22:00:00+08:00',
-    affectedStates: ['Johor', 'Melaka'],
-    affectedDistricts: ['Johor Bahru', 'Kulai', 'Melaka Tengah'],
-    affectedPOIds: ['johor', 'simpangrenggam', 'melaka'],
-    riskLevel: 'sederhana',
-    affectedCommodities: ['Tomato', 'Cili Merah', 'Sayur Berdaun'],
-    recommendedActions: [
-      'Semak keadaan pusat pengumpulan',
-      'Semak kesiapsiagaan kenderaan dan jadual penghantaran',
-      'Pertimbangkan pelarasan pengedaran jika perlu',
-    ],
-    dataStatus: 'dummy',
-  },
-  {
-    scenarioId: 'S03',
-    scenarioName: 'Amaran Banjir',
-    warningType: 'amaran_banjir',
-    source: 'JPS Malaysia',
-    issuedAt: '2026-11-14T09:00:00+08:00',
-    validFrom: '2026-11-14T10:00:00+08:00',
-    validUntil: '2026-11-15T18:00:00+08:00',
-    affectedStates: ['Kelantan', 'Pahang'],
-    affectedDistricts: ['Kota Bharu', 'Kuantan'],
-    affectedPOIds: ['kelantan', 'pahang'],
-    riskLevel: 'tinggi',
-    affectedCommodities: ['Cili Merah', 'Sawi', 'Timun'],
-    recommendedActions: [
-      'Utamakan semakan akses logistik',
-      'Semak stok komoditi di PO terlibat',
-      'Nilai keperluan mobilisasi dari PO lain dalam zon',
-    ],
-    dataStatus: 'dummy',
-  },
-];
-const AI_INSIGHTS = {
-  S01: {
-    summary:
-      'Hujan berterusan di Kelantan, Terengganu dan Pahang berpotensi mengganggu aktiviti penuaian, pengumpulan hasil serta penghantaran komoditi pertanian. PO Kota Baharu dan PO Kuantan turut dikaitkan dengan senario amaran banjir S03, yang meningkatkan keperluan pemantauan akses logistik dan bekalan.',
-    cadangan:
-      'Semak status pengeluaran dan stok komoditi di PO terlibat, pantau laluan penghantaran yang berisiko serta sediakan pilihan mobilisasi bekalan daripada PO lain dalam zon yang sama sekiranya gangguan disahkan.',
-    status: 'dummy',
-    generatedBy: 'dummy',
-  },
-  S02: {
-    summary:
-      'Ribut petir dan angin kencang berpotensi menyebabkan gangguan sementara terhadap aktiviti penuaian, pengumpulan hasil serta operasi pengangkutan di Johor dan Melaka. Risiko terhadap komoditi dan laluan pengedaran memerlukan pengesahan daripada PO berkaitan.',
-    cadangan:
-      'Semak keadaan pusat pengumpulan, kesiapsiagaan kenderaan dan jadual penghantaran. Pantau risiko gangguan bekalan dan pertimbangkan pelarasan pengedaran jika perlu.',
-    status: 'dummy',
-    generatedBy: 'dummy',
-  },
-  S03: {
-    summary:
-      'Kawasan yang terdedah kepada banjir mungkin mengalami gangguan akses jalan dan penghantaran bekalan. Dua PO juga terlibat dalam senario hujan berterusan S01.',
-    cadangan:
-      'Utamakan semakan akses logistik, stok dan keperluan mobilisasi dari PO lain dalam zon.',
-    status: 'dummy',
-    generatedBy: 'dummy',
-  },
-};
+/* --- Senario dijana di pelayan (api/services/cuaca.js) daripada data cuaca sebenar MET Malaysia + Open-Meteo. --- */
 const WARNING_LABELS = {
   hujan_berterusan: 'Hujan berterusan',
+  hujan_lebat: 'Hujan lebat',
   ribut_petir: 'Ribut petir & angin kencang',
   amaran_banjir: 'Banjir',
 };
 const RISK_LABELS = { sederhana: 'Sederhana', tinggi: 'Tinggi' };
 const COMMODITY_PRICE_MAP = { 'Cili Merah': 'Cili Merah', Tomato: 'Tomato Bulat' }; // komoditi senario -> komoditi harga sedia ada
 
-/* --- Lapisan servis (sedia untuk API sebenar) ---
-   Saluran masa depan:
-   MET Malaysia / JPS -> pemprosesan -> padanan geospatial dengan lokasi PO -> pengumpulan senario
-   -> API AI (backend selamat) -> insight -> dashboard.
-   Titik sambungan: amaran MET = widget "Amaran Rasmi MET Malaysia" / DATA.cuaca; amaran banjir JPS = DATA.banjir.
-   Jangan letak kunci API di pelayar; panggilan AI mesti melalui backend: POST /api/ai/scenario-insight (placeholder). */
+/* --- Lapisan servis ---
+   MET Malaysia + Open-Meteo -> pelayan (api/services/cuaca.js) -> senario -> /api/cuaca -> dashboard.
+   Tiada kunci API di pelayar; pelayar hanya memanggil /api/cuaca (same-origin) melalui CUACA.load().
+   Tiada sumber JPS: senario banjir hanya dibenarkan jika datang daripada sumber rasmi (dataStatus 'rasmi', sumber JPS). */
 const ScenarioService = {
   async loadScenarios() {
-    // Ganti dengan fetch('/api/scenarios') apabila API sebenar tersedia. Respons mesti mengikut bentuk SCENARIOS_DUMMY.
-    await Promise.resolve();
+    const j = await CUACA.load();
     const data = [];
-    JSON.parse(JSON.stringify(SCENARIOS_DUMMY)).forEach((s) => {
+    (Array.isArray(j.senario) ? j.senario : []).forEach((s) => {
       const v = ScenarioService.validateScenario(s);
-      if (v.ok) data.push(s);
-      else console.warn('Senario tidak sah diabaikan', s && s.scenarioId, v.errors);
+      if (v.ok) {
+        s.affectedCommodities = ScenarioService.commoditiesFor(s);
+        data.push(s);
+      } else console.warn('Senario tidak sah diabaikan', s && s.scenarioId, v.errors);
     });
-    return { status: 'dummy', data };
+    return { status: 'sebenar', data, fetchedAt: j.fetchedAt };
+  },
+  // Komoditi paling kerap berstatus bukan hijau (peringkat Borong) di PO terlibat; data harga ialah dummy.
+  commoditiesFor(s) {
+    const kira = {};
+    DATA.rekod.forEach((r) => {
+      if (r.peringkat === 'Borong' && r.status !== 'hijau' && s.affectedPOIds.includes(r.poId))
+        kira[r.komoditi] = (kira[r.komoditi] || 0) + 1;
+    });
+    return Object.keys(kira)
+      .sort((a, b) => kira[b] - kira[a] || a.localeCompare(b))
+      .slice(0, 3);
   },
   validateScenario(o) {
     const errors = [];
@@ -136,6 +60,8 @@ const ScenarioService = {
     );
     if (!Object.prototype.hasOwnProperty.call(RISK_LABELS, o.riskLevel))
       errors.push('riskLevel tidak dikenali');
+    if (o.warningType === 'amaran_banjir' && !(o.dataStatus === 'rasmi' && /JPS/.test(o.source)))
+      errors.push('senario banjir hanya daripada sumber rasmi JPS');
     if (Array.isArray(o.affectedPOIds)) {
       if (!o.affectedPOIds.length) errors.push('affectedPOIds kosong');
       o.affectedPOIds.forEach((id) => {
@@ -148,13 +74,12 @@ const ScenarioService = {
     return { ok: !errors.length, errors };
   },
   async fetchAIInsight(scenarioId) {
-    // Placeholder: POST /api/ai/scenario-insight {scenarioId} pada backend selamat (tiada kunci API di sini).
+    // Ringkasan dijana sistem daripada data cuaca (bukan model AI); tiada kunci API di pelayar.
     await Promise.resolve();
-    const i = AI_INSIGHTS[scenarioId];
-    return i ? { ...i, scenarioId, source: 'dummy' } : null;
+    const sc = scenarioById(scenarioId);
+    return sc ? { summary: sc.ringkasan, cadangan: sc.cadangan, source: 'sistem' } : null;
   },
 };
-
 /* --- Pembantu terbitan (tanpa DOM) --- */
 function poScenarioMap() {
   const m = {};
@@ -189,6 +114,9 @@ function joinAmp(list) {
     ? list[0] || ''
     : list.slice(0, -1).join(', ') + ' & ' + list[list.length - 1];
 }
+const commText = (list) => {
+  return list && list.length ? joinDan(list) : 'Tiada komoditi terjejas dikenal pasti';
+};
 function joinDan(list) {
   return list.length < 2
     ? list[0] || ''
@@ -213,7 +141,7 @@ function warningLabel(t) {
 function insightFor(sc) {
   return (
     INSIGHT_CACHE[sc.scenarioId] || {
-      summary: 'Insight AI untuk senario ini belum tersedia (data dummy).',
+      summary: 'Ringkasan untuk senario ini belum tersedia.',
       cadangan: sc.recommendedActions.join('; ') + '.',
     }
   );
@@ -242,6 +170,10 @@ const AMS_CLOUD =
   '<path d="M6.5 14.5a3.8 3.8 0 0 1 .4-7.5 5.4 5.4 0 0 1 10.4 1.2 3.2 3.2 0 0 1-.2 6.3z"/>';
 function weatherIcon(type) {
   if (type === 'ribut_petir') return AMS_SVG(AMS_CLOUD + '<path d="M12.6 14l-2.4 3.6h3L11.4 21"/>');
+  if (type === 'hujan_lebat')
+    return AMS_SVG(
+      AMS_CLOUD + '<path d="M7.5 17.5l-1.2 3M11 17.5l-1.2 3M14.5 17.5l-1.2 3M18 17.5l-1.2 3"/>',
+    );
   if (type === 'amaran_banjir')
     return AMS_SVG(
       '<path d="M6.5 11.5a3.6 3.6 0 0 1 .4-7 5.2 5.2 0 0 1 10 1.1 3 3 0 0 1-.2 5.9z"/><path d="M3 15.5c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0 3-1.4 4.5 0 3 1.4 4.5 0"/><path d="M3 19.5c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0 3-1.4 4.5 0 3 1.4 4.5 0"/>',
@@ -341,7 +273,7 @@ function poDrawerHTML(poId, sc) {
   return `<div class="ams-drawer" id="amsPoDrawer" role="region" aria-label="Butiran ${esc(p.name)}"><div class="ams-drawer-head"><h4>${esc(p.name)}</h4><button type="button" class="button ghost" data-act="closepo">Tutup</button></div>
  <div class="ams-drawer-row"><span class="ams-k">NEGERI</span>${esc(p.negeri)}</div>
  <div class="ams-drawer-row"><span class="ams-k">SENARIO TERLIBAT</span>${esc(ids.join(', '))}</div>
- <div class="ams-drawer-row"><span class="ams-k">KOMODITI SENARIO</span>${esc(joinDan(comms))}</div>
+ <div class="ams-drawer-row"><span class="ams-k">KOMODITI SENARIO</span>${esc(commText(comms))}</div>
  <div class="ams-drawer-row"><span class="ams-k">RISIKO CUACA</span><ul>${risk}</ul></div>
  <div class="ams-drawer-grid"><div class="ams-stat"><span>Kenderaan</span><b>${val(l.kenderaan, ' buah')}</b></div><div class="ams-stat"><span>Muatan</span><b>${val(l.muatanMT, ' MT')}</b></div><div class="ams-stat"><span>Bilik sejuk</span><b>${val(l.bilikSejuk, ' unit')}</b></div><div class="ams-stat"><span>Kapasiti simpanan</span><b>${val(l.kapasitiSimpananMT, ' MT')}</b></div></div>
  ${l.shared && Array.isArray(l.pemilikBersama) ? `<div class="ams-note">Angka gabungan: ${esc(l.pemilikBersama.join(' + '))}</div>` : ''}
@@ -376,33 +308,42 @@ function renderScenarioDetail() {
  ${state.scenarioPO ? poDrawerHTML(state.scenarioPO, sc) : ''}
  <section class="ams-ai" aria-labelledby="amsAiTitle"><h4 class="ams-ai-title" id="amsAiTitle">${ICON_SPARK}<span>AI Insight — ${esc(sc.scenarioName)}</span></h4>
   <p><span class="ams-k">AI INSIGHT SUMMARY</span><span class="ams-ins-summary">${esc(ins.summary)}</span></p>
-  <p><span class="ams-k">KOMODITI BERPOTENSI TERJEJAS</span><b>Komoditi:</b> <span class="ams-ins-comm">${esc(joinDan(sc.affectedCommodities))}.</span></p>
+  <p><span class="ams-k">KOMODITI BERPOTENSI TERJEJAS</span><b>Komoditi:</b> <span class="ams-ins-comm">${esc(commText(sc.affectedCommodities))}.</span></p>
   <p><span class="ams-k">CADANGAN INTERVENSI</span><b>Cadangan:</b> <span class="ams-ins-rec">${esc(ins.cadangan)}</span></p>
-  <span class="ams-dummy-chip">Contoh data dummy — bukan hasil model AI sebenar</span></section>
+  <span class="ams-dummy-chip">Ringkasan dijana sistem daripada data cuaca (bukan model AI)</span></section>
  <div class="ams-actions"><button type="button" class="button" data-act="interv">Lihat Pilihan Intervensi</button></div>`;
 }
 function renderScenarioPanel() {
   if (!$('amsPanel')) return;
   const st = $('amsState');
   const ld = state.scenarioLoad;
-  st.className = 'ams-state' + (ld === 'error' ? ' err' : '');
-  st.textContent =
+  st.className = 'ams-state' + (ld === 'error' || ld === 'stale' ? ' err' : '');
+  if (ld === 'error')
+    st.innerHTML =
+      'Data cuaca tidak dapat dimuatkan, senario tidak dapat dijana. <button type="button" class="button tiny" data-act="cuaca-retry">Cuba semula</button>';
+  else
+    st.textContent =
+      ld === 'loading'
+        ? 'Memuatkan senario…'
+        : ld === 'file'
+          ? 'Senario cuaca sebenar memerlukan pelayan (npm start)'
+          : ld === 'empty'
+            ? 'Tiada senario cuaca berisiko dikesan hari ini'
+            : ld === 'stale'
+              ? 'Data cuaca lapuk: kemas kini terakhir ' + cuacaMasa(scenFetchedAt)
+              : '';
+  $('amsBadge').textContent =
     ld === 'loading'
-      ? 'Memuatkan senario…'
-      : ld === 'error'
-        ? 'Gagal memuatkan senario — memaparkan data dummy'
-        : ld === 'empty'
-          ? 'Tiada senario amaran dikesan'
-          : '';
-  $('amsBadge').textContent = SCEN_LIST.every((s) => s.dataStatus === 'dummy')
-    ? 'DATA DUMMY'
-    : 'DATA LANGSUNG';
+      ? 'MEMUAT'
+      : ld === 'error' || ld === 'file'
+        ? 'TIADA DATA'
+        : 'DATA CUACA SEBENAR';
   renderScenarioKpis();
   renderScenarioList();
   renderScenarioDetail();
   const pg = state.scenario && scenarioById(state.scenario) ? 'detail' : 'list';
   $('amsPanel').dataset.page = pg;
-  $('amsOverview').hidden = pg === 'detail';
+  $('amsOverview').hidden = pg === 'detail' || ld === 'error' || ld === 'file';
 }
 
 /* --- Interaksi --- */
@@ -505,7 +446,7 @@ function scenarioInterventionContext() {
   return {
     record: rec,
     fallback,
-    note: `Konteks senario ${sc.scenarioId} · ${sc.scenarioName} · ${poName(rec.poId)} · Komoditi: ${joinDan(sc.affectedCommodities)}`,
+    note: `Konteks senario ${sc.scenarioId} · ${sc.scenarioName} · ${poName(rec.poId)} · Komoditi: ${commText(sc.affectedCommodities)}`,
   };
 }
 function openScenarioIntervention() {
@@ -544,27 +485,29 @@ $('amsDetail').setAttribute('role', 'region');
 $('amsDetail').setAttribute('aria-label', 'Butiran senario dipilih');
 $('amsDetail').tabIndex = -1;
 
-/* --- Pemuatan awal (async; lalai ke data dummy jika gagal) --- */
+/* --- Pemuatan awal (async; keadaan nyata: loading/ready/empty/stale/error/file) --- */
 async function initScenarios(loader = ScenarioService.loadScenarios) {
   state.scenarioLoad = 'loading';
   renderScenarioPanel();
   try {
     const r = await loader();
     applyScenarios(Array.isArray(r && r.data) ? r.data : []);
+    Object.keys(INSIGHT_CACHE).forEach((k) => delete INSIGHT_CACHE[k]);
     await Promise.all(
       SCEN_LIST.map(async (s) => {
         INSIGHT_CACHE[s.scenarioId] = await ScenarioService.fetchAIInsight(s.scenarioId);
       }),
     );
-    state.scenarioLoad = SCEN_LIST.length ? 'ready' : 'empty';
+    scenFetchedAt = (r && r.fetchedAt) || '';
+    state.scenarioLoad =
+      scenFetchedAt && cuacaLapuk({ fetchedAt: scenFetchedAt })
+        ? 'stale'
+        : SCEN_LIST.length
+          ? 'ready'
+          : 'empty';
   } catch (err) {
-    console.warn('Gagal memuatkan senario', err);
-    applyScenarios(JSON.parse(JSON.stringify(SCENARIOS_DUMMY)));
-    Object.keys(AI_INSIGHTS).forEach((k) => {
-      INSIGHT_CACHE[k] = { ...AI_INSIGHTS[k], source: 'dummy' };
-    });
-    state.scenarioLoad = 'error';
+    applyScenarios([]);
+    state.scenarioLoad = err && err.kind === 'file' ? 'file' : 'error';
   }
   renderAll();
-}
-/* ===== Tamat AI Multi-Scenario Monitoring ===== */
+} /* ===== Tamat AI Multi-Scenario Monitoring ===== */

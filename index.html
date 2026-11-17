@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark light" id="metaScheme" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; font-src 'self' data:; connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; font-src 'self' data:; connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href="data:," />
@@ -14,17 +14,12 @@
     <title>FAMA | Dashboard Pemantauan & Intervensi Komoditi (Data Dummy)</title>
     <link
       rel="stylesheet"
-      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      href="src/vendor/maplibre-gl/maplibre-gl.css"
       integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V"
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <script
-      src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
-      integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+    <script src="src/vendor/maplibre-gl/maplibre-gl.js"></script>
     <script src="config/app.config.js"></script>
     <link rel="stylesheet" href="src/css/base.css" />
     <link rel="stylesheet" href="src/css/scenarios.css" />
@@ -74,7 +69,7 @@
               >Cerah
             </button>
           </div>
-          <span class="tag demo-badge">● SIMULASI · DATA DUMMY</span
+          <span class="tag demo-badge">● DATA DUMMY (kecuali cuaca & senario cuaca)</span
           ><button class="button ghost" id="downloadLogistik">↓ CSV Logistik PO</button
           ><button class="button ghost" id="downloadCsv">↓ CSV Harga Dummy</button
           ><button class="button ghost" id="showLogs">
@@ -111,8 +106,8 @@
           ><span class="source">◎ Threshold Harga</span
           ><span class="source">⌂ Outlet Intervensi</span
           ><span class="source">▰ Kapasiti Infrastruktur</span
-          ><span class="source">≋ JPS <b class="cyan">(simulasi)</b></span
-          ><span class="source">☁ MET Malaysia <b class="cyan">(simulasi)</b></span>
+          ><span class="source">≋ JPS <b class="cyan">(belum disambungkan)</b></span
+          ><span class="source">☁ MET Malaysia · Open-Meteo <b class="cyan">(sebenar)</b></span>
         </div>
         <section class="filterbar" aria-label="Penapis dashboard">
           <div class="ctrl">
@@ -176,7 +171,13 @@
                   </div>
                 </div>
                 <div class="map-tools">
-                  <button class="button tiny ghost" id="floodToggle">≋ Banjir: Hidup</button
+                  <button
+                    class="button tiny ghost"
+                    id="floodToggle"
+                    disabled
+                    title="Risiko banjir: data JPS belum disambungkan"
+                  >
+                    ≋ Risiko banjir: data JPS belum disambungkan</button
                   ><button class="button tiny" id="backMap" style="display: none">
                     ← Malaysia
                   </button>
@@ -201,7 +202,7 @@
                 <span class="legend-item"><i class="dot green"></i>Hijau: Stabil</span
                 ><span class="legend-item"><i class="dot yellow"></i>Kuning: Waspada</span
                 ><span class="legend-item"><i class="dot red"></i>Merah berkelip: Kritikal</span
-                ><span class="legend-item">≋ Banjir: JPS (dummy)</span
+                ><span class="legend-item">≋ Banjir: data JPS belum disambungkan</span
                 ><span class="legend-item" style="margin-left: auto">🔄 Peta ↔ Panel harga</span>
               </div>
               <div class="map-detail" id="mapDetail" hidden style="display: none"></div>
@@ -324,34 +325,29 @@
             <div class="titlebar">
               <div>
                 <div class="panel-title">☁ Ramalan Cuaca Mengikut Negeri</div>
-                <div class="note">Maklumat simulasi — bukan API langsung</div>
+                <div class="note" id="weatherNote">Memuatkan data cuaca…</div>
               </div>
-              <span class="tag" style="font-size: 10px; padding: 4px 8px">MET · Demo</span>
+              <span class="tag" id="weatherTag" style="font-size: 10px; padding: 4px 8px"
+                >MET Malaysia + Open-Meteo</span
+              >
             </div>
+            <div class="weather-banner" id="weatherStatus" role="status" hidden></div>
             <div class="weather-grid" id="weatherGrid"></div>
+            <div class="weather-attrib" id="weatherAttrib">
+              Data cuaca: Open-Meteo.com (CC BY 4.0) · MET Malaysia. Risiko ialah anggaran sistem,
+              bukan amaran rasmi.
+            </div>
           </section>
           <section class="panel">
             <div class="alert-head">
               ⚠ Amaran Rasmi MET Malaysia
-              <span style="margin-left: auto; font-size: 10px; font-weight: 400">CONTOH</span>
+              <span id="metAlertTag" style="margin-left: auto; font-size: 10px; font-weight: 400"
+                >MET · Sebenar</span
+              >
             </div>
-            <div class="alert-body">
-              <div class="alert-item">
-                <b>Amaran ribut petir · Terengganu</b>
-                <p>Simulasi · Risiko hujan lebat di kawasan pengeluaran</p>
-              </div>
-              <div class="alert-item">
-                <b>Amaran hujan lebat · Johor</b>
-                <p>Simulasi · Semakan risiko gangguan bekalan</p>
-              </div>
-              <div class="alert-item">
-                <b>Amaran banjir · Kelantan / Pahang</b>
-                <p>Simulasi · Data JPS belum disambungkan</p>
-              </div>
-            </div>
-            <div class="right-note">
-              Sumber integrasi sasaran: API MET Malaysia &amp; JPS Malaysia.
-              <b>Bukan amaran sebenar.</b>
+            <div class="alert-body" id="metAlertBody">Memuatkan amaran…</div>
+            <div class="right-note" id="metAlertNote">
+              Sumber: API rasmi MET Malaysia (dataset WARNING)
             </div>
           </section>
           <section class="panel ams-panel" id="amsPanel" aria-labelledby="amsTitle">
@@ -379,9 +375,14 @@
                   <div class="ams-sub">Pemantauan pelbagai senario dan PO terlibat</div>
                 </div>
               </div>
-              <span class="tag ams-badge" id="amsBadge">DATA DUMMY</span>
+              <span class="tag ams-badge" id="amsBadge">MEMUAT</span>
             </div>
             <div class="ams-state" id="amsState" role="status" aria-live="polite"></div>
+            <div class="ams-note" id="amsNote">
+              Dijana daripada data cuaca sebenar (anggaran sistem, bukan amaran rasmi). Sumber: MET
+              Malaysia · Open-Meteo.
+            </div>
+            <div class="ams-note" id="amsFloodNote">Risiko banjir: data JPS belum disambungkan</div>
             <div class="ams-overview" id="amsOverview">
               <div class="ams-kpis" id="amsKpis"></div>
               <h3 class="ams-section">Senario Cuaca yang Dikesan</h3>
@@ -420,31 +421,43 @@
             ☰ Penapis
           </button>
           <div class="ctrl">
-            <span>Komoditi</span
+            <label for="ivFKomoditi">Komoditi</label
             ><select id="ivFKomoditi" data-iv-sel="komoditi" aria-label="Komoditi"></select>
           </div>
           <div class="ctrl">
-            <span>Negeri</span
+            <label for="ivFNegeri">Negeri</label
             ><select id="ivFNegeri" data-iv-sel="negeri" aria-label="Negeri"></select>
           </div>
           <div class="ctrl">
-            <span>Pusat Operasi</span
+            <label for="ivFPO">Pusat Operasi</label
             ><select id="ivFPO" data-iv-sel="po" aria-label="Pusat Operasi"></select>
           </div>
           <div class="ctrl">
-            <span>Daerah</span
+            <label for="ivFDaerah">Daerah</label
             ><select id="ivFDaerah" data-iv-sel="daerah" aria-label="Daerah"></select>
           </div>
           <div class="ctrl">
-            <span>Tarikh / Tempoh Analisis</span
+            <span class="iv-lblrow"
+              ><label for="ivFTempoh">Tarikh / Tempoh Analisis</label
+              ><button
+                type="button"
+                class="iv-info"
+                aria-describedby="ivTempohHelp"
+                aria-label="Maklumat tempoh analisis"
+                title="Tempoh purata harga asas. Siri harga tiada tarikh."
+              >
+                i</button
+              ><span id="ivTempohHelp" class="iv-sr"
+                >Tempoh purata harga asas. Siri harga tiada tarikh.</span
+              ></span
             ><select id="ivFTempoh" data-iv-sel="tempoh" aria-label="Tarikh / Tempoh Analisis">
               <option value="7">7 hari</option>
               <option value="14">14 hari</option>
-              <option value="30" selected>30 hari</option></select
-            ><small>Tempoh purata harga asas. Siri harga tiada tarikh.</small>
+              <option value="30" selected>30 hari</option>
+            </select>
           </div>
           <div class="ctrl">
-            <span>Tahap Risiko</span
+            <label for="ivFRisiko">Tahap Risiko</label
             ><select id="ivFRisiko" data-iv-sel="risiko" aria-label="Tahap Risiko">
               <option value="all">Semua tahap</option>
               <option value="kritikal">Kritikal</option>
@@ -454,7 +467,7 @@
           </div>
           <div class="filter-actions iv-reset-wrap">
             <button type="button" class="button ghost" id="ivReset" data-iv-act="reset">
-              ↺ Set Semula
+              ↺ Set Semula<span class="iv-reset-badge" id="ivResetBadge" hidden></span>
             </button>
           </div>
         </section>
@@ -713,10 +726,9 @@
             Kedudukan titik di peta ialah anggaran bandar, bukannya koordinat bangunan PO. Dua
             kumpulan logistik ialah angka gabungan: Dengkil/Selayang dan Johor Baharu/Simpang
             Renggam.
-            <b
-              >Daerah seliaan, rekod harga, forecast, status amaran, outlet, cuaca dan banjir ialah
-              simulasi</b
-            >. Tiada API sebenar digunakan. Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
+            <b>Daerah seliaan, rekod harga, forecast, status amaran dan outlet ialah simulasi</b>.
+            Data cuaca dan senario cuaca ialah data sebenar (MET Malaysia, Open-Meteo); data banjir
+            JPS belum disambungkan. Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
             <b>Ketakselarasan sumber:</b> 64 bilik sejuk dalam ringkasan berbanding 65 daripada
             jumlah butiran.
           </div>

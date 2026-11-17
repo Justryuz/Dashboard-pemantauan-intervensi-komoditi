@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const server = require('../../api/server.js');
+require('../helpers/cuaca-fixture.js').pasangCache(); // data cuaca deterministik, tidak bergantung pada cache tempatan
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );

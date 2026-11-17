@@ -1,6 +1,6 @@
-﻿// Ujian Tab Intervensi (index.html melalui api/server.js). Jalankan dari root: node --no-warnings tests/frontend/intervensi-test.js
+// Ujian Tab Intervensi (index.html melalui api/server.js). Jalankan dari root: node --no-warnings tests/frontend/intervensi-test.js
 const fs=require('fs');const os=require('os');const path=require('path');const cp=require('child_process');
-const puppeteer=require(path.resolve(__dirname,'../../.agents/tasks/bt/node_modules/puppeteer-core'));const server=require('../../api/server.js');
+const puppeteer=require(path.resolve(__dirname,'../../.agents/tasks/bt/node_modules/puppeteer-core'));const server=require('../../api/server.js');require('../helpers/cuaca-fixture.js').pasangCache(); // /api/cuaca deterministik (cuaca sebenar menggantikan senario dummy S01-S03/banjir)
 const ROOT=path.resolve(__dirname,'..','..'),A=path.join(ROOT,'.agents','tasks'),T=fs.mkdtempSync(path.join(os.tmpdir(),'iv-test-'));const EDGE=process.env.BROWSER_PATH||'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 let NEW;
 const OLD='file:///'+path.join(A,'backup-before-intervensi.html').replace(/\\/g,'/');
@@ -318,10 +318,10 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  ok('7 padam draf',await ev(()=>IV_TEST.drafts().length===0));
  // T2
  e=await eng('pengguna','johor','cili-merah');
- ok('7 T2 senarai',JSON.stringify(e.dalam)==='["simpangrenggam"]'&&JSON.stringify(e.luar)==='["melaka","selayang","negerisembilan"]',e);
- ok('7 T2 pahang/kelantan ditapis',e.ex.some(x=>x.poId==='pahang'&&/S03/.test(x.reason))&&e.ex.some(x=>x.poId==='kelantan'));
+ ok('7 T2 senarai (pahang kini layak, ditanda Waspada cuaca)',JSON.stringify(e.dalam)==='["simpangrenggam"]'&&JSON.stringify([...e.luar].sort())===JSON.stringify(['melaka','negerisembilan','pahang','selayang']),e);
+ ok('7 T2 kelantan ditapis (jarak), pahang tidak ditapis',!e.ex.some(x=>x.poId==='pahang')&&e.ex.some(x=>x.poId==='kelantan'));
  await sleep(900);
- ok('7 UI ditapis keluar',await ev(()=>document.getElementById('ivExcluded').textContent.includes('Amaran banjir AMS S03')));
+ ok('7 UI ditapis keluar',await ev(()=>document.getElementById('ivExcluded').textContent.includes('Jarak')));
  await ev(()=>{const c=document.querySelector('#ivListDalam .iv-cand')||document.querySelector('#ivListLuar .iv-cand');if(c)c.click()});await sleep(300);
  ok('7 T2 tiada teks kos/jurang harga bersih',(await noCost()).length===0,await noCost());
  ok('7 T2 ranking Johor Bahru: dalam/luar berbeza, Top-5',await rankChk());
@@ -329,7 +329,7 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  e=await eng('pengguna','johor','cili-merah');
  // eng resets? setRefNow persisted
  const pa=await ev(()=>{const e=IV_TEST.engine();return {luar:e.luar.map(x=>x.poId+(x.flood?':flood':'')),ex:e.excluded.filter(x=>x.poId==='kelantan').map(x=>x.reason)}});
- ok('7 pahang layak dengan Waspada banjir selepas S03 tamat',e.ok&&JSON.stringify(e.luar).includes('pahang')&&pa.luar.some(x=>x==='pahang:flood')||pa.luar.includes('pahang:flood'),pa);
+ ok('7 pahang layak dengan penanda Waspada cuaca (Open-Meteo/MET)',pa.luar.includes('pahang:flood'),pa);
  await ev(()=>IV_TEST.setRefNow('2026-11-15T12:00:00+08:00'));
  // 7b
  await ev(()=>{DASHBOARD_TEST.setScenarios([]);IV_TEST.refresh()});
@@ -337,9 +337,9 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  ok('7b tanpa AMS pahang layak',(await ev(()=>IV_TEST.engine().luar.map(x=>x.poId))).includes('pahang'));
  await ev(()=>DASHBOARD_TEST.initScenarios());await sleep(1500);await ev(()=>IV_TEST.refresh());
  e=await eng('pengguna','johor','cili-merah');
- ok('7b pemulihan AMS',!e.luar.includes('pahang'));
+ ok('7b pemulihan senario cuaca: pahang ditanda Waspada',await ev(()=>IV_TEST.engine().luar.some(x=>x.poId==='pahang'&&x.flood)));
  await ev(()=>IV_TEST.setScenariosPending(true));
- ok('7b chip AMS dimuatkan',await ev(()=>document.getElementById('ivMobRes').innerText.includes('Amaran cuaca/banjir AMS sedang dimuatkan')));
+ ok('7b chip AMS dimuatkan',await ev(()=>document.getElementById('ivMobRes').innerText.includes('Data cuaca sedang dimuatkan')));
  await ev(()=>IV_TEST.setScenariosPending(false));
  // sabah pengguna
  e=await eng('pengguna','sabah','cili-merah');await sleep(300);
@@ -349,12 +349,12 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  await ev(()=>{const r=document.querySelector('#ivPriList [data-iv-act=tindakan][data-iv-arg="pengguna:kelantan:kelantan/pasir-mas:bawang-merah-kecil"]');if(r)r.click();else IV_TEST.dispatch('selectIntervention','pengguna:kelantan:kelantan/pasir-mas:bawang-merah-kecil')});await sleep(1200);
   ok('7c Tindakan Pasir Mas membuka pop-up',await ev(()=>!document.getElementById('ivMd').hidden&&/Bawang Merah Kecil/.test(document.getElementById('ivMdCtx').innerText)&&/Pengguna/.test(document.getElementById('ivMdCtx').innerText)));
   await closeMd();
- const c7=await ev(()=>{const t=document.getElementById('ivMobRes').innerText;const e=IV_TEST.engine();return {banner:t.includes('PO terpilih berada dalam amaran banjir. Sahkan akses laluan sebelum menghantar.'),noK:![...e.dalam,...e.luar].some(x=>x.poId==='kelantan'),n:e.dalam.length+e.luar.length,trig:e.trigger.ok}});
+ const c7=await ev(()=>{const t=document.getElementById('ivMobRes').innerText;const e=IV_TEST.engine();return {banner:t.includes('PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar.'),noK:![...e.dalam,...e.luar].some(x=>x.poId==='kelantan'),n:e.dalam.length+e.luar.length,trig:e.trigger.ok}});
  ok('7c T3 banner dan struktur',c7.banner&&c7.noK&&c7.trig,c7);
- const c7b=await ev(()=>{const c=document.querySelector('#ivMobRes .iv-cand');if(!c)return 'tiada';c.click();return document.getElementById('ivCandDetail')&&document.getElementById('ivCandDetail').innerText.includes('Destinasi/sumber terjejas banjir')});
+ const c7b=await ev(()=>{const c=document.querySelector('#ivMobRes .iv-cand');if(!c)return 'tiada';c.click();return document.getElementById('ivCandDetail')&&document.getElementById('ivCandDetail').innerText.includes('Cuaca tinggi (Open-Meteo/MET)')});
  ok('7c baris risiko banjir pada butiran',c7b===true||c7b==='tiada',c7b);
  await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setFilter',['komoditi','kubis-bulat']);IV_TEST.dispatch('selectPO','sarawak')});await sleep(500);
- ok('7c Samarahan T5 mesej tiada senarai',await ev(()=>{const t=document.getElementById('ivMobRes').innerText;return t.includes('PO terpilih berada dalam amaran banjir')&&t.includes('PO terpilih tiada lebihan/kekurangan bekalan yang disahkan')&&!document.querySelector('#ivMobRes .iv-cand')&&t.includes('Data stok lapuk')}));
+ ok('7c Samarahan T5 mesej tiada senarai',await ev(()=>{const t=document.getElementById('ivMobRes').innerText;return t.includes('PO terpilih berada dalam kawasan risiko cuaca tinggi')&&t.includes('PO terpilih tiada lebihan/kekurangan bekalan yang disahkan')&&!document.querySelector('#ivMobRes .iv-cand')&&t.includes('Data stok lapuk')}));
  // 8 margin
  await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setFilter',['komoditi','cili-merah']);IV_TEST.dispatch('selectPO','simpangrenggam')});await sleep(500);
   await openCase1();await pg.click('#ivMdTabMar');await sleep(500);
@@ -445,7 +445,7 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  ok('3b pautan dalam #intervensi',await dl.evaluate(()=>!document.getElementById('viewIntervensi').hidden));
  await dl.click('#ivTabMonitor');await sleep(1200);
  ok('3b peta lama selepas pautan dalam',await dl.evaluate(()=>{const c=document.querySelector('#map canvas');return c.width>0&&c.height>0}));
- ok('7b selepas settle: pahang tiada dalam T2',await dl.evaluate(()=>{IV_TEST.dispatch('setMode','pengguna');IV_TEST.dispatch('setFilter',['komoditi','cili-merah']);IV_TEST.dispatch('selectPO','johor');return !IV_TEST.engine().luar.some(x=>x.poId==='pahang')}));
+ ok('7b selepas settle: pahang ditanda Waspada cuaca dalam T2',await dl.evaluate(()=>{IV_TEST.dispatch('setMode','pengguna');IV_TEST.dispatch('setFilter',['komoditi','cili-merah']);IV_TEST.dispatch('selectPO','johor');return IV_TEST.engine().luar.some(x=>x.poId==='pahang'&&x.flood)}));
  ok('3b tiada mesej baharu',m3.filter(x=>!baseMsgs.includes(x)).length===0,m3);
  // 10 style blocked -> banner; constructor fail -> fallback
  const dl2=await dl.evaluate(()=>{IV_TEST.failNext('map');return 1});
@@ -670,7 +670,7 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  const b13=await (async()=>{const p2=await page(OLD,1440,900,[]);await p2.select('#filterCommodity','Cili Merah').catch(()=>{});await sleep(300);const x=await p2.evaluate(()=>DASHBOARD_TEST.filteredRecords().length);await p2.close();return x})();
  ok('13 #filterCommodity sama seperti baseline',r13===b13,[r13,b13]);
  await po.click('#resetFilters');await po.click('#floodToggle');await sleep(300);
- ok('13 #floodToggle',await po.evaluate(()=>document.getElementById('floodToggle').textContent.includes('Mati')));
+ ok('13 #floodToggle dilumpuhkan: data JPS belum disambungkan',await po.evaluate(()=>{const b=document.getElementById('floodToggle');return b.disabled&&b.textContent.includes('JPS belum disambungkan')}));
  await po.click('#showLogs');await sleep(400);ok('13 #showLogs',await po.evaluate(()=>!!document.getElementById('modalBack')));
  await po.evaluate(()=>{const b=document.getElementById('modalBack');if(b)b.remove()});
  await po.evaluate(()=>{const c=document.querySelector('#amsList [data-sid]');if(c)c.click()});await sleep(500);

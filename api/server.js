@@ -35,6 +35,7 @@ const MIME = {
 };
 
 const { CSP } = require('../config/security.js');
+const cuaca = require('./services/cuaca.js');
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP + "; frame-ancestors 'none'",
@@ -108,6 +109,31 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  if (pathname === '/api/cuaca') {
+    const cache = cuaca.bacaCache();
+    if (!cache)
+      return send(
+        res,
+        503,
+        JSON.stringify({
+          ralat: 'Data cuaca belum tersedia',
+          sedangDikemaskini: cuaca.sedangAmbil(),
+        }),
+        {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
+    const umur = cuaca.umurJam(cache);
+    return send(
+      res,
+      200,
+      req.method === 'HEAD'
+        ? ''
+        : JSON.stringify({ ...cache, umurJam: Number.isFinite(umur) ? umur : null }),
+      { 'Content-Type': 'application/json; charset=utf-8' },
+    );
+  }
+
   const file = resolvePublic(pathname);
   if (!file) return send(res, 404, 'Not Found');
   fs.readFile(file, (err, buf) => {
@@ -119,6 +145,9 @@ const server = http.createServer((req, res) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, HOST, () => console.log(`Dashboard: http://${HOST}:${PORT}`));
+  server.listen(PORT, HOST, () => {
+    console.log(`Dashboard: http://${HOST}:${PORT}`);
+    cuaca.mulaPenjadual();
+  });
 }
 module.exports = server;

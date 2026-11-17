@@ -1,6 +1,6 @@
 # Dashboard Pemantauan Intervensi Komoditi
 
-Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Semua data ialah data dummy/simulasi.
+Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Data cuaca dan senario cuaca ialah data sebenar (MET Malaysia + Open-Meteo); selebihnya (harga, stok, AI Muse dll.) ialah data dummy/simulasi.
 
 ## Struktur
 
@@ -16,12 +16,12 @@ Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Se
 │   ├── js/
 │   │   ├── theme-init.js       Tetapkan tema sebelum render (elak kelipan)
 │   │   ├── app.js              Tab Pemantauan: state, penapis, peta, KPI, senarai, carta, modal, eksport CSV
-│   │   ├── scenarios.js        AI Multi-Scenario Monitoring (data dummy, ScenarioService, UI)
+│   │   ├── scenarios.js        AI Multi-Scenario Monitoring (senario daripada data cuaca sebenar, ScenarioService, UI)
 │   │   ├── main.js             Titik mula: initControls(), renderAll(), initScenarios()
 │   │   ├── intervensi.js       Tab Intervensi: harga, bekalan, logistik, mobilisasi, margin, AI Muse
 │   │   └── theme-toggle.js     Butang tukar tema
 │   └── data/
-│       └── dashboard-data.js   Data dummy (objek DATA): PO, rekod harga, cuaca, banjir, logistik
+│       └── dashboard-data.js   Data dummy (objek DATA): PO, rekod harga, logistik
 ├── api/                        Pelayan statik + API (server.js) dan folder routes/controllers/services/...
 ├── config/
 │   ├── app.config.js           Konfigurasi sisi pelanggan (gaya peta). Tiada rahsia.
@@ -29,7 +29,9 @@ Dashboard pemantauan dan intervensi komoditi FAMA bagi 15 Pusat Operasi (PO). Se
 ├── data/                       raw/ dan processed/ (diabaikan git)
 ├── docs/                       spesifikasi, rujukan, laporan, pembentangan (.pptx)
 ├── scripts/                    Skrip utiliti
-├── tests/frontend/             smoke.js, click-all.js, snapshot.js, intervensi-test.js (lama)
+├── tests/                      api/cuaca-api.js, helpers/cuaca-fixture.js, frontend/ (smoke, click-all, cuaca, filter-bar, ams, startup-csp, snapshot, intervensi-test)
+scripts/ambil-cuaca.js        Skrip CLI ambil data cuaca (npm run cuaca:ambil)
+api/services/cuaca.js         Pengambil MET Malaysia + Open-Meteo, risiko cuaca, penjana senario, cache
 ├── .env.example                Templat pembolehubah persekitaran
 └── package.json
 ```
@@ -50,11 +52,25 @@ Perlu Node.js 20.12 atau lebih baharu.
 cp .env.example .env    # isi nilai jika perlu
 npm install             # hanya untuk prettier (dev)
 npm start               # http://127.0.0.1:3000
-npm test                # smoke test + klik semua butang (perlu Chrome; set BROWSER_PATH jika lain)
+npm test                # smoke, klik semua butang, API cuaca, kad cuaca, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
+npm run cuaca:ambil     # ambil data cuaca sebenar sekarang (MET + Open-Meteo)
 npm run format          # format kod dengan Prettier
 ```
 
 Buka melalui `npm start`. Membuka `index.html` terus (file://) masih berfungsi, tetapi header keselamatan hanya dihantar oleh pelayan.
+
+## Data cuaca sebenar
+
+Sumber: **MET Malaysia** (api.met.gov.my v2: ramalan negeri `FORECAST/GENERAL` dan amaran rasmi dataset `WARNING`) dan **Open-Meteo** (suhu, kelembapan, hujan, angin, tiupan, 3 hari untuk 15 PO). Atribusi: Data cuaca: Open-Meteo.com (CC BY 4.0).
+
+- Pembolehubah persekitaran dalam `.env` (jangan commit): `MET_API_TOKEN` dan `MET_API_BASE` (lalai `https://api.met.gov.my/v2`). Token tidak pernah dihantar ke pelayar, cache atau log.
+- Jalankan `npm start`. Semasa permulaan pelayan mengambil data jika cache tiada atau lebih 24 jam, kemudian menyemak setiap jam. Cache: `data/processed/cuaca-terkini.json` (diabaikan git; boleh ditukar dengan `CUACA_CACHE_FILE`; `CUACA_AUTO=0` mematikan pengambilan automatik).
+- Ambil secara manual: `npm run cuaca:ambil`. Alternatif Windows Task Scheduler (harian 06:00): `schtasks /Create /SC DAILY /ST 06:00 /TN "CuacaFAMA" /TR "cmd /c cd /d <laluan projek> && npm run cuaca:ambil"`.
+- `GET /api/cuaca` memulangkan cache (503 jika belum ada; pelayar mencuba semula sebentar bila pelayan sedang mengambil data). Selepas menambah laluan baharu, **mulakan semula** pelayan (proses lama akan membalas 404).
+- Risiko cuaca PO ialah anggaran sistem, bukan amaran rasmi. Ambang boleh ubah dalam `AMBANG` (`api/services/cuaca.js`): Tinggi jika hujan >= 30 mm atau (MET ribut petir/hujan lebat dan kebarangkalian >= 90%); Sederhana jika >= 10 mm, kebarangkalian >= 70% atau tiupan >= 40 km/j.
+- Senario AMS dijana di pelayan (`bangunSenario`): Hujan Lebat (>= 30 mm atau MET hujan lebat), Ribut Petir & Angin Kencang (MET ribut petir atau tiupan >= 40 km/j) dan Hujan Berterusan (>= 2 hari berturut-turut, kebarangkalian >= 70% dan hujan >= 1 mm). Tiada senario banjir kerana tiada sumber JPS ("Risiko banjir: data JPS belum disambungkan").
+- Kad "Amaran Rasmi MET Malaysia" hanya memaparkan amaran sebenar dataset `WARNING`.
+- Membuka `index.html` melalui `file://` tidak menyokong data sebenar (perlu `npm start`).
 
 ## Fungsi dashboard
 
@@ -64,7 +80,7 @@ Buka melalui `npm start`. Membuka `index.html` terus (file://) masih berfungsi, 
 - Penapis: komoditi, PO, indikator, mod senarai dan julat tren.
 - KPI: PO dalam tapisan, kritikal, berwaspada, stabil dan isu komoditi.
 - Analisis harga: 5 harga terendah dan 5 tertinggi, perbandingan negeri/daerah, trend harga harian dengan jalur sigma dan had lantai/siling.
-- Ramalan cuaca, amaran MET (contoh) dan AI Multi-Scenario Monitoring.
+- Ramalan cuaca sebenar (MET Malaysia + Open-Meteo), amaran rasmi MET dan AI Multi-Scenario Monitoring yang dijana daripada data cuaca sebenar.
 - Rekod tindakan intervensi (disimpan dalam pelayar), eksport CSV harga dan logistik PO.
 - Tema Gelap / Cerah yang diingati oleh pelayar.
 

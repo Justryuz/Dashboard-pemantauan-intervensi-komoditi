@@ -1103,22 +1103,6 @@ const DATA = {
     {"id":"sarawak|Serian|Telur Gred A|Borong","poId":"sarawak","negeri":"Sarawak","daerah":"Serian","komoditi":"Telur Gred A","peringkat":"Borong","unit":"RM/10 biji","prices":[4.71,4.66,4.65,4.6,4.64,4.7,4.76,4.83,4.88,4.93,4.96,4.91,4.89,4.8,4.74,4.65,4.62,4.59,4.62,4.61,4.69,4.73,4.8,4.89,4.9,4.93,4.88,4.85,4.75,4.69],"purata":4.76,"sigma":0.12,"ramalan":4.72,"hargaLantai":2.8,"hargaSiling":7.5,"mingguSebelum":4.67,"mingguTerkini":4.84,"perubahanPct":3.77,"status":"hijau","sebab":"Dalam julat normal"},
     {"id":"sarawak|Serian|Telur Gred A|Runcit","poId":"sarawak","negeri":"Sarawak","daerah":"Serian","komoditi":"Telur Gred A","peringkat":"Runcit","unit":"RM/10 biji","prices":[5.73,5.78,5.87,5.93,6.08,6.13,6.17,6.23,6.18,6.13,6.06,5.96,5.94,5.87,5.83,5.88,5.94,6.04,6.11,6.21,6.28,6.32,6.3,6.26,6.23,6.16,6.08,5.98,5.95,5.99],"purata":6.05,"sigma":0.16,"ramalan":6.11,"hargaLantai":3.47,"hargaSiling":9.3,"mingguSebelum":6.17,"mingguTerkini":6.09,"perubahanPct":-1.27,"status":"hijau","sebab":"Dalam julat normal"}
   ],
-  "cuaca": [
-    {"negeri":"Kelantan","icon":"☁️","keadaan":"Mendung","suhu":29,"angin":9},
-    {"negeri":"Terengganu","icon":"⛈️","keadaan":"Ribut petir","suhu":27,"angin":10},
-    {"negeri":"Pahang","icon":"🌦️","keadaan":"Gerimis","suhu":28,"angin":8},
-    {"negeri":"Johor","icon":"🌧️","keadaan":"Hujan lebat","suhu":27,"angin":8},
-    {"negeri":"Selangor","icon":"🌦️","keadaan":"Gerimis","suhu":29,"angin":9},
-    {"negeri":"Kedah","icon":"☁️","keadaan":"Mendung","suhu":31,"angin":11},
-    {"negeri":"Pulau Pinang","icon":"☁️","keadaan":"Mendung","suhu":31,"angin":6},
-    {"negeri":"Sabah","icon":"⛅","keadaan":"Berawan","suhu":30,"angin":7},
-    {"negeri":"Sarawak","icon":"🌦️","keadaan":"Hujan setempat","suhu":28,"angin":8}
-  ],
-  "banjir": [
-    {"name":"Banjir — Kota Bharu (Demo)","lat":6.11,"lon":102.2,"level":"Amaran"},
-    {"name":"Banjir — Kuantan (Demo)","lat":3.84,"lon":103.28,"level":"Waspada"},
-    {"name":"Banjir — Kuching (Demo)","lat":1.62,"lon":110.3,"level":"Amaran"}
-  ],
   "mapPaths": {
     "malaysia": "M112.54,116.25L119.32,106.97L151.15,129.75L154.21,156.45L179.96,150.24L192.71,128.87L201.67,133.73L224.71,165.13L241.07,199.94L243.3,234.96L239.15,258.61L242.95,276.49L245.8,307.27L259.53,321.6L274.87,367.58L274.12,385.16L246.47,388.63L209.57,350.11L163.43,308.84L158.87,282.34L136.32,247.56L130.94,204.5L116.87,176.15L121.14,138.29L112.54,116.25ZM806.6,237.25L772.79,228.48L727.96,228.46L714.44,287.6L699.43,305.68L679.43,378.0L647.63,389.09L610.73,374.51L592.03,379.07L569.3,405.37L544.41,401.62L519.25,412.2L492.58,382.82L486.07,348.06L514.65,365.88L544.79,356.17L552.63,312.14L569.28,302.33L616.03,291.08L644.0,249.94L663.16,217.05L680.92,244.0L689.11,226.29L707.75,227.93L710.02,194.73L711.78,169.12L741.81,132.95L761.48,92.31L777.26,92.14L797.29,118.45L799.07,141.05L824.76,155.55L857.29,171.19L854.52,191.56L828.35,194.14L835.31,219.53L806.6,237.25Z",
     "thailand": "M312.73,-289.81L276.18,-297.27L225.75,-287.34L200.78,-244.1L210.01,-181.3L175.0,-205.18L141.64,-204.21L147.36,-245.06L113.01,-244.76L109.93,-187.56L88.88,-111.61L76.2,-65.68L78.87,-28.04L104.28,-26.41L120.11,21.05L127.11,66.06L148.88,95.84L172.5,101.89L192.71,128.87L179.96,150.24L154.21,156.45L151.15,129.75L119.32,106.97L112.54,116.25L97.14,96.29L90.47,70.54L69.74,41.18L50.85,16.52L44.45,47.09L37.05,18.2L41.31,-14.24L52.79,-64.11L71.69,-117.55L93.1,-166.02L77.86,-213.45L78.47,-237.6L74.01,-266.63L48.0,-307.95L38.69,-334.03L52.16,-343.64L66.43,-388.85L50.46,-423.17L25.71,-461.13L6.86,-506.76L23.31,-516.21L41.1,-572.43L68.63,-574.75L91.39,-597.3L113.72,-609.33L130.61,-593.28L132.85,-562.03L159.2,-559.65L149.6,-504.86L150.52,-458.25L191.63,-489.27L203.31,-480.1L226.15,-481.61L234.01,-499.7L263.5,-496.13L293.16,-453.9L295.59,-402.58L327.17,-357.26L325.43,-313.24L312.73,-289.81Z",
@@ -1126,7 +1110,7 @@ const DATA = {
     "brunei": "M711.78,169.12L710.02,194.73L707.75,227.93L689.11,226.29L680.92,244.0L663.16,217.05L678.6,197.6L711.78,169.12Z"
   },
   "generatedDate": "2026-11-14",
-  "reference": "Nama PO dan kapasiti daripada infografik logistik yang dimuat naik. Koordinat anggaran bandar; daerah seliaan, harga, status, outlet dan cuaca/banjir adalah simulasi. Nota kualiti data: 64 bilik sejuk pada ringkasan, 65 jumlah butiran.",
+  "reference": "Nama PO dan kapasiti daripada infografik logistik yang dimuat naik. Koordinat anggaran bandar; daerah seliaan, harga, status, dan outlet adalah simulasi; data cuaca sebenar dimuat daripada /api/cuaca (MET Malaysia, Open-Meteo). Nota kualiti data: 64 bilik sejuk pada ringkasan, 65 jumlah butiran.",
   "logistikSokongan": {
     "lokasiTidakDipetakan": 27,
     "kenderaan": 127,

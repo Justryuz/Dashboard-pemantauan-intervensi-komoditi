@@ -628,6 +628,7 @@
 }
 /* ===== Halaman senario (pemacu: state.scenario) ===== */
 .ams-panel[data-page='detail'] > .ams-state,
+.ams-panel[data-page='detail'] > .ams-note,
 .ams-panel[data-page='detail'] > .ams-overview {
   display: none;
 }

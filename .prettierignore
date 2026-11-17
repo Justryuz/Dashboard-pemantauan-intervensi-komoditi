@@ -4,3 +4,4 @@ data
 docs
 src/data/dashboard-data.js
 tests/frontend/intervensi-test.js
+src/vendor

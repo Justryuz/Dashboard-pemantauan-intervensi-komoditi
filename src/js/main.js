@@ -1,5 +1,6 @@
 initControls();
 renderAll();
+initCuaca();
 window.famaScenariosReady = initScenarios();
 window.DASHBOARD_TEST = {
   state,
@@ -19,7 +20,6 @@ window.DASHBOARD_TEST = {
     applyScenarios(list);
     renderAll();
   },
-  scenarioDummy: () => JSON.parse(JSON.stringify(SCENARIOS_DUMMY)),
   ScenarioService,
   scenarioInterventionContext,
 };

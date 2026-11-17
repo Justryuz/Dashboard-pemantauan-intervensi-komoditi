@@ -731,38 +731,22 @@
     now = now == null ? nowMs() : now;
     const p = IV_POBY[poId];
     let best = null;
-    const rank = { Amaran: 2, Waspada: 1 };
-    (DATA.banjir || []).forEach((f) => {
-      if (hav(p.lat, p.lon, f.lat, f.lon) <= 30) {
-        const lv = f.level;
-        if (!best || rank[lv] > rank[best.level])
-          best = {
-            level: lv,
-            source: `${lv === 'Amaran' ? 'Amaran' : 'Waspada'} banjir (DATA.banjir)`,
-          };
-      }
-    });
+    // Hanya cuaca sebenar (Open-Meteo/MET): risiko hujan lebat Tinggi menjadi penanda Waspada. Tiada data banjir JPS.
     ivScenarios().forEach((s) => {
-      if (s.warningType !== 'amaran_banjir' || !(s.affectedPOIds || []).includes(poId)) return;
-      if (!(Date.parse(s.validFrom) <= now && now <= Date.parse(s.validUntil))) return;
-      const lv =
-        s.riskLevel === 'tinggi' ? 'Amaran' : s.riskLevel === 'sederhana' ? 'Waspada' : null;
-      if (!lv) return;
-      if (
-        !best ||
-        rank[lv] > rank[best.level] ||
-        (rank[lv] === rank[best.level] && best.source.includes('DATA.banjir'))
-      )
-        best = { level: lv, source: `${lv} banjir AMS ${s.scenarioId}` };
+      if (s.warningType !== 'hujan_lebat' || s.riskLevel !== 'tinggi' || best) return;
+      if (!(s.affectedPOIds || []).includes(poId)) return;
+      // Senario cuaca sebenar dinilai pada masa sebenar; tarikh rujukan prototaip (refNow) hanya untuk data dummy.
+      const t = s.dataStatus === 'sebenar' ? Date.now() : now;
+      if (!(Date.parse(s.validFrom) <= t && t <= Date.parse(s.validUntil))) return;
+      best = { level: 'Waspada', source: `Cuaca (Open-Meteo/MET) ${s.scenarioId}` };
     });
     return best;
   }
   const disruptionLabel = (d) =>
     d
-      ? (d.level === 'Amaran' ? 'Amaran banjir' : 'Waspada banjir') +
-        (d.source.includes('AMS') ? ' AMS ' + d.source.split('AMS ')[1] : ' (DATA.banjir)')
+      ? 'Cuaca tinggi (Open-Meteo/MET)' +
+        (d.source.split(') ')[1] ? ' ' + d.source.split(') ')[1] : '')
       : '';
-
   /* ===== Enjin mobilisasi (tulen) ===== */
   function mobilisationEngine(inp) {
     const { mode, anchorPOId, commodityId } = inp;
@@ -2342,6 +2326,21 @@
     );
     $i('ivFTempoh').value = String(s.selectedDateRange.days);
     $i('ivFRisiko').value = s.selectedRisk;
+    const nAktif =
+      [s.selectedCommodityId, s.selectedStateId, s.selectedPOId, s.selectedDistrictId].filter(
+        Boolean,
+      ).length +
+      (s.selectedDateRange.days !== 30 ? 1 : 0) +
+      (s.selectedRisk !== 'all' ? 1 : 0);
+    const rb = $i('ivResetBadge');
+    rb.hidden = !nAktif;
+    rb.textContent = String(nAktif);
+    const rs = $i('ivReset');
+    rs.dataset.idle = nAktif ? 'false' : 'true';
+    rs.setAttribute(
+      'aria-label',
+      nAktif ? 'Set semula penapis (' + nAktif + ' aktif)' : 'Set semula penapis',
+    );
     const t = IV_CONFIG.thresholds;
     [
       ['ivThrPW', Math.abs(t.pengeluar.warnPct)],
@@ -2645,7 +2644,7 @@
     const lbl = s.selectedMode === 'pengguna' ? 'Lebihan stok' : 'Keperluan';
     const chips = [];
     if (c.sameGroup) chips.push(chip('Kongsi kapasiti logistik (kumpulan gabungan)', 'info'));
-    if (c.flood) chips.push(chip('Waspada banjir', 'warn'));
+    if (c.flood) chips.push(chip('Cuaca (Open-Meteo/MET)', 'warn'));
     if (c.overlay) chips.push(chip('Senario ujian (dummy)', 'warn'));
     return `<button type="button" class="iv-cand" aria-pressed="${s.mob.candidateKey === c.poId}" data-iv-act="cand" data-iv-arg="${E(c.poId)}" data-iv-side="${side}"><div class="iv-cand-h"><span>#${c.rank} ${E(c.name)}</span><span>Skor ${c.score}/100</span></div>
  <div class="iv-row-s">${E(c.negeri)}</div>
@@ -2703,12 +2702,12 @@
     }
     let h = '';
     if (s.ui.scenPending)
-      h += `<div class="iv-chips">${chip('Amaran cuaca/banjir AMS sedang dimuatkan', 'warn')}</div>`;
+      h += `<div class="iv-chips">${chip('Data cuaca sedang dimuatkan', 'warn')}</div>`;
     else if (s.ui.scenError)
-      h += `<div class="iv-chips">${chip('Data AMS tidak tersedia, hanya DATA.banjir digunakan', 'warn')}</div>`;
+      h += `<div class="iv-chips">${chip('Data cuaca tidak tersedia, gangguan cuaca tidak dikira', 'warn')}</div>`;
     const ad = disruptionLevel(r.po);
     if (ad)
-      h += `<div class="iv-banner ${ad.level === 'Amaran' ? 'bad' : ''}">PO terpilih berada dalam ${ad.level === 'Amaran' ? 'amaran' : 'waspada'} banjir. Sahkan akses laluan sebelum menghantar. <small>(${E(ad.source)})</small></div>`;
+      h += `<div class="iv-banner ${ad.level === 'Amaran' ? 'bad' : ''}">PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar. <small>(${E(ad.source)})</small></div>`;
     if (!eng.trigger.ok) {
       h += `<div class="iv-empty">PO terpilih tiada lebihan/kekurangan bekalan yang disahkan<br><small>${E(eng.trigger.text || '')}</small></div>`;
       host.innerHTML = h;
@@ -2734,7 +2733,7 @@
         dst = r.mode === 'pengguna' ? poName(r.po) : sel.name;
       const risks = [];
       if (ad && ad.level === 'Amaran') risks.push('Destinasi/sumber terjejas banjir');
-      if (sel.flood) risks.push('Waspada banjir pada ' + sel.name);
+      if (sel.flood) risks.push('Cuaca tinggi (Open-Meteo/MET) pada ' + sel.name);
       if (sel.sameGroup) risks.push('Kapasiti kenderaan dikongsi dengan PO terpilih');
       if (!sel.vehicleKnown)
         risks.push(
@@ -2798,7 +2797,7 @@
       justification: `Harga ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} ${rmAny(c.price)} dan jarak ${Math.round(c.km)} km; skor ${c.score}/100.`,
       deliveryRisk:
         (ad && ad.level === 'Amaran'
-          ? 'PO terpilih berada dalam amaran banjir. Sahkan akses laluan sebelum menghantar. '
+          ? 'PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar. '
           : '') + (c.vehicleKnown ? '' : 'Ketersediaan kenderaan tidak diketahui.'),
       stockVerification: 'belum disahkan',
       weights: { price: s.mob.wPrice, dist: 100 - s.mob.wPrice },
@@ -3213,7 +3212,13 @@
   let _scenSig = '';
   function scenSig() {
     return JSON.stringify(
-      ivScenarios().map((s) => [s.scenarioId, s.riskLevel, s.affectedPOIds, s.validUntil]),
+      ivScenarios().map((s) => [
+        s.scenarioId,
+        s.warningType,
+        s.riskLevel,
+        s.affectedPOIds,
+        s.validUntil,
+      ]),
     );
   }
   function ivRefreshScenarios(force) {
@@ -3754,6 +3759,7 @@
     supplyConfirm,
     priorityScore,
     mobilisationEngine,
+    disruptionLevel,
     marginPct,
     maxFarmPrice,
     minSell,

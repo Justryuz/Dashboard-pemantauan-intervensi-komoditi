@@ -1212,6 +1212,78 @@ select option {
     grid-template-rows: none;
   }
 }
+
+/* ===== Kad cuaca sebenar ===== */
+.weather-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.weather-nm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.weather-risk {
+  margin-left: auto;
+  flex: none;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.weather-risk.r-rendah {
+  color: var(--green);
+}
+.weather-risk.r-sederhana {
+  color: var(--yellow);
+}
+.weather-risk.r-tinggi {
+  color: var(--red);
+}
+.weather-sub {
+  line-height: 1.5;
+}
+.weather-banner {
+  margin: 0 17px 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--muted);
+  font-size: 11px;
+}
+.weather-banner[hidden] {
+  display: none;
+}
+.weather-banner.err {
+  color: var(--yellow);
+  border-color: var(--yellow);
+}
+.weather-attrib {
+  padding: 0 17px 12px;
+  font-size: 10px;
+  color: var(--muted);
+}
+#metAlertBody {
+  max-height: 280px;
+  overflow-y: auto;
+}
+.alert-item p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.alert-item p.alert-meta {
+  font-size: 10px;
+  color: var(--muted);
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,

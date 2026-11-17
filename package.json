@@ -7,7 +7,8 @@
   },
   "scripts": {
     "start": "node api/server.js",
-    "test": "node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js",
+    "cuaca:ambil": "node scripts/ambil-cuaca.js",
+    "test": "node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js && node --no-warnings tests/api/cuaca-api.js && node --no-warnings tests/frontend/cuaca.js && node --no-warnings tests/frontend/filter-bar.js && node --no-warnings tests/frontend/ams.js && node --no-warnings tests/frontend/startup-csp.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

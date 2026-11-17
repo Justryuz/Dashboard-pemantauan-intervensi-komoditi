@@ -139,10 +139,6 @@ function initControls() {
     zoomTo(null);
     renderAll();
   };
-  $('floodToggle').onclick = () => {
-    state.banjir = !state.banjir;
-    renderMap();
-  };
   $('downloadCsv').onclick = exportCSV;
   $('downloadLogistik').onclick = exportLogistikCSV;
   $('showLogs').onclick = openLogModal;
@@ -279,22 +275,11 @@ function mapChild(tag, cls, text) {
   return c;
 }
 function renderMap() {
-  $('floodToggle').textContent = state.banjir ? '≋ Banjir: Hidup' : '≋ Banjir: Mati';
   const visible = statePOs();
   if (map) {
     hidePOHover();
     mapMarkers.forEach((m) => m.remove());
     mapMarkers = [];
-    if (state.banjir) {
-      DATA.banjir.forEach((f) => {
-        const el = mapEl('flood-dot' + (state.po ? ' compact' : ''), {
-          'aria-label': f.name,
-          title: f.name,
-        });
-        el.textContent = '≋';
-        addMapMarker(el, f.lon, f.lat);
-      });
-    }
     const labelShift = {
       perlis: [-8, -16],
       kedah: [-5, 21],
@@ -410,21 +395,236 @@ initMap();
 window.famaMonitorMapResize = () => {
   if (map) map.resize();
 };
+/* ===== Cuaca sebenar (MET Malaysia + Open-Meteo) =====
+   Data dimuat sekali daripada /api/cuaca (same-origin; token MET tidak pernah sampai ke pelayar)
+   dan dikongsi oleh kad ramalan, kad amaran dan senario AMS. */
+const CUACA = {
+  promise: null,
+  load(force) {
+    if (force || !this.promise) {
+      this.promise = (async () => {
+        if (location.protocol === 'file:') {
+          const e = new Error('file');
+          e.kind = 'file';
+          throw e;
+        }
+        // Cache belum ada tetapi pelayan sedang mengambil data: cuba lagi sebentar (maks. ~30 saat).
+        let res;
+        for (let cuba = 0; ; cuba++) {
+          res = await fetch('/api/cuaca', { cache: 'no-store' });
+          const sedia = res.status === 503 && cuba < 6;
+          const bd = sedia
+            ? await res
+                .clone()
+                .json()
+                .catch(() => null)
+            : null;
+          if (!(bd && bd.sedangDikemaskini)) break;
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        if (!j || !Array.isArray(j.negeri) || !Array.isArray(j.po))
+          throw new Error('Format data cuaca tidak sah');
+        return j;
+      })();
+    }
+    return this.promise;
+  },
+  staleHours: 30,
+};
+let cuacaState = { status: 'memuat', data: null };
+const RISIKO_NILAI = { Rendah: 0, Sederhana: 1, Tinggi: 2 };
+const cuacaFmt = new Intl.DateTimeFormat('ms-MY', {
+  timeZone: 'Asia/Kuala_Lumpur',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+const cuacaMasa = (iso) => {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return '-';
+  const p = Object.fromEntries(cuacaFmt.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute} MYT`;
+};
+const cuacaHariIni = () => {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date());
+};
+const cuacaLapuk = (d) => {
+  const t = Date.parse(d && d.fetchedAt);
+  return Number.isNaN(t) || (Date.now() - t) / 36e5 > CUACA.staleHours;
+};
+const cuacaRetryBtn = () => {
+  return ' <button type="button" class="button tiny" data-act="cuaca-retry">Cuba semula</button>';
+};
+const cuacaTileData = (d, n) => {
+  const hari = cuacaHariIni();
+  const wakil = d.po.find((p) => p.poId === n.poWakilId) || d.po.find((p) => p.negeri === n.negeri);
+  const met = n.tarikh.find((x) => x.tarikh >= hari) || n.tarikh[0] || null;
+  const omHari = wakil && (wakil.harian || []).find((x) => x.tarikh >= hari);
+  let risiko = 'Rendah';
+  d.po
+    .filter((p) => p.negeri === n.negeri)
+    .forEach((p) => {
+      const h = (p.harian || []).find((x) => x.tarikh >= hari);
+      const r = h && h.risiko && h.risiko.tahap;
+      if (r && RISIKO_NILAI[r] > RISIKO_NILAI[risiko]) risiko = r;
+    });
+  const keadaan = (met && met.keadaan) || (wakil && wakil.semasa && wakil.semasa.keadaan) || '-';
+  const ikon =
+    (met && met.keadaan && met.ikon) || (wakil && wakil.semasa && wakil.semasa.ikon) || '🌡️';
+  const sMin = met && Number.isFinite(met.suhuMin) ? met.suhuMin : omHari && omHari.suhuMin;
+  const sMax = met && Number.isFinite(met.suhuMax) ? met.suhuMax : omHari && omHari.suhuMax;
+  const suhu = sMin != null && sMax != null ? `${Math.round(sMin)}–${Math.round(sMax)}°C` : '-';
+  const angin = wakil && wakil.semasa && wakil.semasa.angin != null ? wakil.semasa.angin : null;
+  const lembap =
+    wakil && wakil.semasa && wakil.semasa.kelembapan != null ? wakil.semasa.kelembapan : null;
+  return { negeri: n.negeri, keadaan, ikon, suhu, angin, lembap, risiko, met };
+};
 function renderWeather() {
-  let selected = DATA.cuaca;
-  if (state.po) {
-    const p = poById[state.po];
-    selected = [...DATA.cuaca].sort((a, b) => (b.negeri === p.negeri) - (a.negeri === p.negeri));
+  const grid = $('weatherGrid');
+  const banner = $('weatherStatus');
+  const note = $('weatherNote');
+  const cs = cuacaState;
+  let msg = '';
+  let kind = '';
+  if (cs.status === 'memuat') note.textContent = 'Memuatkan data cuaca…';
+  else if (cs.status === 'file') {
+    note.textContent = 'Data cuaca sebenar tidak tersedia';
+    msg = 'Data cuaca sebenar memerlukan pelayan (npm start)';
+  } else if (cs.status === 'error') {
+    note.textContent = 'Data cuaca tidak tersedia';
+    msg = 'Data cuaca tidak dapat dimuatkan.' + cuacaRetryBtn();
+    kind = 'err';
   }
-  $('weatherGrid').innerHTML = selected
-    .slice(0, 6)
-    .map(
-      (w) =>
-        `<article class="weather-card"><div class="weather-name">${esc(w.negeri)}</div><div class="weather-now">${w.icon} <span>${esc(w.keadaan)}</span></div><div class="weather-sub">♧ ${w.suhu}°C　≋ ${w.angin} km/j</div></article>`,
+  if (cs.status !== 'ready') {
+    grid.innerHTML = '';
+    banner.hidden = !msg;
+    banner.className = 'weather-banner' + (kind ? ' ' + kind : '');
+    banner.innerHTML = msg;
+    return;
+  }
+  const d = cs.data;
+  note.textContent = 'Dikemas kini ' + cuacaMasa(d.fetchedAt);
+  const sumberGagal = ['met', 'openMeteo']
+    .filter((k) => d.sumber && d.sumber[k] && d.sumber[k].status === 'gagal')
+    .map((k) => (k === 'met' ? 'MET Malaysia' : 'Open-Meteo'));
+  if (cuacaLapuk(d)) {
+    msg = 'Data lapuk: kemas kini terakhir ' + cuacaMasa(d.fetchedAt);
+    kind = 'err';
+  } else if (sumberGagal.length) {
+    msg =
+      'Sumber tidak dapat dikemas kini: ' + sumberGagal.join(', ') + ' (data terakhir dipaparkan)';
+    kind = 'err';
+  }
+  banner.hidden = !msg;
+  banner.className = 'weather-banner' + (kind ? ' ' + kind : '');
+  banner.textContent = msg;
+  const pilihan = state.po ? poById[state.po].negeri : null;
+  const tiles = d.negeri
+    .map((n) => cuacaTileData(d, n))
+    .sort(
+      (a, b) =>
+        (b.negeri === pilihan) - (a.negeri === pilihan) ||
+        RISIKO_NILAI[b.risiko] - RISIKO_NILAI[a.risiko] ||
+        a.negeri.localeCompare(b.negeri),
     )
+    .slice(0, 6);
+  grid.innerHTML = tiles
+    .map((w) => {
+      const tip = w.met
+        ? `Pagi: ${w.met.pagiMs || '-'} · Petang: ${w.met.tengahHariMs || '-'} · Malam: ${w.met.malamMs || '-'}`
+        : '';
+      return `<article class="weather-card" title="${esc(tip)}"><div class="weather-name"><span class="weather-nm">${esc(w.negeri)}</span><span class="weather-risk r-${esc(w.risiko.toLowerCase())}" title="Anggaran sistem, bukan amaran rasmi">${esc(w.risiko)}</span></div><div class="weather-now">${esc(w.ikon)} <span>${esc(w.keadaan)}</span></div><div class="weather-sub">♧ ${esc(w.suhu)}　≋ ${w.angin == null ? '-' : esc(Math.round(w.angin))} km/j　💧 ${w.lembap == null ? '-' : esc(Math.round(w.lembap))}%</div></article>`;
+    })
     .join('');
 }
-function logistikStatsHTML(l) {
+const renderMetAlerts = () => {
+  const body = $('metAlertBody');
+  const note = $('metAlertNote');
+  const cs = cuacaState;
+  const sumber = 'Sumber: API rasmi MET Malaysia (dataset WARNING)';
+  if (cs.status === 'memuat') {
+    body.textContent = 'Memuatkan amaran…';
+    note.textContent = sumber;
+    return;
+  }
+  if (cs.status === 'file') {
+    body.textContent = 'Amaran rasmi sebenar memerlukan pelayan (npm start)';
+    note.textContent = sumber;
+    return;
+  }
+  if (cs.status === 'error') {
+    body.innerHTML = 'Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn();
+    note.textContent = sumber;
+    return;
+  }
+  const d = cs.data;
+  const st = d.sumber && d.sumber.metAmaran ? d.sumber.metAmaran.status : 'gagal';
+  const masa = cuacaMasa(d.amaranDiambil || d.fetchedAt);
+  note.textContent = `${sumber} · Dikemas kini ${masa}`;
+  if (st === 'tiada_dataset') {
+    body.textContent = 'Amaran rasmi belum tersedia melalui API MET';
+    return;
+  }
+  if (st === 'gagal') {
+    body.innerHTML = 'Amaran rasmi tidak dapat dimuatkan.' + cuacaRetryBtn();
+    return;
+  }
+  const kini = Date.now();
+  const aktif = (d.amaran || []).filter((a) => !a.sah_hingga || Date.parse(a.sah_hingga) >= kini);
+  if (!aktif.length) {
+    body.innerHTML = `<div class="alert-item"><b>Tiada amaran rasmi aktif</b><p>Sumber: MET Malaysia · ${esc(masa)}</p></div>`;
+    return;
+  }
+  const had = 4;
+  body.innerHTML =
+    aktif
+      .slice(0, had)
+      .map((a) => {
+        const lok =
+          a.negeri && a.negeri.length
+            ? a.negeri.length > 4
+              ? a.negeri.length + ' negeri'
+              : a.negeri.join(', ')
+            : '';
+        const sah = a.sah_hingga ? ' · Sah hingga ' + cuacaMasa(a.sah_hingga) : '';
+        return `<div class="alert-item"><b>${esc(a.tajuk)}${lok ? ' · ' + esc(lok) : ''}</b><p title="${esc(a.teks)}">${esc(a.teks)}</p><p class="alert-meta">MET Malaysia · Dikeluarkan ${esc(cuacaMasa(a.dikeluarkan))}${esc(sah)}</p></div>`;
+      })
+      .join('') +
+    (aktif.length > had
+      ? `<div class="alert-item"><b>+${aktif.length - had} amaran aktif lain</b></div>`
+      : '');
+};
+const aplikasiCuaca = (p) => {
+  return p.then(
+    (d) => {
+      cuacaState = { status: 'ready', data: d };
+    },
+    (e) => {
+      cuacaState = { status: e && e.kind === 'file' ? 'file' : 'error', data: null };
+    },
+  );
+};
+const initCuaca = (force) => {
+  cuacaState = { status: 'memuat', data: null };
+  renderWeather();
+  renderMetAlerts();
+  return aplikasiCuaca(CUACA.load(force)).then(() => {
+    renderWeather();
+    renderMetAlerts();
+  });
+};
+document.addEventListener('click', (ev) => {
+  if (!ev.target.closest('[data-act="cuaca-retry"]')) return;
+  initCuaca(true).then(() => {
+    if (typeof initScenarios === 'function') initScenarios();
+  });
+});
+/* ===== Tamat cuaca sebenar ===== */ function logistikStatsHTML(l) {
   return `<div class="logistic-stat-grid"><div class="logistic-stat"><div class="l-label">Kenderaan</div><div class="l-val">${l.kenderaan} buah</div></div><div class="logistic-stat"><div class="l-label">Muatan</div><div class="l-val">${l.muatanMT.toFixed(2)} MT</div></div><div class="logistic-stat"><div class="l-label">Bilik sejuk</div><div class="l-val">${l.bilikSejuk} unit</div></div><div class="logistic-stat"><div class="l-label">Kapasiti simpanan</div><div class="l-val">${l.kapasitiSimpananMT.toFixed(2)} MT</div></div></div>`;
 }
 function poHoverHTML(p) {

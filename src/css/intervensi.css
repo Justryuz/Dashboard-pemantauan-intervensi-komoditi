@@ -136,23 +136,135 @@ button.iv-chip[aria-pressed='true'] {
   color: var(--tffffff);
 }
 .iv-filters {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 12px 15px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 12px 14px;
+  padding: 14px 16px;
   border-radius: 15px;
   background: var(--b102344);
   border: 1px solid var(--b285074);
 }
-.iv-filters .ctrl small {
-  font-size: 10px;
-  color: var(--t7f9bb8);
-  line-height: 1.2;
+.iv-filters .ctrl {
+  min-width: 0;
+  flex: none;
+  gap: 6px;
 }
-.iv-filters .ctrl select,
-.iv-filters .ctrl input {
-  min-height: 38px;
+.iv-filters .ctrl label,
+.iv-filters .ctrl .iv-lblrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--muted);
+}
+.iv-filters .ctrl .iv-lblrow label {
+  min-height: 0;
+}
+.iv-filters .ctrl label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.iv-info {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--muted);
+  font:
+    italic 700 10px/14px Georgia,
+    serif;
+  text-align: center;
+  cursor: help;
+}
+.iv-info:hover,
+.iv-info:focus-visible {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+.iv-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.iv-filters .ctrl select {
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--b07182f);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2391a9c7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+  text-overflow: ellipsis;
+}
+html[data-theme='cerah'] .iv-filters .ctrl select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23415978' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.iv-filters .ctrl select:hover {
+  border-color: var(--cyan);
+}
+.iv-filters .ctrl select:focus-visible,
+.iv-filters .iv-info:focus-visible,
+.iv-filters #ivReset:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.iv-filters .iv-reset-wrap {
+  align-self: end;
+  margin: 0;
+}
+.iv-filters #ivReset {
+  box-sizing: border-box;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+.iv-reset-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--cyan);
+  color: var(--bg);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.iv-reset-badge[hidden] {
+  display: none;
+}
+.iv-filters #ivReset[data-idle='true'] {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+}
+@media (max-width: 1199px) {
+  .iv-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .iv-filters .iv-reset-wrap {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
 }
 .iv-fbtn {
   display: none;
@@ -915,12 +1027,7 @@ button.iv-chip[aria-pressed='true'] {
 }
 @media (max-width: 799px) {
   .iv-filters {
-    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .iv-filters .ctrl {
-    min-width: 0;
-    flex: none;
   }
   .iv-thr-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -940,6 +1047,7 @@ button.iv-chip[aria-pressed='true'] {
   .iv-fbtn {
     display: inline-flex;
     align-self: center;
+    grid-column: 1 / -1;
   }
   .iv-filters.iv-collapsed .ctrl,
   .iv-filters.iv-collapsed .iv-reset-wrap {

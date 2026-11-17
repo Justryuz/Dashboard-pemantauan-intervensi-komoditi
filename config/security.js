@@ -3,8 +3,8 @@
 // script-src tanpa 'unsafe-inline': semua JS dalam fail luaran. style-src masih perlukan 'unsafe-inline' kerana atribut style="" dalam templat UI.
 const CSP = [
   "default-src 'none'",
-  "script-src 'self' https://unpkg.com",
-  "style-src 'self' 'unsafe-inline' https://unpkg.com",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com",
