@@ -2282,3 +2282,180 @@ select option {
 #metAlertTag:empty {
   display: none;
 }
+
+/* ===== Kawalan peta: peta asas, amaran cuaca, radar Windy ===== */
+.peta-kawalan {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.peta-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.peta-seg {
+  display: inline-flex;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--b0b1c37);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+.peta-seg button,
+.peta-menu-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--tdceeff);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.peta-seg button + button {
+  border-left: 1px solid var(--line2);
+}
+.peta-seg button:hover,
+.peta-menu-btn:hover {
+  filter: brightness(1.25);
+}
+.peta-seg button[aria-pressed='true'] {
+  background: var(--cyan);
+  color: #04202e;
+}
+.peta-seg button:focus-visible,
+.peta-menu-btn:focus-visible,
+.peta-radar-kepala button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.peta-menu-btn {
+  display: none;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--b0b1c37);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+.peta-radar {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  top: 72px;
+  width: min(520px, calc(100% - 20px));
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  background: var(--b0b1c37);
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+.peta-radar[hidden] {
+  display: none;
+}
+.peta-radar-kepala {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  font-size: 12px;
+  color: var(--tdceeff);
+  border-bottom: 1px solid var(--line2);
+}
+.peta-radar-kepala span {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.peta-radar-kepala button {
+  appearance: none;
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.peta-radar-badan {
+  flex: 1;
+  min-height: 0;
+}
+.peta-radar-badan iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.po-hover-popup .maplibregl-popup-content {
+  pointer-events: auto;
+}
+.gmaps-baris {
+  margin-top: 6px;
+}
+.gmaps-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0b64b0;
+  text-decoration: underline;
+}
+.po-hover-popup .gmaps-link {
+  color: var(--cyan);
+}
+.amaran-popup {
+  max-height: 190px;
+  overflow: auto;
+}
+.amaran-popup-item {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(100, 130, 160, 0.35);
+}
+.amaran-popup-item:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.amaran-popup-item .alert-tahap {
+  margin-left: 6px;
+}
+.amaran-popup-sah {
+  font-size: 10.5px;
+  color: #405f77;
+}
+.amaran-popup-teks {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+.amaran-popup .alert-more {
+  margin-top: 2px;
+}
+@media (max-width: 640px) {
+  .peta-menu-btn {
+    display: block;
+  }
+  .peta-menu {
+    display: none;
+  }
+  .peta-kawalan.terbuka .peta-menu {
+    display: flex;
+  }
+  .peta-radar {
+    top: 52px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    width: auto;
+  }
+}

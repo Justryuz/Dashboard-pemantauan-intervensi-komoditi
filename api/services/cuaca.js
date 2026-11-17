@@ -784,6 +784,7 @@ module.exports = {
   ambilMET,
   ambilAmaranMET,
   dedupeAmaran,
+  negeriDalamTeks,
   ambilOpenMeteo,
   bangunSenario,
   bina,

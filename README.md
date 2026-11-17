@@ -52,7 +52,7 @@ Perlu Node.js 20.12 atau lebih baharu.
 cp .env.example .env    # isi nilai jika perlu
 npm install             # hanya untuk prettier (dev)
 npm start               # http://127.0.0.1:3000
-npm test                # smoke, klik semua butang, API cuaca/banjir/IPU/Muse, kad cuaca, banjir, IPU, AI Muse, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
+npm test                # smoke, klik semua butang, API cuaca/banjir/IPU/Muse/amaran data.gov.my, peta (asas, amaran, radar), kad cuaca, banjir, IPU, AI Muse, bar penapis, AMS, permulaan + CSP (set BROWSER_PATH jika lain)
 npm run cuaca:ambil     # ambil data cuaca sebenar sekarang (MET + Open-Meteo)
 npm run banjir:ambil    # ambil data banjir sebenar sekarang (JPS Malaysia + JPS Selangor)
 npm run ipu:ambil       # ambil IPU sebenar sekarang (JAS MyEQMS)
@@ -128,6 +128,20 @@ Linux cron (setiap 6 jam):
 ```
 
 **Had.** Lokasi berita diekstrak daripada teks nota, jadi sesetengah berita mungkin tiada lokasi. Struktur fail Drive bukan API rasmi berdokumen dan boleh berubah tanpa notis.
+
+## Peta utama (Pemantauan)
+
+Kawalan peta berada di penjuru kanan atas peta. Pada skrin 640 px dan ke bawah, kawalan runtuh menjadi satu butang **Lapisan**.
+
+- **Peta asas**: Lalai (CARTO), Terrain (OpenTopoMap, zum maks 17), Jalan (OpenStreetMap, zum maks 19) dan Satelit (Esri World Imagery, zum maks 19). Pilihan disimpan dalam `localStorage` (`fama_peta_asas`). Tukar peta asas memuat semula gaya peta dan memasang semula lapisan tindihan (stesen banjir JPS, amaran cuaca). Penanda PO ialah elemen DOM dan tidak terjejas. Atribusi setiap peta dipaparkan pada kawalan atribusi. Tile dimuat oleh pelayar seperti biasa tanpa prefetch; hanya cache HTTP piawai digunakan.
+- **Amaran Cuaca** (togol): amaran aktif MET Malaysia daripada `https://api.data.gov.my/weather/warning` ditanda pada titik tengah negeri yang disebut dalam teks amaran (tiada poligon negeri dalam projek, jadi kedudukan ialah anggaran), warna ikut tahap. Pop-up memaparkan tajuk, tempoh sah dan teks ringkas dengan **Lihat lagi**. Amaran data.gov.my yang tidak menyamai amaran `api.met.gov.my` (tajuk sama, masa dikeluarkan dalam 60 minit, negeri bertindih) juga masuk ke kad Amaran Rasmi dengan sumber "MET Malaysia (data.gov.my)".
+- **Radar (Windy)**: panel di atas peta. Iframe `https://embed.windy.com/embed2.html` hanya dicipta bila dibuka dan dibuang bila ditutup (`sandbox`, `referrerpolicy=no-referrer`). URL `node.windy.com/embed/radar` tidak boleh dibenamkan kerana Windy menghantar `frame-ancestors 'self' *.windy.com`, jadi `embed.windy.com` digunakan dengan parameter yang sama. Radar: Windy.com.
+- **Google Maps**: pop-up PO, stesen banjir JPS dan amaran cuaca ada pautan "Buka di Google Maps" (`https://www.google.com/maps/search/?api=1&query=lat,lng`). Pautan sahaja, tiada API. Baris kad Stesen Banjir JPS tiada pautan kerana baris ialah butang.
+- Ikon penanda Leaflet (cdnjs) tidak diperlukan; peta menggunakan penanda sendiri dan CDN tidak ditambah.
+
+**Amaran data.gov.my (pelayan).** `GET /api/met-malaysia` memulangkan cache amaran ternormal. Semakan setiap 30 minit (`AMARAN_DG_POLL_MIN`), tamat masa 20 s, 1 percubaan semula, `User-Agent: FAMA-dashboard-prototype`. Had kadar data.gov.my kira-kira 4 permintaan seminit. Cache: `data/processed/amaran-datagov.json` (`AMARAN_DG_CACHE_FILE`; `AMARAN_DG_AUTO=0` mematikan pengambilan automatik). Tanpa cache, respons ialah 200 dengan `amaran: []`. Setiap amaran ada `pendua` jika sama dengan amaran MET yang sedia ada.
+
+**Had tile.** Tile OpenStreetMap untuk penggunaan ringan sahaja ([dasar tile OSM](https://operations.osmfoundation.org/policies/tiles/)); untuk production gunakan penyedia tile yang sesuai. OpenTopoMap juga untuk penggunaan sederhana. Peta tab Intervensi (`src/js/intervensi.js`) belum mendapat pilihan peta asas dan pautan Google Maps (cadangan susulan).
 
 ## Fungsi dashboard
 

@@ -131,6 +131,14 @@ function pasangCacheIPU(obj) {
   process.env.IPU_CACHE_FILE = f;
   return f;
 }
+// Amaran data.gov.my: lalai tiada cache (fail tidak wujud) supaya ujian tidak membaca data sebenar pembangun.
+function pasangCacheAmaranDG(obj) {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'amaran-dg-'));
+  const f = path.join(d, 'amaran-dg.json');
+  if (obj) fs.writeFileSync(f, JSON.stringify(obj));
+  process.env.AMARAN_DG_CACHE_FILE = f;
+  return f;
+}
 // Cuaca + banjir (lalai normal) + IPU + AI Muse.
 function pasangSemuaCache(opsyen = {}) {
   return {
@@ -138,6 +146,7 @@ function pasangSemuaCache(opsyen = {}) {
     banjir: pasangCacheBanjir(opsyen.banjir || buatFixtureBanjir()),
     ipu: pasangCacheIPU(opsyen.ipu || buatFixtureIPU()),
     muse: pasangCacheMuse(opsyen.muse || buatFixtureMuse()),
+    amaranDG: pasangCacheAmaranDG(opsyen.amaranDG),
   };
 }
 
@@ -146,6 +155,7 @@ module.exports = {
   buatFixtureIPU,
   pasangCacheBanjir,
   pasangCacheIPU,
+  pasangCacheAmaranDG,
   pasangSemuaCache,
   anjakMasa,
 };

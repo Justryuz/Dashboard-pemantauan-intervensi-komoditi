@@ -39,6 +39,7 @@ const cuaca = require('./services/cuaca.js');
 const banjir = require('./services/banjir.js');
 const kualitiUdara = require('./services/kualiti-udara.js');
 const muse = require('./services/muse.js');
+const amaranDG = require('./services/amaran-datagov.js');
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP + "; frame-ancestors 'none'",
@@ -141,6 +142,40 @@ const server = http.createServer((req, res) => {
     );
   }
 
+  if (pathname === '/api/met-malaysia') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const cache = amaranDG.bacaCache();
+    // Lapisan ini pilihan: tanpa cache, pulangkan 200 kosong (bukan 503) supaya pelayar tidak mencatat ralat.
+    if (!cache)
+      return send(
+        res,
+        200,
+        JSON.stringify({
+          versi: 1,
+          fetchedAt: null,
+          atribusi: amaranDG.ATRIBUSI,
+          sumber: { status: 'belum_tersedia', mesej: '' },
+          sedangDikemaskini: amaranDG.sedangAmbil(),
+          amaran: [],
+        }),
+        JSON_HDR,
+      );
+    const umur = amaranDG.umurJam(cache);
+    const met = (cuaca.bacaCache() || {}).amaran || [];
+    return send(
+      res,
+      200,
+      req.method === 'HEAD'
+        ? ''
+        : JSON.stringify({
+            ...cache,
+            amaran: amaranDG.tandaiPendua(cache.amaran, met),
+            umurJam: Number.isFinite(umur) ? umur : null,
+          }),
+      JSON_HDR,
+    );
+  }
+
   const API_CACHE = {
     '/api/cuaca': [cuaca, 'cuaca'],
     '/api/banjir': [banjir, 'banjir'],
@@ -189,6 +224,7 @@ if (require.main === module) {
     banjir.mulaPenjadual();
     kualitiUdara.mulaPenjadual();
     muse.mulaPenjadual();
+    amaranDG.mulaPenjadual();
   });
 }
 module.exports = server;

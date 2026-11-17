@@ -36,6 +36,7 @@ async function mula(env) {
       BANJIR_AUTO: '0',
       IPU_AUTO: '0',
       MUSE_AUTO: '0',
+      AMARAN_DG_AUTO: '0',
       ...env,
     },
     stdio: 'ignore',
@@ -66,6 +67,7 @@ async function mula(env) {
     BANJIR_CACHE_FILE: fx.banjir,
     IPU_CACHE_FILE: fx.ipu,
     MUSE_CACHE_FILE: fx.muse,
+    AMARAN_DG_CACHE_FILE: fx.amaranDG,
   });
   let browser;
   try {
@@ -77,6 +79,8 @@ async function mula(env) {
     ok('/api/kualiti-udara 200 selepas permulaan', ip.status === 200, ip.status);
     const ms = await fetch(base + '/api/muse');
     ok('/api/muse 200 selepas permulaan', ms.status === 200, ms.status);
+    const am = await fetch(base + '/api/met-malaysia');
+    ok('/api/met-malaysia 200 selepas permulaan', am.status === 200, am.status);
     const idx = await fetch(base + '/');
     const csp = idx.headers.get('content-security-policy') || '';
     ok('CSP pengepala tiada unpkg', !/unpkg/.test(csp), csp);

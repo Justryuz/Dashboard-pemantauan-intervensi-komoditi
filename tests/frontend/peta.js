@@ -1,0 +1,510 @@
+'use strict';
+// Peta utama: tukar peta asas (lapisan tindihan kekal), pilihan diingati selepas muat semula, lapisan Amaran Cuaca
+// (/api/met-malaysia distub), radar Windy (iframe lazy), pautan Google Maps, kad Amaran Rasmi (sumber data.gov.my) dan CSP.
+// Tile dan Windy distub (PNG 1x1 / halaman kosong). Tangkapan skrin: PETA_SHOTS=<folder> PETA_ASLI=1 (tile sebenar).
+// Jalankan dari root: node tests/frontend/peta.js
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const server = require('../../api/server.js');
+const dg = require('../../api/services/amaran-datagov.js');
+const { buatFixture } = require('../helpers/cuaca-fixture.js');
+const { buatFixtureBanjir, pasangSemuaCache } = require('../helpers/banjir-fixture.js');
+const { stubApi } = require('../helpers/api-stub.js');
+const puppeteer = require(
+  path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
+);
+const EDGE =
+  process.env.BROWSER_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MENTAH = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'met-datagov-amaran.json'), 'utf8'),
+);
+const SHOTS = process.env.PETA_SHOTS || '';
+
+// Amaran sampel sebenar: dua aktif (ribut petir, laut bergelora), satu tamat (hujan) dan satu ditanda pendua.
+function fixtureDG() {
+  const kini = Date.now();
+  const iso = (ms) => new Date(ms + 8 * 36e5).toISOString().slice(0, 19) + '+08:00';
+  const amaran = dg.normalisasi(MENTAH).map((a) => {
+    const tamat = /HUJAN BERTERUSAN/.test(a.tajuk);
+    return {
+      ...a,
+      dikeluarkan: iso(kini - 3 * 36e5),
+      sah_dari: iso(kini - 2 * 36e5),
+      sah_hingga: iso(kini + (tamat ? -36e5 : 20 * 36e5)),
+      pendua: false,
+    };
+  });
+  amaran.find((a) => /RIBUT PETIR/.test(a.tajuk)).pendua = true;
+  return {
+    versi: 1,
+    fetchedAt: new Date().toISOString(),
+    atribusi: dg.ATRIBUSI,
+    sumber: { status: 'ok', mesej: '' },
+    amaran,
+  };
+}
+
+(async () => {
+  pasangSemuaCache();
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await puppeteer.launch({
+    executablePath: EDGE,
+    headless: 'new',
+    userDataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'peta-')),
+    args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+  });
+  const gagal = [];
+  const ok = (nama, cond, info) => {
+    if (!cond) gagal.push(nama + (info !== undefined ? ' -> ' + JSON.stringify(info) : ''));
+  };
+  const asli = !!process.env.PETA_ASLI;
+  async function buka({ lebar = 1440, tinggi = 1300, tema = null, stubDG = fixtureDG() } = {}) {
+    const page = await browser.newPage();
+    await page.setViewport({ width: lebar, height: tinggi });
+    const masalah = [];
+    page.on('pageerror', (e) => masalah.push('pageerror: ' + e.message));
+    page.on('console', (m) => {
+      // AbortError: MapLibre membatalkan tile yang sedang diminta apabila peta asas ditukar (jangkaan).
+      if (/AbortError/.test(m.text())) return;
+      if (['error', 'warning'].includes(m.type())) masalah.push(`console.${m.type()}: ${m.text()}`);
+    });
+    await page.evaluateOnNewDocument((t) => {
+      window.__csp = [];
+      document.addEventListener('securitypolicyviolation', (e) =>
+        window.__csp.push(e.violatedDirective + ' ' + e.blockedURI),
+      );
+      if (t) {
+        try {
+          localStorage.setItem('fama_tema', t);
+        } catch {
+          /* abaikan */
+        }
+      }
+    }, tema);
+    await stubApi(page, {
+      cuaca: buatFixture(),
+      banjir: buatFixtureBanjir(),
+      metmy: stubDG,
+      tileAsli: asli,
+    });
+    await page.goto(base + '/', { waitUntil: 'load', timeout: 60000 });
+    await page.waitForFunction(
+      () =>
+        window.DASHBOARD_TEST &&
+        DASHBOARD_TEST.peta().lapisan.banjir &&
+        DASHBOARD_TEST.peta().lapisan.amaran,
+      { timeout: 30000 },
+    );
+    return { page, masalah };
+  }
+  const info = (page) => page.evaluate(() => DASHBOARD_TEST.peta());
+  async function tukar(page, kunci) {
+    await page.click(`#petaKawalan [data-asas="${kunci}"]`);
+    await page.waitForFunction(
+      (k) => DASHBOARD_TEST.peta().asas === k && DASHBOARD_TEST.peta().gayaDimuat,
+      { timeout: 20000 },
+      kunci,
+    );
+    await page.waitForFunction(
+      () => DASHBOARD_TEST.peta().lapisan.banjir && DASHBOARD_TEST.peta().lapisan.amaran,
+      { timeout: 20000 },
+    );
+  }
+  async function foto(page, nama) {
+    if (!SHOTS) return;
+    fs.mkdirSync(SHOTS, { recursive: true });
+    await sleep(asli ? 5000 : 600);
+    await page.evaluate(() =>
+      document
+        .querySelector('.map-svg-frame')
+        .scrollIntoView({ block: 'center', behavior: 'instant' }),
+    );
+    await sleep(600);
+    const sc = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+    const b = await (await page.$('.map-svg-frame')).boundingBox();
+    if (process.env.PETA_DEBUG) console.log(nama, JSON.stringify(b), JSON.stringify(page.viewport()));
+    await page.screenshot({
+      path: path.join(SHOTS, nama + '.png'),
+      clip: {
+        x: Math.max(0, b.x) + sc.x,
+        y: Math.max(0, b.y) + sc.y,
+        width: Math.min(b.width, 1500),
+        height: Math.max(1, Math.min(b.height, 800, page.viewport().height - Math.max(0, b.y))),
+      },
+    });
+  }
+
+  try {
+    // (i) keadaan awal: lalai, tindihan dipasang, iframe Windy TIDAK dimuat
+    const { page, masalah } = await buka();
+    let i = await info(page);
+    ok('(i) peta asas lalai', i.asas === 'lalai' && !i.tiles, i);
+    ok('(i) lapisan banjir dan amaran dipasang', i.lapisan.banjir && i.lapisan.amaran, i.lapisan);
+    ok('(i) 15 penanda PO', i.markerPO === 15, i.markerPO);
+    ok(
+      '(i) iframe Windy tidak wujud semasa mula',
+      (await page.$$('iframe')).length === 0 && page.windyUrls.length === 0,
+      page.windyUrls,
+    );
+    ok('(i) panel radar tersembunyi', await page.$eval('#petaRadar', (e) => e.hidden));
+    ok(
+      '(i) butang peta asas: 4 pilihan Lalai/Terrain/Jalan/Satelit',
+      JSON.stringify(
+        await page.$$eval('#petaKawalan [data-asas]', (b) => b.map((x) => x.textContent)),
+      ) === JSON.stringify(['Lalai', 'Terrain', 'Jalan', 'Satelit']),
+    );
+    await foto(page, '1440-gelap-lalai');
+
+    // (ii) tukar peta asas: sumber raster betul, tindihan dan penanda kekal, atribusi betul
+    const JANGKAAN = {
+      terrain: {
+        tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.opentopomap.org/{z}/{x}/{y}.png`),
+        maxzoom: 17,
+        attr: 'OpenTopoMap (CC-BY-SA), © OpenStreetMap',
+        host: /opentopomap\.org/,
+      },
+      jalan: {
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        maxzoom: 19,
+        attr: '© OpenStreetMap contributors',
+        host: /tile\.openstreetmap\.org/,
+      },
+      satelit: {
+        tiles: [
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        ],
+        maxzoom: 19,
+        attr: 'Esri, Maxar, Earthstar Geographics',
+        host: /server\.arcgisonline\.com/,
+      },
+    };
+    for (const [k, j] of Object.entries(JANGKAAN)) {
+      await tukar(page, k);
+      i = await info(page);
+      ok(`(ii) ${k}: URL tile`, JSON.stringify(i.tiles) === JSON.stringify(j.tiles), i.tiles);
+      ok(`(ii) ${k}: maxzoom`, i.maxzoom === j.maxzoom, i.maxzoom);
+      ok(`(ii) ${k}: atribusi dalam sumber`, i.attribusi === j.attr, i.attribusi);
+      await page
+        .waitForFunction(
+          (a) => document.querySelector('.maplibregl-ctrl-attrib').textContent.includes(a),
+          { timeout: 5000 },
+          j.attr,
+        )
+        .then(
+          () => {},
+          async () =>
+            ok(
+              `(ii) ${k}: atribusi dipaparkan`,
+              false,
+              await page.$eval('.maplibregl-ctrl-attrib', (e) => e.textContent),
+            ),
+        );
+      ok(
+        `(ii) ${k}: lapisan banjir + amaran kekal`,
+        i.lapisan.banjir && i.lapisan.amaran && i.sumber.includes('banjir-stesen'),
+        i,
+      );
+      ok(`(ii) ${k}: penanda PO kekal`, i.markerPO === 15, i.markerPO);
+      ok(`(ii) ${k}: data banjir kekal`, i.fiturBanjir > 0, i.fiturBanjir);
+      await page.waitForFunction((n) => true, {}, 0);
+      await sleep(500);
+      ok(
+        `(ii) ${k}: tile diminta daripada hos betul`,
+        page.tileUrls.some((u) => j.host.test(u)),
+        page.tileUrls.slice(0, 3),
+      );
+      ok(
+        `(ii) ${k}: butang ditekan`,
+        (await page.$eval(`[data-asas="${k}"]`, (b) => b.getAttribute('aria-pressed'))) === 'true',
+      );
+      await foto(page, `1440-gelap-${k}`);
+    }
+    // tukar semula ke Lalai: sumber raster dibuang, tindihan kekal
+    await tukar(page, 'lalai');
+    i = await info(page);
+    ok('(ii) lalai semula: tiada sumber peta-asas', !i.sumber.includes('peta-asas'), i.sumber);
+    ok('(ii) lalai semula: tindihan kekal', i.lapisan.banjir && i.lapisan.amaran, i.lapisan);
+
+    // (iii) pilihan diingati selepas muat semula
+    await tukar(page, 'satelit');
+    ok(
+      '(iii) localStorage fama_peta_asas',
+      (await page.evaluate(() => localStorage.getItem('fama_peta_asas'))) === 'satelit',
+    );
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(
+      () => window.DASHBOARD_TEST && DASHBOARD_TEST.peta().lapisan.amaran,
+      {
+        timeout: 30000,
+      },
+    );
+    i = await info(page);
+    ok('(iii) satelit dikekalkan selepas muat semula', i.asas === 'satelit' && !!i.tiles, i);
+    ok(
+      '(iii) butang Satelit ditekan',
+      (await page.$eval('[data-asas="satelit"]', (b) => b.getAttribute('aria-pressed'))) === 'true',
+    );
+    ok('(iii) lapisan banjir dipasang selepas muat semula', i.lapisan.banjir, i.lapisan);
+    await page.evaluate(() => localStorage.setItem('fama_peta_asas', 'tidak-sah'));
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(
+      () => window.DASHBOARD_TEST && DASHBOARD_TEST.peta().lapisan.amaran,
+      {
+        timeout: 30000,
+      },
+    );
+    ok('(iii) nilai tidak sah -> lalai', (await info(page)).asas === 'lalai');
+    await tukar(page, 'lalai');
+
+    // (iv) lapisan Amaran Cuaca
+    i = await info(page);
+    const negeri = i.fiturAmaran.map((f) => f.negeri);
+    ok('(iv) ada titik amaran aktif', negeri.length > 5, negeri);
+    ok('(iv) kedudukan: Selangor ada', negeri.includes('Selangor'));
+    ok(
+      '(iv) butang Amaran Cuaca menunjukkan kiraan',
+      /Amaran Cuaca \(\d+\)/.test(await page.$eval('#petaAmaranBtn', (b) => b.textContent)),
+    );
+    await page.click('#petaAmaranBtn');
+    ok(
+      '(iv) togol mematikan lapisan',
+      (await info(page)).lapisan.amaranTunjuk === 'none' &&
+        (await page.$eval('#petaAmaranBtn', (b) => b.getAttribute('aria-pressed'))) === 'false',
+    );
+    await page.click('#petaAmaranBtn');
+    ok('(iv) togol menghidupkan semula', (await info(page)).lapisan.amaranTunjuk === 'visible');
+    const pop = await page.evaluate(() => {
+      const p = DASHBOARD_TEST.bukaPopupAmaran('Selangor');
+      const n = p && p.getElement();
+      const a = n && n.querySelector('.gmaps-link');
+      return (
+        n && {
+          teks: n.innerText,
+          href: a && a.getAttribute('href'),
+          target: a && a.target,
+          rel: a && a.rel,
+          lagi: !!n.querySelector('.alert-more'),
+        }
+      );
+    });
+    ok('(iv) pop-up amaran dibuka', !!pop && /Amaran cuaca · Selangor/.test(pop.teks), pop);
+    ok(
+      '(iv) pop-up: tajuk, tempoh sah, sumber',
+      pop &&
+        /LAUT BERGELORA/.test(pop.teks) &&
+        /Sah:/.test(pop.teks) &&
+        /data\.gov\.my/.test(pop.teks),
+      pop && pop.teks,
+    );
+    ok('(iv) pop-up: Lihat lagi', pop && pop.lagi);
+    ok(
+      '(iv) pop-up: Google Maps href (tengah negeri Selangor)',
+      pop && pop.href === 'https://www.google.com/maps/search/?api=1&query=3.55%2C101.3',
+      pop && pop.href,
+    );
+    ok(
+      '(iv) pop-up: target=_blank rel=noopener noreferrer',
+      pop && pop.target === '_blank' && pop.rel === 'noopener noreferrer',
+      pop,
+    );
+    const panjangSebelum = await page.$eval('.amaran-popup-teks', (e) => e.textContent.length);
+    await page.click('.amaran-popup .alert-more');
+    const panjangSelepas = await page.$eval('.amaran-popup-teks', (e) => e.textContent.length);
+    ok('(iv) Lihat lagi mengembangkan teks', panjangSelepas > panjangSebelum, [
+      panjangSebelum,
+      panjangSelepas,
+    ]);
+    await foto(page, '1440-gelap-amaran');
+
+    // (v) kad Amaran Rasmi: sumber data.gov.my tanpa pendua
+    const kad = await page.evaluate(() =>
+      DASHBOARD_TEST.senaraiAmaranRasmi()
+        .filter((a) => a.sumber === 'MET Malaysia (data.gov.my)')
+        .map((a) => a.tajuk),
+    );
+    ok('(v) kad: 3 amaran data.gov.my (pendua ribut petir disisih)', kad.length === 3, kad);
+    ok('(v) kad: tiada ribut petir pendua', !kad.some((t) => /RIBUT PETIR/.test(t)), kad);
+    ok(
+      '(v) kad memaparkan label sumber',
+      (await page.$eval('#metAlertBody', (e) => e.innerText)).includes(
+        'MET Malaysia (data.gov.my)',
+      ),
+    );
+    const susunan = await page.evaluate(() =>
+      DASHBOARD_TEST.senaraiAmaranRasmi().map((a) => (a.aktif ? 1 : 0)),
+    );
+    ok(
+      '(v) aktif dahulu, Tamat kemudian',
+      susunan.join('') ===
+        susunan
+          .slice()
+          .sort((x, y) => y - x)
+          .join(''),
+      susunan,
+    );
+
+    // (vi) radar Windy: lazy, atribut, tutup
+    await page.click('#petaRadarBtn');
+    await page.waitForSelector('#petaRadar iframe');
+    const fr = await page.$eval('#petaRadar iframe', (f) => ({
+      src: f.getAttribute('src'),
+      title: f.title,
+      loading: f.getAttribute('loading'),
+      rp: f.getAttribute('referrerpolicy'),
+      sb: f.getAttribute('sandbox'),
+    }));
+    ok(
+      '(vi) iframe src embed.windy.com',
+      /^https:\/\/embed\.windy\.com\/embed2\.html\?lat=4\.21&lon=101\.97&zoom=6&/.test(fr.src) &&
+        fr.src.includes('product=radar'),
+      fr.src,
+    );
+    ok(
+      '(vi) iframe title/loading/referrerpolicy',
+      !!fr.title && fr.loading === 'lazy' && fr.rp === 'no-referrer',
+      fr,
+    );
+    ok('(vi) iframe sandbox', fr.sb === 'allow-scripts allow-same-origin allow-popups', fr.sb);
+    ok(
+      '(vi) panel nampak + nota Windy.com',
+      !(await page.$eval('#petaRadar', (e) => e.hidden)) &&
+        (await page.$eval('#petaRadar', (e) => e.innerText)).includes('Radar: Windy.com'),
+    );
+    await sleep(300);
+    ok(
+      '(vi) Windy diminta selepas dibuka',
+      page.tileUrls && (asli || page.windyUrls.length >= 1),
+      page.windyUrls,
+    );
+    await foto(page, '1440-gelap-radar');
+    await page.click('#petaRadarTutup');
+    ok(
+      '(vi) tutup: iframe dibuang dan panel tersembunyi',
+      (await page.$$('#petaRadar iframe')).length === 0 &&
+        (await page.$eval('#petaRadar', (e) => e.hidden)),
+    );
+
+    // (vii) Google Maps dalam pop-up PO (hover) dan stesen JPS
+    const po = await page.evaluate(() => {
+      const p = DASHBOARD_TEST.DATA.po[0];
+      return { id: p.id, lat: p.lat, lon: p.lon };
+    });
+    await page.hover('.po-marker');
+    await page.waitForSelector('.po-hover-popup .gmaps-link');
+    const gl = await page.$eval('.po-hover-popup .gmaps-link', (a) => ({
+      href: a.getAttribute('href'),
+      target: a.target,
+      rel: a.rel,
+    }));
+    const ph = await page.evaluate(() => {
+      const el = document.querySelector('.po-hover-popup .ph-name');
+      const p = DASHBOARD_TEST.DATA.po.find((x) => x.name === el.textContent);
+      return { lat: p.lat, lon: p.lon };
+    });
+    ok(
+      '(vii) pop-up PO: href Google Maps betul',
+      gl.href ===
+        'https://www.google.com/maps/search/?api=1&query=' +
+          encodeURIComponent(`${ph.lat},${ph.lon}`),
+      [gl, ph],
+    );
+    ok(
+      '(vii) pop-up PO: target + rel',
+      gl.target === '_blank' && gl.rel === 'noopener noreferrer',
+      gl,
+    );
+    // kursor boleh bergerak ke pop-up tanpa ia hilang
+    const kotak = await (await page.$('.po-hover-popup .gmaps-link')).boundingBox();
+    await page.mouse.move(kotak.x + 3, kotak.y + 3, { steps: 8 });
+    await sleep(500);
+    ok(
+      '(vii) pop-up PO kekal bila kursor di atasnya',
+      !!(await page.$('.po-hover-popup .gmaps-link')),
+    );
+    const st = await page.evaluate(() => {
+      const p = DASHBOARD_TEST.bukaPopupStesen(
+        { nama: 'UJI', statusRasmi: 'Waspada', parasAir: 3, lat: 3.1234, lon: 101.5678 },
+        [101.5, 3.1],
+      );
+      const a = p.getElement().querySelector('.gmaps-link');
+      return a && a.getAttribute('href');
+    });
+    ok(
+      '(vii) pop-up stesen JPS: koordinat stesen',
+      st === 'https://www.google.com/maps/search/?api=1&query=3.1234%2C101.5678',
+      st,
+    );
+
+    ok(
+      'tiada pelanggaran CSP',
+      (await page.evaluate(() => window.__csp)).length === 0,
+      await page.evaluate(() => window.__csp),
+    );
+    ok('tiada ralat/amaran konsol', masalah.length === 0, masalah);
+    await page.close();
+
+    // (viii) tema cerah 1440: tangkapan skrin
+    if (SHOTS) {
+      const c = await buka({ tema: 'cerah' });
+      await foto(c.page, '1440-cerah-lalai');
+      for (const k of ['terrain', 'jalan', 'satelit']) {
+        await tukar(c.page, k);
+        await foto(c.page, `1440-cerah-${k}`);
+      }
+      await c.page.click('#petaRadarBtn');
+      await c.page.waitForSelector('#petaRadar iframe');
+      await foto(c.page, '1440-cerah-radar');
+      await c.page.close();
+    }
+
+    // (ix) 390px: kawalan runtuh jadi satu butang 'Lapisan'
+    for (const tema of SHOTS ? ['gelap', 'cerah'] : ['gelap']) {
+      const m = await buka({ lebar: 390, tinggi: 844, tema });
+      const lihat = (s) => m.page.$eval(s, (e) => getComputedStyle(e).display);
+      ok('(ix) butang Lapisan kelihatan', (await lihat('#petaMenuBtn')) !== 'none');
+      ok('(ix) menu tersembunyi sebelum dibuka', (await lihat('#petaMenu')) === 'none');
+      await foto(m.page, `390-${tema}-lalai`);
+      await m.page.click('#petaMenuBtn');
+      ok('(ix) menu terbuka', (await lihat('#petaMenu')) !== 'none');
+      ok(
+        '(ix) aria-expanded',
+        (await m.page.$eval('#petaMenuBtn', (b) => b.getAttribute('aria-expanded'))) === 'true',
+      );
+      await foto(m.page, `390-${tema}-menu`);
+      for (const k of ['terrain', 'jalan', 'satelit']) {
+        await tukar(m.page, k);
+        await foto(m.page, `390-${tema}-${k}`);
+      }
+      await m.page.click('#petaRadarBtn');
+      await m.page.waitForSelector('#petaRadar iframe');
+      const r = await m.page.evaluate(() => {
+        const a = document.getElementById('petaRadar').getBoundingClientRect();
+        const b = document.querySelector('.map-svg-frame').getBoundingClientRect();
+        return { lebar: a.width, dalam: a.left >= b.left && a.right <= b.right + 1 };
+      });
+      ok('(ix) radar muat dalam peta pada 390px', r.dalam && r.lebar > 250, r);
+      await foto(m.page, `390-${tema}-radar`);
+      ok(
+        '(ix) tiada limpahan mendatar',
+        await m.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      );
+      ok('(ix) tiada ralat konsol', m.masalah.length === 0, m.masalah);
+      await m.page.close();
+    }
+  } finally {
+    await browser.close();
+    server.close();
+  }
+  console.log(
+    gagal.length
+      ? 'GAGAL:\n' + gagal.join('\n')
+      : 'OK: peta (asas, amaran, radar, Google Maps) lulus',
+  );
+  process.exitCode = gagal.length ? 1 : 0;
+})().catch((e) => {
+  console.error(e);
+  process.exit(2);
+});

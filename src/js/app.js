@@ -228,6 +228,87 @@ const FAMA_MAP_STYLE =
   (window.APP_CONFIG && window.APP_CONFIG.mapStyle) ||
   'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 window.FAMA_MAP_CONFIG = { style: FAMA_MAP_STYLE, bounds: MAP_BOUNDS };
+/* ===== Peta asas (basemap) boleh tukar =====
+   Lalai = gaya CARTO. Lain-lain ialah lapisan raster tunggal. Tukar gaya memuat semula semua lapisan tindihan
+   (stesen banjir, amaran cuaca) melalui 'style.load'. Tile dimuat oleh pelayar seperti biasa (cache HTTP piawai). */
+const PETA_ASAS_KUNCI = 'fama_peta_asas';
+const PETA_ASAS = {
+  lalai: { label: 'Lalai' },
+  terrain: {
+    label: 'Terrain',
+    tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.opentopomap.org/{z}/{x}/{y}.png`),
+    maxzoom: 17,
+    attribution: 'OpenTopoMap (CC-BY-SA), © OpenStreetMap',
+  },
+  jalan: {
+    label: 'Jalan',
+    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+    maxzoom: 19,
+    attribution: '© OpenStreetMap contributors',
+  },
+  satelit: {
+    label: 'Satelit',
+    tiles: [
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    ],
+    maxzoom: 19,
+    attribution: 'Esri, Maxar, Earthstar Geographics',
+  },
+};
+function bacaPetaAsas() {
+  try {
+    const k = localStorage.getItem(PETA_ASAS_KUNCI);
+    return Object.hasOwn(PETA_ASAS, k) ? k : 'lalai';
+  } catch {
+    return 'lalai';
+  }
+}
+let petaAsas = bacaPetaAsas();
+let gayaDimuat = false;
+function petaGaya(k) {
+  const a = PETA_ASAS[k];
+  if (!a || !a.tiles) return FAMA_MAP_STYLE;
+  return {
+    version: 8,
+    sources: {
+      'peta-asas': {
+        type: 'raster',
+        tiles: a.tiles,
+        tileSize: 256,
+        maxzoom: a.maxzoom,
+        attribution: a.attribution,
+      },
+    },
+    layers: [{ id: 'peta-asas', type: 'raster', source: 'peta-asas' }],
+  };
+}
+function tetapPetaAsas(k) {
+  if (!Object.hasOwn(PETA_ASAS, k)) return;
+  try {
+    localStorage.setItem(PETA_ASAS_KUNCI, k);
+  } catch {
+    /* storan tidak tersedia: pilihan tidak diingati */
+  }
+  if (k === petaAsas) return;
+  petaAsas = k;
+  if (map) {
+    gayaDimuat = false;
+    map.setStyle(petaGaya(k), { diff: false });
+  }
+  renderPetaKawalan();
+}
+// Hubungan ke Google Maps (hanya pautan; tiada API). Nilai koordinat dikodkan dengan encodeURIComponent.
+const gmapsUrl = (lat, lng) =>
+  'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lng);
+function gmapsPautan(lat, lng) {
+  const a = document.createElement('a');
+  a.className = 'gmaps-link';
+  a.href = gmapsUrl(lat, lng);
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = 'Buka di Google Maps';
+  return a;
+}
 function initMap() {
   if (typeof maplibregl === 'undefined') {
     console.warn('MapLibre GL tidak dapat dimuatkan');
@@ -236,7 +317,7 @@ function initMap() {
   try {
     map = new maplibregl.Map({
       container: 'map',
-      style: FAMA_MAP_STYLE,
+      style: petaGaya(petaAsas),
       bounds: MAP_BOUNDS,
       fitBoundsOptions: { padding: 20 },
       attributionControl: true,
@@ -250,6 +331,13 @@ function initMap() {
       },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.on('style.load', () => {
+      gayaDimuat = true;
+      banjirLapisan.sedia = false;
+      amaranLapisan.sedia = false;
+      kemasLapisanBanjir();
+      kemasLapisanAmaran();
+    });
   } catch (err) {
     console.warn('Peta tidak dapat dimulakan', err);
     map = null;
@@ -313,7 +401,7 @@ function renderMap() {
         el.append(t);
       }
       el.addEventListener('mouseenter', () => showPOHover(p));
-      el.addEventListener('mouseleave', hidePOHover);
+      el.addEventListener('mouseleave', jadualSembunyiPOHover);
       el.addEventListener('focus', () => showPOHover(p));
       el.addEventListener('blur', hidePOHover);
       el.addEventListener('click', () => selectPO(p.id));
@@ -544,6 +632,7 @@ function renderWeather() {
 }
 const AMARAN_MET = 'MET Malaysia';
 const AMARAN_JPS = 'JPS Malaysia (Public Info Banjir)';
+const AMARAN_DG = 'MET Malaysia (data.gov.my)';
 const AMARAN_HAD = 7;
 const AMARAN_TAHAP_NILAI = { BAHAYA: 4, BURUK: 3, WASPADA: 2, UMUM: 1 };
 const amaranTahap = (a) => {
@@ -557,7 +646,8 @@ const amaranTahap = (a) => {
   return cari(a.tajuk) || cari(String(a.teks || '').slice(0, 160)) || 'UMUM';
 };
 const amaranDaerah = (a) => {
-  const m = a.sumber === AMARAN_MET && /\(([^()]{3,70})\)/.exec(a.teks || '');
+  const m =
+    (a.sumber === AMARAN_MET || a.sumber === AMARAN_DG) && /\(([^()]{3,70})\)/.exec(a.teks || '');
   return m ? m[1].trim() : '';
 };
 // Gabung amaran rasmi MET + JPS, terbaharu dahulu (ikut masa dikeluarkan), maksimum 7.
@@ -575,6 +665,21 @@ function senaraiAmaranRasmi(kini = Date.now()) {
         bendera: a.aktif !== false,
       }),
     );
+  // Sumber tambahan MET melalui data.gov.my; amaran yang sama dengan api.met.gov.my ditanda `pendua` oleh pelayan.
+  if (amaranDGState.status === 'ready')
+    (amaranDGState.data.amaran || [])
+      .filter((a) => !a.pendua)
+      .forEach((a) =>
+        senarai.push({
+          sumber: AMARAN_DG,
+          tajuk: a.tajuk,
+          teks: a.teks,
+          negeri: a.negeri || [],
+          dikeluarkan: a.dikeluarkan,
+          sahHingga: a.sah_hingga,
+          bendera: true,
+        }),
+      );
   if (banjirState.status === 'ready') {
     const d = banjirState.data;
     (d.amaranSejarah || d.amaran || []).forEach((a) =>
@@ -959,8 +1064,10 @@ const stesenProps = (s) => ({
   trend: s.trend || '',
   masaBacaan: s.masaBacaan || '',
   sumber: s.sumber || '',
+  lat: s.lat,
+  lon: s.lon,
 });
-function stesenPopupNode(p) {
+function stesenPopupNode(p, lngLat) {
   const n = document.createElement('div');
   n.className = 'banjir-popup';
   const baris = (k, v) => {
@@ -983,6 +1090,16 @@ function stesenPopupNode(p) {
   s.className = 'banjir-popup-sumber';
   s.textContent = 'Sumber: ' + (p.sumber || 'JPS Malaysia');
   n.append(s);
+  // Koordinat stesen sebenar diutamakan; jika tiada, guna titik pop-up.
+  const ll = Array.isArray(lngLat) ? lngLat : lngLat ? [lngLat.lng, lngLat.lat] : null;
+  const lat = Number.isFinite(Number(p.lat)) && p.lat !== null ? Number(p.lat) : ll && ll[1];
+  const lon = Number.isFinite(Number(p.lon)) && p.lon !== null ? Number(p.lon) : ll && ll[0];
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    const g = document.createElement('div');
+    g.className = 'gmaps-baris';
+    g.append(gmapsPautan(lat, lon));
+    n.append(g);
+  }
   return n;
 }
 function bukaPopupStesen(p, lngLat) {
@@ -990,7 +1107,7 @@ function bukaPopupStesen(p, lngLat) {
   if (banjirLapisan.popup) banjirLapisan.popup.remove();
   banjirLapisan.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
     .setLngLat(lngLat)
-    .setDOMContent(stesenPopupNode(p))
+    .setDOMContent(stesenPopupNode(p, lngLat))
     .addTo(map);
   return banjirLapisan.popup;
 }
@@ -1020,12 +1137,16 @@ function pasangLapisanBanjir() {
     const f = banjirPenapis();
     if (f) lapisan.filter = f;
     map.addLayer(lapisan);
-    map.on('click', 'banjir-stesen', (e) => {
-      const ft = e.features && e.features[0];
-      if (ft) bukaPopupStesen(ft.properties, e.lngLat);
-    });
-    map.on('mouseenter', 'banjir-stesen', () => (map.getCanvas().style.cursor = 'pointer'));
-    map.on('mouseleave', 'banjir-stesen', () => (map.getCanvas().style.cursor = ''));
+    if (!banjirLapisan.pengendali) {
+      // Pendengar berlapis kekal selepas tukar gaya peta; daftar sekali sahaja.
+      banjirLapisan.pengendali = true;
+      map.on('click', 'banjir-stesen', (e) => {
+        const ft = e.features && e.features[0];
+        if (ft) bukaPopupStesen(ft.properties, e.lngLat);
+      });
+      map.on('mouseenter', 'banjir-stesen', () => (map.getCanvas().style.cursor = 'pointer'));
+      map.on('mouseleave', 'banjir-stesen', () => (map.getCanvas().style.cursor = ''));
+    }
     banjirLapisan.sedia = true;
   } catch (err) {
     console.warn('Lapisan banjir tidak dapat dipasang', err);
@@ -1040,23 +1161,18 @@ function renderFloodLayer() {
     semua.disabled = !banjirLapisan.tunjuk;
   }
   if (map) {
-    const kemas = () => {
-      pasangLapisanBanjir();
-      if (!banjirLapisan.sedia) return;
-      map
-        .getSource('banjir-stesen')
-        .setData({ type: 'FeatureCollection', features: banjirFitur() });
-      map.setFilter('banjir-stesen', banjirPenapis());
-      map.setLayoutProperty(
-        'banjir-stesen',
-        'visibility',
-        banjirLapisan.tunjuk ? 'visible' : 'none',
-      );
-    };
-    if (map.isStyleLoaded()) kemas();
-    else map.once('load', kemas);
+    if (gayaDimuat) kemasLapisanBanjir();
+    else map.once('style.load', kemasLapisanBanjir);
   }
   renderMapCaption();
+}
+function kemasLapisanBanjir() {
+  if (!map) return;
+  pasangLapisanBanjir();
+  if (!banjirLapisan.sedia) return;
+  map.getSource('banjir-stesen').setData({ type: 'FeatureCollection', features: banjirFitur() });
+  map.setFilter('banjir-stesen', banjirPenapis());
+  map.setLayoutProperty('banjir-stesen', 'visibility', banjirLapisan.tunjuk ? 'visible' : 'none');
 }
 function initFloodLayer() {
   const tog = $('floodToggle');
@@ -1204,6 +1320,362 @@ document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-act="stesen-banjir"]');
   if (b) pilihStesenBanjir(b.dataset.stesen);
 });
+/* ===== Amaran cuaca data.gov.my (lapisan peta + kad Amaran Rasmi) =====
+   Dimuat daripada /api/met-malaysia (same-origin). Tiada poligon negeri dalam projek, jadi amaran aktif
+   ditanda pada titik tengah negeri yang disebut dalam teks amaran. */
+const AMARAN_DG_API = {
+  promise: null,
+  load(force) {
+    if (force || !this.promise) {
+      this.promise = (async () => {
+        if (location.protocol === 'file:') {
+          const e = new Error('file');
+          e.kind = 'file';
+          throw e;
+        }
+        const res = await fetch('/api/met-malaysia', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        if (!j || !Array.isArray(j.amaran)) throw new Error('Format amaran tidak sah');
+        return j;
+      })();
+    }
+    return this.promise;
+  },
+};
+let amaranDGState = { status: 'memuat', data: null };
+let amaranLapisan = { tunjuk: true, sedia: false, popup: null, pengendali: false, negeri: {} };
+const NEGERI_PUSAT = {
+  Johor: [103.3, 1.95],
+  Kedah: [100.6, 6.1],
+  Kelantan: [102.0, 5.4],
+  'Kuala Lumpur': [101.69, 3.14],
+  Labuan: [115.24, 5.28],
+  Melaka: [102.25, 2.25],
+  'Negeri Sembilan': [102.2, 2.75],
+  Pahang: [102.6, 3.8],
+  'Pulau Pinang': [100.3, 5.4],
+  Perak: [101.1, 4.6],
+  Perlis: [100.2, 6.45],
+  Putrajaya: [101.69, 2.93],
+  Sabah: [116.8, 5.4],
+  Sarawak: [113.5, 2.5],
+  Selangor: [101.3, 3.55],
+  Terengganu: [102.9, 4.9],
+};
+const AMARAN_WARNA = { BAHAYA: '#b91c1c', BURUK: '#ea580c', WASPADA: '#ca8a04', UMUM: '#2563eb' };
+const amaranDGAktif = (a, kini = Date.now()) => {
+  const t = Date.parse(a.sah_hingga);
+  return !Number.isNaN(t) && t >= kini;
+};
+// Kumpul amaran aktif mengikut negeri; tahap negeri = tahap tertinggi.
+function amaranMengikutNegeri() {
+  const hasil = {};
+  if (amaranDGState.status !== 'ready') return hasil;
+  (amaranDGState.data.amaran || [])
+    .filter((a) => amaranDGAktif(a))
+    .forEach((a) =>
+      (a.negeri || []).forEach((n) => {
+        if (NEGERI_PUSAT[n]) (hasil[n] = hasil[n] || []).push(a);
+      }),
+    );
+  Object.values(hasil).forEach((l) =>
+    l.sort(
+      (x, y) =>
+        (AMARAN_TAHAP_NILAI[y.tahap] || 1) - (AMARAN_TAHAP_NILAI[x.tahap] || 1) ||
+        (Date.parse(y.dikeluarkan) || 0) - (Date.parse(x.dikeluarkan) || 0),
+    ),
+  );
+  return hasil;
+}
+function amaranFitur() {
+  amaranLapisan.negeri = amaranMengikutNegeri();
+  return Object.entries(amaranLapisan.negeri).map(([n, l]) => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: NEGERI_PUSAT[n] },
+    properties: { negeri: n, tahap: l[0].tahap || 'UMUM', jumlah: l.length },
+  }));
+}
+function amaranPopupNode(negeri) {
+  const senarai = amaranLapisan.negeri[negeri] || [];
+  const n = document.createElement('div');
+  n.className = 'banjir-popup amaran-popup';
+  const t = document.createElement('div');
+  t.className = 'banjir-popup-tajuk';
+  t.textContent = `Amaran cuaca · ${negeri} (${senarai.length})`;
+  n.append(t);
+  senarai.slice(0, 3).forEach((a) => {
+    const k = document.createElement('div');
+    k.className = 'amaran-popup-item';
+    const h = document.createElement('b');
+    h.textContent = a.tajuk;
+    const chip = document.createElement('span');
+    chip.className = 'alert-tahap t-' + String(a.tahap || 'UMUM').toLowerCase();
+    chip.textContent = a.tahap || 'UMUM';
+    const sah = document.createElement('div');
+    sah.className = 'amaran-popup-sah';
+    sah.textContent = `Sah: ${a.sah_dari ? cuacaMasa(a.sah_dari) : '-'} hingga ${cuacaMasa(a.sah_hingga)}`;
+    const p = document.createElement('p');
+    p.className = 'amaran-popup-teks';
+    const penuh = String(a.teks || '');
+    const ringkas = penuh.length > 150 ? penuh.slice(0, 150).trimEnd() + '…' : penuh;
+    p.textContent = ringkas;
+    k.append(h, chip, sah, p);
+    if (penuh.length > 150) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'alert-more';
+      b.textContent = 'Lihat lagi';
+      b.setAttribute('aria-expanded', 'false');
+      b.addEventListener('click', () => {
+        const buka = b.getAttribute('aria-expanded') !== 'true';
+        p.textContent = buka ? penuh : ringkas;
+        b.textContent = buka ? 'Kurangkan' : 'Lihat lagi';
+        b.setAttribute('aria-expanded', buka ? 'true' : 'false');
+      });
+      k.append(b);
+    }
+    n.append(k);
+  });
+  if (senarai.length > 3) {
+    const lagi = document.createElement('div');
+    lagi.className = 'banjir-popup-sumber';
+    lagi.textContent = `+${senarai.length - 3} amaran lain (lihat kad Amaran Rasmi)`;
+    n.append(lagi);
+  }
+  const s = document.createElement('div');
+  s.className = 'banjir-popup-sumber';
+  s.textContent = 'Sumber: ' + AMARAN_DG + ' · kedudukan titik ialah tengah negeri';
+  n.append(s);
+  const g = document.createElement('div');
+  g.className = 'gmaps-baris';
+  g.append(gmapsPautan(NEGERI_PUSAT[negeri][1], NEGERI_PUSAT[negeri][0]));
+  n.append(g);
+  return n;
+}
+function bukaPopupAmaran(negeri) {
+  if (!map || !NEGERI_PUSAT[negeri] || !(amaranLapisan.negeri[negeri] || []).length) return null;
+  if (amaranLapisan.popup) amaranLapisan.popup.remove();
+  amaranLapisan.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
+    .setLngLat(NEGERI_PUSAT[negeri])
+    .setDOMContent(amaranPopupNode(negeri))
+    .addTo(map);
+  return amaranLapisan.popup;
+}
+function pasangLapisanAmaran() {
+  if (!map || amaranLapisan.sedia) return;
+  try {
+    map.addSource('amaran-cuaca', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: amaranFitur() },
+    });
+    const warna = ['match', ['get', 'tahap']];
+    Object.entries(AMARAN_WARNA).forEach(([k, v]) => warna.push(k, v));
+    warna.push(AMARAN_WARNA.UMUM);
+    const layout = { visibility: amaranLapisan.tunjuk ? 'visible' : 'none' };
+    const bawah = map.getLayer('banjir-stesen') ? 'banjir-stesen' : undefined;
+    map.addLayer(
+      {
+        id: 'amaran-cuaca-halo',
+        type: 'circle',
+        source: 'amaran-cuaca',
+        layout,
+        paint: { 'circle-color': warna, 'circle-radius': 20, 'circle-opacity': 0.16 },
+      },
+      bawah,
+    );
+    map.addLayer(
+      {
+        id: 'amaran-cuaca',
+        type: 'circle',
+        source: 'amaran-cuaca',
+        layout,
+        paint: {
+          'circle-color': warna,
+          'circle-opacity': 0.35,
+          'circle-radius': 10,
+          'circle-stroke-color': warna,
+          'circle-stroke-width': 3,
+        },
+      },
+      bawah,
+    );
+    if (!amaranLapisan.pengendali) {
+      amaranLapisan.pengendali = true;
+      map.on('click', 'amaran-cuaca', (e) => {
+        const ft = e.features && e.features[0];
+        if (ft) bukaPopupAmaran(ft.properties.negeri);
+      });
+      map.on('mouseenter', 'amaran-cuaca', () => (map.getCanvas().style.cursor = 'pointer'));
+      map.on('mouseleave', 'amaran-cuaca', () => (map.getCanvas().style.cursor = ''));
+    }
+    amaranLapisan.sedia = true;
+  } catch (err) {
+    console.warn('Lapisan amaran cuaca tidak dapat dipasang', err);
+  }
+}
+function kemasLapisanAmaran() {
+  if (!map) return;
+  pasangLapisanAmaran();
+  if (!amaranLapisan.sedia) return;
+  map.getSource('amaran-cuaca').setData({ type: 'FeatureCollection', features: amaranFitur() });
+  ['amaran-cuaca', 'amaran-cuaca-halo'].forEach((id) =>
+    map.setLayoutProperty(id, 'visibility', amaranLapisan.tunjuk ? 'visible' : 'none'),
+  );
+}
+function renderAmaranLayer() {
+  if (map) {
+    if (gayaDimuat) kemasLapisanAmaran();
+    else map.once('style.load', kemasLapisanAmaran);
+  }
+  renderPetaKawalan();
+}
+const initAmaranDG = () => {
+  amaranDGState = { status: 'memuat', data: null };
+  return AMARAN_DG_API.load().then(
+    (d) => {
+      amaranDGState = { status: 'ready', data: d };
+      renderMetAlerts();
+      renderAmaranLayer();
+    },
+    (e) => {
+      amaranDGState = { status: e && e.kind === 'file' ? 'file' : 'error', data: null };
+    },
+  );
+};
+
+/* ===== Kawalan peta: peta asas, lapisan Amaran Cuaca, radar Windy ===== */
+const WINDY_URL =
+  'https://embed.windy.com/embed2.html?lat=4.21&lon=101.97&zoom=6&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1';
+let radarBuka = false;
+function butangPeta(teks, atribut) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = teks;
+  Object.entries(atribut || {}).forEach(([k, v]) => b.setAttribute(k, v));
+  return b;
+}
+function bukaRadar() {
+  const panel = $('petaRadar');
+  if (!panel) return;
+  const badan = panel.querySelector('.peta-radar-badan');
+  if (!badan.querySelector('iframe')) {
+    // Dicipta hanya apabila dibuka (tidak dimuat semasa halaman bermula).
+    const f = document.createElement('iframe');
+    f.title = 'Radar cuaca Windy untuk Malaysia';
+    f.loading = 'lazy';
+    f.referrerPolicy = 'no-referrer';
+    f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups');
+    f.src = WINDY_URL;
+    badan.append(f);
+  }
+  panel.hidden = false;
+  radarBuka = true;
+  renderPetaKawalan();
+}
+function tutupRadar() {
+  const panel = $('petaRadar');
+  if (!panel) return;
+  const f = panel.querySelector('iframe');
+  if (f) f.remove();
+  panel.hidden = true;
+  radarBuka = false;
+  renderPetaKawalan();
+  const b = $('petaRadarBtn');
+  if (b) b.focus();
+}
+function renderPetaKawalan() {
+  const kot = $('petaKawalan');
+  if (!kot) return;
+  kot
+    .querySelectorAll('[data-asas]')
+    .forEach((b) => b.setAttribute('aria-pressed', b.dataset.asas === petaAsas ? 'true' : 'false'));
+  const a = $('petaAmaranBtn');
+  if (a) {
+    a.setAttribute('aria-pressed', amaranLapisan.tunjuk ? 'true' : 'false');
+    const n = Object.keys(amaranLapisan.negeri).length;
+    a.textContent = 'Amaran Cuaca' + (n ? ` (${n})` : '');
+  }
+  const r = $('petaRadarBtn');
+  if (r) {
+    r.setAttribute('aria-pressed', radarBuka ? 'true' : 'false');
+    r.setAttribute('aria-expanded', radarBuka ? 'true' : 'false');
+  }
+}
+function initPetaKawalan() {
+  const bingkai = $('map') && $('map').parentElement;
+  if (!bingkai) return;
+  const kot = document.createElement('div');
+  kot.id = 'petaKawalan';
+  kot.className = 'peta-kawalan';
+  const menuBtn = butangPeta('Lapisan', {
+    class: 'peta-menu-btn',
+    id: 'petaMenuBtn',
+    'aria-expanded': 'false',
+    'aria-controls': 'petaMenu',
+  });
+  const menu = document.createElement('div');
+  menu.id = 'petaMenu';
+  menu.className = 'peta-menu';
+  const asas = document.createElement('div');
+  asas.className = 'peta-seg';
+  asas.setAttribute('role', 'group');
+  asas.setAttribute('aria-label', 'Peta asas');
+  Object.entries(PETA_ASAS).forEach(([k, v]) => {
+    const b = butangPeta(v.label, { 'data-asas': k, 'aria-pressed': 'false' });
+    b.addEventListener('click', () => tetapPetaAsas(k));
+    asas.append(b);
+  });
+  const lapis = document.createElement('div');
+  lapis.className = 'peta-seg';
+  lapis.setAttribute('role', 'group');
+  lapis.setAttribute('aria-label', 'Lapisan tambahan');
+  const am = butangPeta('Amaran Cuaca', {
+    id: 'petaAmaranBtn',
+    'aria-pressed': 'true',
+    title: 'Tunjuk atau sembunyi amaran cuaca aktif (MET Malaysia, data.gov.my)',
+  });
+  am.addEventListener('click', () => {
+    amaranLapisan.tunjuk = !amaranLapisan.tunjuk;
+    if (!amaranLapisan.tunjuk && amaranLapisan.popup) amaranLapisan.popup.remove();
+    renderAmaranLayer();
+  });
+  const rd = butangPeta('Radar (Windy)', {
+    id: 'petaRadarBtn',
+    'aria-pressed': 'false',
+    'aria-expanded': 'false',
+    'aria-controls': 'petaRadar',
+    title: 'Buka radar cuaca Windy di atas peta',
+  });
+  rd.addEventListener('click', () => (radarBuka ? tutupRadar() : bukaRadar()));
+  lapis.append(am, rd);
+  menu.append(asas, lapis);
+  kot.append(menuBtn, menu);
+  menuBtn.addEventListener('click', () => {
+    const buka = kot.classList.toggle('terbuka');
+    menuBtn.setAttribute('aria-expanded', buka ? 'true' : 'false');
+  });
+  const panel = document.createElement('div');
+  panel.id = 'petaRadar';
+  panel.className = 'peta-radar';
+  panel.hidden = true;
+  panel.setAttribute('role', 'region');
+  panel.setAttribute('aria-label', 'Radar cuaca Windy');
+  const kepala = document.createElement('div');
+  kepala.className = 'peta-radar-kepala';
+  const tajuk = document.createElement('b');
+  tajuk.textContent = 'Radar cuaca';
+  const sumber = document.createElement('span');
+  sumber.textContent = 'Radar: Windy.com';
+  const tutup = butangPeta('×', { 'aria-label': 'Tutup radar', id: 'petaRadarTutup' });
+  tutup.addEventListener('click', tutupRadar);
+  kepala.append(tajuk, sumber, tutup);
+  const badan = document.createElement('div');
+  badan.className = 'peta-radar-badan';
+  panel.append(kepala, badan);
+  bingkai.append(kot, panel);
+  renderPetaKawalan();
+}
 let mapCaptionAsas = '';
 function renderMapCaption() {
   const c = $('mapCaption');
@@ -1224,11 +1696,25 @@ function poHoverHTML(p) {
       (o) =>
         `<div class="outlet-item"><span><b>${esc(o.jenis)}</b> · ${esc(o.nama)}</span><span class="nowrap">${o.jarakKm} km</span></div>`,
     )
-    .join('')}`;
+    .join(
+      '',
+    )}<div class="gmaps-baris"><a class="gmaps-link" href="${esc(gmapsUrl(p.lat, p.lon))}" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></div>`;
 }
 let poHoverPopup = null;
+let poHoverTimer = null;
 function hidePOHover() {
+  clearTimeout(poHoverTimer);
   if (poHoverPopup) poHoverPopup.remove();
+}
+// Beri masa kursor bergerak dari penanda ke pop-up (supaya pautan Google Maps boleh diklik).
+function jadualSembunyiPOHover() {
+  clearTimeout(poHoverTimer);
+  poHoverTimer = setTimeout(hidePOHover, 300);
+}
+function ikatPOHover(popup) {
+  const el = popup.getElement();
+  el.addEventListener('mouseenter', () => clearTimeout(poHoverTimer));
+  el.addEventListener('mouseleave', jadualSembunyiPOHover);
 }
 function showPOHover(p) {
   if (!map || typeof maplibregl === 'undefined') return;
@@ -1243,6 +1729,7 @@ function showPOHover(p) {
   const html = poHoverHTML(p);
   hidePOHover();
   poHoverPopup = new maplibregl.Popup(opts).setLngLat([p.lon, p.lat]).setHTML(html).addTo(map);
+  ikatPOHover(poHoverPopup);
   // Jika popup tidak muat di atas atau di bawah titik, buka di sisi dan anjak supaya kekal dalam peta
   const e = poHoverPopup.getElement(),
     h = e.querySelector('.maplibregl-popup-content').offsetHeight,
@@ -1264,6 +1751,7 @@ function showPOHover(p) {
     .setLngLat([p.lon, p.lat])
     .setHTML(html)
     .addTo(map);
+  ikatPOHover(poHoverPopup);
   if (dy) poHoverPopup.addClassName('po-hover-notip');
 }
 function renderOutlets() {
