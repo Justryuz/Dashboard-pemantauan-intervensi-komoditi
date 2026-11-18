@@ -43,7 +43,23 @@
     kot.id = 'cuacaMenu';
     kot.setAttribute('role', 'group');
     kot.setAttribute('aria-label', 'Lapisan cuaca');
-    kot.append(el('div', 'cuaca-menu-tajuk', 'Lapisan cuaca'));
+    const kepala = el('div', 'cuaca-menu-kepala');
+    const tajuk = el('span', 'cuaca-menu-tajuk', 'Lapisan cuaca');
+    const cip = el('span', 'cuaca-menu-cip');
+    cip.id = 'cuacaMenuCip';
+    cip.hidden = true;
+    const kecil = el('button', 'cuaca-kecil');
+    kecil.id = 'cuacaKecil';
+    kecil.type = 'button';
+    kecil.setAttribute('aria-controls', 'cuacaSenarai');
+    kepala.append(tajuk, cip, kecil);
+    kot.append(kepala);
+    const senarai = el('div', 'cuaca-senarai');
+    senarai.id = 'cuacaSenarai';
+    const dalam = el('div', 'cuaca-senarai-dalam');
+    senarai.append(dalam);
+    kot.append(senarai);
+    kepala.addEventListener('click', () => tetapKecil(!kot.classList.contains('kecil')));
     NS.LAPISAN.forEach((l) => {
       const b = el('button', 'cuaca-btn');
       b.type = 'button';
@@ -60,10 +76,48 @@
         NS.togol(l.id);
         tutupMenuMudahAlih();
       });
-      kot.append(b);
+      dalam.append(b);
     });
     menu.append(kot);
+    rujukMenu = { kot, btn: kecil, cip };
+    let kecilSimpan = false;
+    try {
+      kecilSimpan = localStorage.getItem(KUNCI_KECIL) === '1';
+    } catch {
+      /* abaikan */
+    }
+    tetapKecil(kecilSimpan, true);
     kemas();
+  }
+
+  const KUNCI_KECIL = 'fama_lapisan_kecil';
+  let rujukMenu = null;
+  function tetapKecil(kecil, tanpaSimpan) {
+    if (!rujukMenu) return;
+    const { kot, btn } = rujukMenu;
+    kot.classList.toggle('kecil', kecil);
+    btn.setAttribute('aria-expanded', kecil ? 'false' : 'true');
+    const label = kecil ? 'Besarkan panel lapisan' : 'Kecilkan panel lapisan';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    btn.replaceChildren(ikon(kecil ? 'M3.5 6 L8 10.5 L12.5 6' : 'M3.5 8 H12.5'));
+    if (!tanpaSimpan) {
+      try {
+        localStorage.setItem(KUNCI_KECIL, kecil ? '1' : '0');
+      } catch {
+        /* abaikan */
+      }
+    }
+    kemasCip();
+  }
+  function kemasCip() {
+    if (!rujukMenu || !NS.keadaanKawalan) return;
+    const { kot, cip } = rujukMenu;
+    const k = NS.keadaanKawalan();
+    const l = NS.LAPISAN.find((x) => x.id === k.utama);
+    const teks = l ? l.label : '';
+    cip.textContent = teks;
+    cip.hidden = !(kot.classList.contains('kecil') && teks);
   }
 
   function pasangPapan(bingkai) {
@@ -240,6 +294,7 @@
       else if (b.querySelector('.cuaca-tambah')) b.title = 'Lapisan tambahan';
       else b.removeAttribute('title');
     });
+    kemasCip();
     kemasLegenda(k);
     kemasBawah(k);
   }

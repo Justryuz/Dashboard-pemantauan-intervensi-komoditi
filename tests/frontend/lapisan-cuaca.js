@@ -268,6 +268,33 @@ const siklonAda = () => ({
           }
           await page.close();
         }
+      // Panel Lapisan Cuaca: dibesarkan dan dikecilkan (1440, klip sekitar menu)
+      for (const tema of ['gelap', 'cerah']) {
+        const { page } = await buka({ tema });
+        await togol(page, 'angin');
+        for (const keadaan of ['besar', 'kecil']) {
+          if (keadaan === 'kecil') await page.click('#cuacaKecil');
+          await sleep(1500);
+          await page.evaluate(() =>
+            document
+              .querySelector('#cuacaMenu')
+              .scrollIntoView({ block: 'center', behavior: 'instant' }),
+          );
+          const b = await (await page.$('#petaMenu')).boundingBox();
+          const sc = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+          await page.screenshot({
+            path: path.join(SHOTS, `panel-${tema}-${keadaan}.png`),
+            clip: {
+              x: Math.max(0, b.x - 20) + sc.x,
+              y: Math.max(0, b.y - 20) + sc.y,
+              width: b.width + 40,
+              height: 420,
+            },
+          });
+        }
+        await page.click('#cuacaKecil');
+        await page.close();
+      }
       return;
     }
 
@@ -1004,6 +1031,108 @@ const siklonAda = () => ({
       await foto(m.page, '390-suhu');
       ok('(ix) tiada ralat konsol', m.masalah.length === 0, m.masalah);
       await m.page.close();
+    }
+
+    // ===== (kecil) butang kecilkan panel Lapisan Cuaca =====
+    for (const tema of ['gelap', 'cerah']) {
+      const m = await buka({ tema });
+      const p = m.page;
+      const T = `(kecil ${tema})`;
+      const adaBtn = await p.$('#cuacaMenu #cuacaKecil');
+      ok(`${T} butang wujud`, !!adaBtn);
+      const sifat = () =>
+        p.evaluate(() => {
+          const b = document.querySelector('#cuacaKecil');
+          const bt = document.querySelector('#cuacaMenu [data-lapisan="angin"]');
+          const r = (s) => document.querySelector(s).getBoundingClientRect();
+          return {
+            exp: b.getAttribute('aria-expanded'),
+            lbl: b.getAttribute('aria-label'),
+            ctl: b.getAttribute('aria-controls'),
+            ctlAda: !!document.getElementById(b.getAttribute('aria-controls')),
+            item: getComputedStyle(bt).visibility,
+            kepalaV: r('.cuaca-menu-kepala').height > 0,
+            tinggi: r('#cuacaMenu').height,
+            cip: document.querySelector('#cuacaMenuCip').hidden
+              ? ''
+              : document.querySelector('#cuacaMenuCip').textContent,
+            kepala: document.querySelector('.cuaca-menu-tajuk').textContent,
+          };
+        });
+      const a = await sifat();
+      ok(`${T} awal: terbuka`, a.exp === 'true' && a.lbl === 'Kecilkan panel lapisan', a);
+      ok(`${T} aria-controls menuding elemen sedia ada`, a.ctl === 'cuacaSenarai' && a.ctlAda, a);
+      ok(`${T} awal: item tampak, panel tinggi`, a.item === 'visible' && a.tinggi > 150, a);
+      await togol(p, 'angin');
+      await p.focus('#cuacaKecil');
+      await p.keyboard.press('Enter');
+      await sleep(500);
+      const k = await sifat();
+      ok(
+        `${T} kecil: aria-expanded false, label Besarkan`,
+        k.exp === 'false' && k.lbl === 'Besarkan panel lapisan',
+        k,
+      );
+      ok(
+        `${T} kecil: item tersembunyi, kepala tampak, tinggi kecil`,
+        k.item === 'hidden' && k.kepalaV && k.tinggi < 50,
+        k,
+      );
+      ok(`${T} kecil: cip lapisan aktif`, k.cip === 'Angin', k);
+      ok(
+        `${T} kecil: legenda masih berfungsi`,
+        (await aktif(p)).utama === 'angin' && (await kotak(p, '#cuacaLegenda')).w > 50,
+      );
+      ok(
+        `${T} kecil: fokus ring tampak pada butang`,
+        await p.evaluate(() => {
+          const b = document.querySelector('#cuacaKecil');
+          return b.matches(':focus-visible') && getComputedStyle(b).outlineStyle !== 'none';
+        }),
+      );
+      ok(
+        `${T} tersimpan dalam localStorage`,
+        (await p.evaluate(() => localStorage.getItem('fama_lapisan_kecil'))) === '1',
+      );
+      await p.reload({ waitUntil: 'load' });
+      await p.waitForFunction(
+        () =>
+          window.DASHBOARD_TEST &&
+          DASHBOARD_TEST.cuaca &&
+          DASHBOARD_TEST.peta().lapisan.banjir &&
+          document.querySelector('#cuacaMenu'),
+        { timeout: 30000 },
+      );
+      await p.evaluate((t) => DASHBOARD_TEST.cuaca.tetapSekarang(t), T0);
+      const r = await sifat();
+      ok(
+        `${T} selepas muat semula kekal kecil`,
+        r.exp === 'false' && r.item === 'hidden' && r.tinggi < 50,
+        r,
+      );
+      await p.click('.cuaca-menu-kepala .cuaca-menu-tajuk');
+      await sleep(500);
+      const e = await sifat();
+      ok(
+        `${T} klik pengepala membesarkan`,
+        e.exp === 'true' && e.item === 'visible' && e.tinggi > 150,
+        e,
+      );
+      await p.click('#cuacaKecil');
+      await sleep(500);
+      ok(`${T} klik butang mengecilkan semula`, (await sifat()).exp === 'false');
+      await p.click('#cuacaKecil');
+      await sleep(500);
+      ok(
+        `${T} besar: localStorage 0`,
+        (await p.evaluate(() => localStorage.getItem('fama_lapisan_kecil'))) === '0',
+      );
+      await p.click('#cuacaMenu [data-lapisan="suhu"]');
+      await tunggu(p, () => DASHBOARD_TEST.cuaca.aktif().utama === 'suhu');
+      ok(`${T} pilih lapisan selepas kembang berfungsi`, (await aktif(p)).utama === 'suhu');
+      ok(`${T} tiada ralat konsol`, m.masalah.length === 0, m.masalah);
+      ok(`${T} tiada pelanggaran CSP`, (await p.evaluate(() => window.__csp)).length === 0);
+      await p.close();
     }
 
     // ===== (x) keadaan ralat =====
