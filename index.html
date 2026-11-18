@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark light" id="metaScheme" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://tile.openstreetmap.org https://a.tile.opentopomap.org https://b.tile.opentopomap.org https://c.tile.opentopomap.org https://server.arcgisonline.com; font-src 'self' data:; connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://tile.openstreetmap.org https://a.tile.opentopomap.org https://b.tile.opentopomap.org https://c.tile.opentopomap.org https://server.arcgisonline.com; frame-src https://embed.windy.com; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://tile.openstreetmap.org https://a.tile.opentopomap.org https://b.tile.opentopomap.org https://c.tile.opentopomap.org https://server.arcgisonline.com https://tilecache.rainviewer.com https://gibs.earthdata.nasa.gov; font-src 'self' data:; connect-src 'self' https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://tile.openstreetmap.org https://a.tile.opentopomap.org https://b.tile.opentopomap.org https://c.tile.opentopomap.org https://server.arcgisonline.com https://tilecache.rainviewer.com https://gibs.earthdata.nasa.gov; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href="data:," />
@@ -22,6 +22,7 @@
     <script src="src/vendor/maplibre-gl/maplibre-gl.js"></script>
     <script src="config/app.config.js"></script>
     <link rel="stylesheet" href="src/css/base.css" />
+    <link rel="stylesheet" href="src/css/lapisan-cuaca.css" />
     <link rel="stylesheet" href="src/css/scenarios.css" />
     <link rel="stylesheet" href="src/css/intervensi.css" />
     <link rel="stylesheet" href="src/css/tema.css" />
@@ -190,7 +191,7 @@
                   </button>
                 </div>
               </div>
-              <div class="map-svg-frame">
+              <div class="map-svg-frame peta-berlapis">
                 <div
                   id="map"
                   role="region"
@@ -793,6 +794,13 @@
       <div id="toast" class="toast" role="status"></div>
     </div>
     <script src="src/data/dashboard-data.js"></script>
+    <script src="src/js/lapisan-cuaca/interp.js"></script>
+    <script src="src/js/lapisan-cuaca/skala.js"></script>
+    <script src="src/js/lapisan-cuaca/gl.js"></script>
+    <script src="src/js/lapisan-cuaca/zarah.js"></script>
+    <script src="src/js/lapisan-cuaca/data.js"></script>
+    <script src="src/js/lapisan-cuaca/daftar.js"></script>
+    <script src="src/js/lapisan-cuaca/kawalan.js"></script>
     <script src="src/js/app.js"></script>
     <script src="src/js/scenarios.js"></script>
     <script src="src/js/main.js"></script>

@@ -26,3 +26,12 @@ Masa rujukan (`sekarang`) untuk ujian unit: nasional `2026-11-17T04:30:00Z`, Sel
 | `muse/folder-harian.html`         | Dibina tangan; `{{TARIKH}}` diganti oleh ujian. Ada `.json` db-curated, `.csv`, `cleansed` dan `raw` (hanya db-curated boleh dimuat turun). |
 | `muse/db-curated-2026-11-15.json` | 5 rekod sebenar daripada `db-curated-2026-11-15.json` (Drive), diambil 2026-11-17.                                                          |
 | `muse/db-curated-invalid.json`    | Sintetik: rekod tidak sah, baris tiada data, nombor sebagai rentetan, pendua.                                                               |
+
+## Fixture lapisan cuaca
+
+| Fail                        | Asal                                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openmeteo-3pt.json`        | Respons sebenar Open-Meteo forecast (3 koordinat, 10 pembolehubah, 96 jam), 2026-11-17. Kes satu koordinat diuji dengan elemen pertama (objek tunggal). |
+| `openmeteo-marine-3pt.json` | Respons sebenar Open-Meteo marine (3 koordinat; titik pertama ialah darat dan semua nilainya null).                                                     |
+| `rainviewer-maps.json`      | Respons sebenar `weather-maps.json` RainViewer (13 bingkai radar lampau).                                                                               |
+| `gdacs-tc.json`             | Respons sebenar GDACS (senarai TC + geometri ditapis); rujuk `_catatan`.                                                                                |

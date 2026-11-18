@@ -86,6 +86,15 @@ async function mula(env) {
     ok('CSP pengepala tiada unpkg', !/unpkg/.test(csp), csp);
     const html = await idx.text();
     ok('index.html tiada unpkg', !/unpkg/.test(html));
+    ok('CSP pengepala tiada windy dan tiada frame-src', !/windy|frame-src/i.test(csp), csp);
+    const metaCsp =
+      (html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]*)"/) || [])[1] || '';
+    ok('meta CSP tiada windy dan tiada frame-src', !/windy|frame-src/i.test(metaCsp), metaCsp);
+    const direktif = (teks, nama) =>
+      (teks.split(';').find((d) => d.trim().startsWith(nama + ' ')) || '').trim();
+    for (const h of ['https://tilecache.rainviewer.com', 'https://gibs.earthdata.nasa.gov'])
+      for (const d of ['img-src', 'connect-src'])
+        ok(`CSP ${d} ada ${h}`, direktif(csp, d).split(/\s+/).includes(h), direktif(csp, d));
     ok(
       'meta CSP sama dengan pengepala (tanpa frame-ancestors)',
       html.includes(csp.replace("; frame-ancestors 'none'", '')),

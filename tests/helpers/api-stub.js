@@ -1,9 +1,10 @@
 'use strict';
-// Satu pemintas permintaan puppeteer bagi /api/cuaca, /api/banjir, /api/kualiti-udara dan /api/muse.
-// Fungsi pengendali menerima URL permintaan (berguna untuk /api/muse?minggu=).
+// Satu pemintas permintaan puppeteer bagi /api/cuaca, /api/banjir, /api/kualiti-udara, /api/muse dan API lapisan cuaca
+// (grid, grid/meta, grid/titik, radar, satelit, siklon).
+// Fungsi pengendali menerima URL permintaan (berguna untuk /api/muse?minggu= dan /api/grid?var=).
 // Dua pemintas pada satu halaman akan bertembung, jadi gunakan hanya ini.
 // Setiap kunci: fungsi () => nilai, 'abort', {status}, {body} atau objek JSON terus.
-// tileAsli: true = biarkan tile dan Windy ke rangkaian sebenar (untuk tangkapan skrin).
+// tileAsli: true = biarkan tile ke rangkaian sebenar (untuk tangkapan skrin).
 // Kunci yang tidak diberi: permintaan diteruskan ke pelayan sebenar.
 const LALUAN = {
   cuaca: /\/api\/cuaca(\?|$)/,
@@ -11,21 +12,25 @@ const LALUAN = {
   ipu: /\/api\/kualiti-udara(\?|$)/,
   muse: /\/api\/muse(\?|$)/,
   metmy: /\/api\/met-malaysia(\?|$)/,
+  gridMeta: /\/api\/grid\/meta(\?|$)/,
+  gridTitik: /\/api\/grid\/titik(\?|$)/,
+  grid: /\/api\/grid(\?|$)/,
+  radar: /\/api\/radar(\?|$)/,
+  satelit: /\/api\/satelit(\?|$)/,
+  siklon: /\/api\/siklon(\?|$)/,
 };
-// Tile peta asas dan iframe Windy tidak pernah ke rangkaian sebenar: tile = PNG 1x1, Windy = halaman kosong.
-// Permintaan dicatat pada page.tileUrls dan page.windyUrls.
+// Tile peta asas dan tile cuaca tidak pernah ke rangkaian sebenar: tile = PNG 1x1.
+// Permintaan dicatat pada page.tileUrls.
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
 );
 const RE_TILE =
-  /^https:\/\/(tile\.openstreetmap\.org|[abc]\.tile\.opentopomap\.org|server\.arcgisonline\.com)\//;
-const RE_WINDY = /^https:\/\/(embed|node)\.windy\.com\//;
+  /^https:\/\/(tile\.openstreetmap\.org|[abc]\.tile\.opentopomap\.org|server\.arcgisonline\.com|tilecache\.rainviewer\.com|gibs\.earthdata\.nasa\.gov)\//;
 
 async function stubApi(page, pengendali = {}) {
   await page.setRequestInterception(true);
   page.tileUrls = [];
-  page.windyUrls = [];
   page.on('request', (req) => {
     if (!pengendali.tileAsli && RE_TILE.test(req.url())) {
       page.tileUrls.push(req.url());
@@ -34,14 +39,6 @@ async function stubApi(page, pengendali = {}) {
         contentType: 'image/png',
         headers: { 'Access-Control-Allow-Origin': '*' },
         body: PNG_1X1,
-      });
-    }
-    if (!pengendali.tileAsli && RE_WINDY.test(req.url())) {
-      page.windyUrls.push(req.url());
-      return req.respond({
-        status: 200,
-        contentType: 'text/html',
-        body: '<!doctype html><title>Windy (stub)</title><body style="background:#345;color:#fff;font:14px sans-serif">Radar Windy (stub ujian)</body>',
       });
     }
     const kunci = Object.keys(LALUAN).find((k) => LALUAN[k].test(req.url()));
@@ -63,4 +60,4 @@ async function stubApi(page, pengendali = {}) {
   });
 }
 
-module.exports = { stubApi };
+module.exports = { stubApi, PNG_1X1 };

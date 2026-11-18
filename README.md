@@ -135,13 +135,30 @@ Kawalan peta berada di penjuru kanan atas peta. Pada skrin 640 px dan ke bawah, 
 
 - **Peta asas**: Lalai (CARTO), Terrain (OpenTopoMap, zum maks 17), Jalan (OpenStreetMap, zum maks 19) dan Satelit (Esri World Imagery, zum maks 19). Pilihan disimpan dalam `localStorage` (`fama_peta_asas`). Tukar peta asas memuat semula gaya peta dan memasang semula lapisan tindihan (stesen banjir JPS, amaran cuaca). Penanda PO ialah elemen DOM dan tidak terjejas. Atribusi setiap peta dipaparkan pada kawalan atribusi. Tile dimuat oleh pelayar seperti biasa tanpa prefetch; hanya cache HTTP piawai digunakan.
 - **Amaran Cuaca** (togol): amaran aktif MET Malaysia daripada `https://api.data.gov.my/weather/warning` ditanda pada titik tengah negeri yang disebut dalam teks amaran (tiada poligon negeri dalam projek, jadi kedudukan ialah anggaran), warna ikut tahap. Pop-up memaparkan tajuk, tempoh sah dan teks ringkas dengan **Lihat lagi**. Amaran data.gov.my yang tidak menyamai amaran `api.met.gov.my` (tajuk sama, masa dikeluarkan dalam 60 minit, negeri bertindih) juga masuk ke kad Amaran Rasmi dengan sumber "MET Malaysia (data.gov.my)".
-- **Radar (Windy)**: panel di atas peta. Iframe `https://embed.windy.com/embed2.html` hanya dicipta bila dibuka dan dibuang bila ditutup (`sandbox`, `referrerpolicy=no-referrer`). URL `node.windy.com/embed/radar` tidak boleh dibenamkan kerana Windy menghantar `frame-ancestors 'self' *.windy.com`, jadi `embed.windy.com` digunakan dengan parameter yang sama. Radar: Windy.com.
+- **Radar cuaca**: iframe Windy telah diganti dengan lapisan cuaca natif (bahagian "Lapisan cuaca" di bawah).
 - **Google Maps**: pop-up PO, stesen banjir JPS dan amaran cuaca ada pautan "Buka di Google Maps" (`https://www.google.com/maps/search/?api=1&query=lat,lng`). Pautan sahaja, tiada API. Baris kad Stesen Banjir JPS tiada pautan kerana baris ialah butang.
 - Ikon penanda Leaflet (cdnjs) tidak diperlukan; peta menggunakan penanda sendiri dan CDN tidak ditambah.
 
 **Amaran data.gov.my (pelayan).** `GET /api/met-malaysia` memulangkan cache amaran ternormal. Semakan setiap 30 minit (`AMARAN_DG_POLL_MIN`), tamat masa 20 s, 1 percubaan semula, `User-Agent: FAMA-dashboard-prototype`. Had kadar data.gov.my kira-kira 4 permintaan seminit. Cache: `data/processed/amaran-datagov.json` (`AMARAN_DG_CACHE_FILE`; `AMARAN_DG_AUTO=0` mematikan pengambilan automatik). Tanpa cache, respons ialah 200 dengan `amaran: []`. Setiap amaran ada `pendua` jika sama dengan amaran MET yang sedia ada.
 
 **Had tile.** Tile OpenStreetMap untuk penggunaan ringan sahaja ([dasar tile OSM](https://operations.osmfoundation.org/policies/tiles/)); untuk production gunakan penyedia tile yang sesuai. OpenTopoMap juga untuk penggunaan sederhana. Peta tab Intervensi (`src/js/intervensi.js`) belum mendapat pilihan peta asas dan pautan Google Maps (cadangan susulan).
+
+## Lapisan cuaca
+
+Menu **Lapisan cuaca** pada peta utama (dalam butang `Lapisan` pada mobil): Radar cuaca, Satelit, Angin, Hujan/petir, Suhu, Penjejak siklon, Awan, Ombak, Kumpulan hujan, Ribut petir. Satu lapisan utama pada satu masa; Radar, Satelit dan Siklon ialah tindihan. Garis masa (main/jeda) untuk ramalan 72 j atau imbasan radar/satelit; klik peta untuk nilai pada titik. Ribut petir ialah anggaran (CAPE dan kod cuaca). Windy diganti dengan lapisan natif ini; tiada iframe.
+
+| Lapisan                                       | Sumber                                             | Laluan                                                     |
+| --------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| Grid (angin, suhu, awan, hujan, ombak, ribut) | Open-Meteo (CC BY 4.0), grid 0.5°, 615 titik, 96 j | `/api/grid/meta`, `/api/grid?var=&jam=`, `/api/grid/titik` |
+| Radar                                         | RainViewer                                         | `/api/radar`                                               |
+| Satelit                                       | NASA GIBS (Himawari IR)                            | `/api/satelit`                                             |
+| Siklon                                        | GDACS                                              | `/api/siklon`                                              |
+
+- Had percuma Open-Meteo: 10 000 unit/hari, bukan komersial. Satu muat semula = 12 permintaan / 1046 unit (larian pertama 14 / 1230, membina topeng laut); setiap 6 j (`GRID_POLL_JAM`) ~4 200 unit/hari. Pengawal kuota harian `GRID_KUOTA_HARIAN` (lalai 8000). RainViewer percuma, skala kecil tanpa SLA.
+- Produksi: letak kunci dalam `.env` sahaja (`OPEN_METEO_API_KEY`, `OPEN_METEO_BASE`, `OPEN_METEO_MARINE_BASE`, `RAINVIEWER_BASE`, `GRID_RES_DEG`, `GRID_POLL_JAM`). Kunci tidak pernah dihantar ke pelayar atau log. Jika `RAINVIEWER_TILE_HOST` ditukar, kedua-dua CSP (`config/security.js` dan `<meta>` index.html) mesti disunting.
+- Skrip: `npm run grid:ambil`, `npm run siklon:ambil` (jalankan sekali sahaja; setiap larian grid menggunakan kuota).
+- CORS disahkan 17 Nov 2026: tilecache.rainviewer.com dan gibs.earthdata.nasa.gov memulangkan `Access-Control-Allow-Origin: *`.
+- Atribusi: Open-Meteo.com, RainViewer, NASA GIBS / JMA Himawari, GDACS.
 
 ## Fungsi dashboard
 

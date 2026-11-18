@@ -335,9 +335,11 @@ function initMap() {
       gayaDimuat = true;
       banjirLapisan.sedia = false;
       amaranLapisan.sedia = false;
+      if (window.FamaCuaca && FamaCuaca.pasangSemula) FamaCuaca.pasangSemula();
       kemasLapisanBanjir();
       kemasLapisanAmaran();
     });
+    if (window.FamaCuaca && FamaCuaca.sedia) FamaCuaca.sedia(map);
   } catch (err) {
     console.warn('Peta tidak dapat dimulakan', err);
     map = null;
@@ -1544,45 +1546,13 @@ const initAmaranDG = () => {
   );
 };
 
-/* ===== Kawalan peta: peta asas, lapisan Amaran Cuaca, radar Windy ===== */
-const WINDY_URL =
-  'https://embed.windy.com/embed2.html?lat=4.21&lon=101.97&zoom=6&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1';
-let radarBuka = false;
+/* ===== Kawalan peta: peta asas, lapisan Amaran Cuaca, lapisan cuaca (lapisan-cuaca/*.js) ===== */
 function butangPeta(teks, atribut) {
   const b = document.createElement('button');
   b.type = 'button';
   b.textContent = teks;
   Object.entries(atribut || {}).forEach(([k, v]) => b.setAttribute(k, v));
   return b;
-}
-function bukaRadar() {
-  const panel = $('petaRadar');
-  if (!panel) return;
-  const badan = panel.querySelector('.peta-radar-badan');
-  if (!badan.querySelector('iframe')) {
-    // Dicipta hanya apabila dibuka (tidak dimuat semasa halaman bermula).
-    const f = document.createElement('iframe');
-    f.title = 'Radar cuaca Windy untuk Malaysia';
-    f.loading = 'lazy';
-    f.referrerPolicy = 'no-referrer';
-    f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups');
-    f.src = WINDY_URL;
-    badan.append(f);
-  }
-  panel.hidden = false;
-  radarBuka = true;
-  renderPetaKawalan();
-}
-function tutupRadar() {
-  const panel = $('petaRadar');
-  if (!panel) return;
-  const f = panel.querySelector('iframe');
-  if (f) f.remove();
-  panel.hidden = true;
-  radarBuka = false;
-  renderPetaKawalan();
-  const b = $('petaRadarBtn');
-  if (b) b.focus();
 }
 function renderPetaKawalan() {
   const kot = $('petaKawalan');
@@ -1595,11 +1565,6 @@ function renderPetaKawalan() {
     a.setAttribute('aria-pressed', amaranLapisan.tunjuk ? 'true' : 'false');
     const n = Object.keys(amaranLapisan.negeri).length;
     a.textContent = 'Amaran Cuaca' + (n ? ` (${n})` : '');
-  }
-  const r = $('petaRadarBtn');
-  if (r) {
-    r.setAttribute('aria-pressed', radarBuka ? 'true' : 'false');
-    r.setAttribute('aria-expanded', radarBuka ? 'true' : 'false');
   }
 }
 function initPetaKawalan() {
@@ -1640,40 +1605,16 @@ function initPetaKawalan() {
     if (!amaranLapisan.tunjuk && amaranLapisan.popup) amaranLapisan.popup.remove();
     renderAmaranLayer();
   });
-  const rd = butangPeta('Radar (Windy)', {
-    id: 'petaRadarBtn',
-    'aria-pressed': 'false',
-    'aria-expanded': 'false',
-    'aria-controls': 'petaRadar',
-    title: 'Buka radar cuaca Windy di atas peta',
-  });
-  rd.addEventListener('click', () => (radarBuka ? tutupRadar() : bukaRadar()));
-  lapis.append(am, rd);
+  lapis.append(am);
   menu.append(asas, lapis);
+  if (map && window.FamaCuaca && FamaCuaca.pasangMenu) FamaCuaca.pasangMenu(menu);
   kot.append(menuBtn, menu);
   menuBtn.addEventListener('click', () => {
     const buka = kot.classList.toggle('terbuka');
     menuBtn.setAttribute('aria-expanded', buka ? 'true' : 'false');
   });
-  const panel = document.createElement('div');
-  panel.id = 'petaRadar';
-  panel.className = 'peta-radar';
-  panel.hidden = true;
-  panel.setAttribute('role', 'region');
-  panel.setAttribute('aria-label', 'Radar cuaca Windy');
-  const kepala = document.createElement('div');
-  kepala.className = 'peta-radar-kepala';
-  const tajuk = document.createElement('b');
-  tajuk.textContent = 'Radar cuaca';
-  const sumber = document.createElement('span');
-  sumber.textContent = 'Radar: Windy.com';
-  const tutup = butangPeta('×', { 'aria-label': 'Tutup radar', id: 'petaRadarTutup' });
-  tutup.addEventListener('click', tutupRadar);
-  kepala.append(tajuk, sumber, tutup);
-  const badan = document.createElement('div');
-  badan.className = 'peta-radar-badan';
-  panel.append(kepala, badan);
-  bingkai.append(kot, panel);
+  bingkai.append(kot);
+  if (map && window.FamaCuaca && FamaCuaca.pasangPapan) FamaCuaca.pasangPapan(bingkai);
   renderPetaKawalan();
 }
 let mapCaptionAsas = '';

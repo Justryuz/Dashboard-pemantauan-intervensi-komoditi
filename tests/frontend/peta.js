@@ -1,7 +1,8 @@
 'use strict';
 // Peta utama: tukar peta asas (lapisan tindihan kekal), pilihan diingati selepas muat semula, lapisan Amaran Cuaca
-// (/api/met-malaysia distub), radar Windy (iframe lazy), pautan Google Maps, kad Amaran Rasmi (sumber data.gov.my) dan CSP.
-// Tile dan Windy distub (PNG 1x1 / halaman kosong). Tangkapan skrin: PETA_SHOTS=<folder> PETA_ASLI=1 (tile sebenar).
+// (/api/met-malaysia distub), pautan Google Maps, kad Amaran Rasmi (sumber data.gov.my) dan CSP.
+// Iframe radar luar telah dibuang (digantikan lapisan cuaca natif; lihat tests/frontend/lapisan-cuaca.js).
+// Tile distub (PNG 1x1). Tangkapan skrin: PETA_SHOTS=<folder> PETA_ASLI=1 (tile sebenar).
 // Jalankan dari root: node tests/frontend/peta.js
 const fs = require('node:fs');
 const os = require('node:os');
@@ -125,7 +126,8 @@ function fixtureDG() {
     await sleep(600);
     const sc = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
     const b = await (await page.$('.map-svg-frame')).boundingBox();
-    if (process.env.PETA_DEBUG) console.log(nama, JSON.stringify(b), JSON.stringify(page.viewport()));
+    if (process.env.PETA_DEBUG)
+      console.log(nama, JSON.stringify(b), JSON.stringify(page.viewport()));
     await page.screenshot({
       path: path.join(SHOTS, nama + '.png'),
       clip: {
@@ -138,18 +140,17 @@ function fixtureDG() {
   }
 
   try {
-    // (i) keadaan awal: lalai, tindihan dipasang, iframe Windy TIDAK dimuat
+    // (i) keadaan awal: lalai, tindihan dipasang, tiada iframe radar luar
     const { page, masalah } = await buka();
     let i = await info(page);
     ok('(i) peta asas lalai', i.asas === 'lalai' && !i.tiles, i);
     ok('(i) lapisan banjir dan amaran dipasang', i.lapisan.banjir && i.lapisan.amaran, i.lapisan);
     ok('(i) 15 penanda PO', i.markerPO === 15, i.markerPO);
+    ok('(i) tiada iframe radar luar', (await page.$$('iframe')).length === 0);
     ok(
-      '(i) iframe Windy tidak wujud semasa mula',
-      (await page.$$('iframe')).length === 0 && page.windyUrls.length === 0,
-      page.windyUrls,
+      '(i) tiada #petaRadar / butang radar',
+      !(await page.$('#petaRadar')) && !(await page.$('#petaRadarBtn')),
     );
-    ok('(i) panel radar tersembunyi', await page.$eval('#petaRadar', (e) => e.hidden));
     ok(
       '(i) butang peta asas: 4 pilihan Lalai/Terrain/Jalan/Satelit',
       JSON.stringify(
@@ -346,45 +347,18 @@ function fixtureDG() {
       susunan,
     );
 
-    // (vi) radar Windy: lazy, atribut, tutup
-    await page.click('#petaRadarBtn');
-    await page.waitForSelector('#petaRadar iframe');
-    const fr = await page.$eval('#petaRadar iframe', (f) => ({
-      src: f.getAttribute('src'),
-      title: f.title,
-      loading: f.getAttribute('loading'),
-      rp: f.getAttribute('referrerpolicy'),
-      sb: f.getAttribute('sandbox'),
-    }));
-    ok(
-      '(vi) iframe src embed.windy.com',
-      /^https:\/\/embed\.windy\.com\/embed2\.html\?lat=4\.21&lon=101\.97&zoom=6&/.test(fr.src) &&
-        fr.src.includes('product=radar'),
-      fr.src,
+    // (vi) tiada iframe radar luar dan CSP tidak membenarkan bingkai luar
+    const cspPeta = await page.evaluate(
+      () => document.querySelector('meta[http-equiv="Content-Security-Policy"]').content,
     );
     ok(
-      '(vi) iframe title/loading/referrerpolicy',
-      !!fr.title && fr.loading === 'lazy' && fr.rp === 'no-referrer',
-      fr,
+      '(vi) CSP meta tiada frame-src dan tiada hos radar luar',
+      !/frame-src|windy/i.test(cspPeta),
+      cspPeta,
     );
-    ok('(vi) iframe sandbox', fr.sb === 'allow-scripts allow-same-origin allow-popups', fr.sb);
     ok(
-      '(vi) panel nampak + nota Windy.com',
-      !(await page.$eval('#petaRadar', (e) => e.hidden)) &&
-        (await page.$eval('#petaRadar', (e) => e.innerText)).includes('Radar: Windy.com'),
-    );
-    await sleep(300);
-    ok(
-      '(vi) Windy diminta selepas dibuka',
-      page.tileUrls && (asli || page.windyUrls.length >= 1),
-      page.windyUrls,
-    );
-    await foto(page, '1440-gelap-radar');
-    await page.click('#petaRadarTutup');
-    ok(
-      '(vi) tutup: iframe dibuang dan panel tersembunyi',
-      (await page.$$('#petaRadar iframe')).length === 0 &&
-        (await page.$eval('#petaRadar', (e) => e.hidden)),
+      '(vi) kawalan peta tiada teks radar luar',
+      !/windy/i.test(await page.$eval('#petaKawalan', (e) => e.innerText)),
     );
 
     // (vii) Google Maps dalam pop-up PO (hover) dan stesen JPS
@@ -454,9 +428,6 @@ function fixtureDG() {
         await tukar(c.page, k);
         await foto(c.page, `1440-cerah-${k}`);
       }
-      await c.page.click('#petaRadarBtn');
-      await c.page.waitForSelector('#petaRadar iframe');
-      await foto(c.page, '1440-cerah-radar');
       await c.page.close();
     }
 
@@ -478,15 +449,6 @@ function fixtureDG() {
         await tukar(m.page, k);
         await foto(m.page, `390-${tema}-${k}`);
       }
-      await m.page.click('#petaRadarBtn');
-      await m.page.waitForSelector('#petaRadar iframe');
-      const r = await m.page.evaluate(() => {
-        const a = document.getElementById('petaRadar').getBoundingClientRect();
-        const b = document.querySelector('.map-svg-frame').getBoundingClientRect();
-        return { lebar: a.width, dalam: a.left >= b.left && a.right <= b.right + 1 };
-      });
-      ok('(ix) radar muat dalam peta pada 390px', r.dalam && r.lebar > 250, r);
-      await foto(m.page, `390-${tema}-radar`);
       ok(
         '(ix) tiada limpahan mendatar',
         await m.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
@@ -501,7 +463,7 @@ function fixtureDG() {
   console.log(
     gagal.length
       ? 'GAGAL:\n' + gagal.join('\n')
-      : 'OK: peta (asas, amaran, radar, Google Maps) lulus',
+      : 'OK: peta (asas, amaran, Google Maps, tanpa iframe radar) lulus',
   );
   process.exitCode = gagal.length ? 1 : 0;
 })().catch((e) => {

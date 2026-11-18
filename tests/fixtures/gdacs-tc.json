@@ -1,0 +1,3268 @@
+{
+  "_catatan": "Contoh respons GDACS sebenar (17 Nov 2026). senarai = geteventlist/SEARCH?eventlist=TC (2 acara dipilih: 1001351 AKVAN-26 aktif, 1001336 TWENTYEIGHT-26 lampau dalam rantau). geometri[eventid] = url.geometry (cincin poligon dijarangkan).",
+  "senarai": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "bbox": [87.3, 12, 87.3, 12],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [87.3, 12]
+        },
+        "properties": {
+          "eventtype": "TC",
+          "eventid": 1001351,
+          "episodeid": 3,
+          "eventname": "AKVAN-26",
+          "glide": "",
+          "name": "Tropical Cyclone AKVAN-26",
+          "description": "Tropical Cyclone AKVAN-26",
+          "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+          "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+          "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+          "url": {
+            "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+            "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+            "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+          },
+          "alertlevel": "Orange",
+          "alertscore": 2,
+          "episodealertlevel": "Orange",
+          "episodealertscore": 2,
+          "istemporary": "false",
+          "iscurrent": "true",
+          "country": "India",
+          "fromdate": "2026-11-16T18:00:00",
+          "todate": "2026-11-17T06:00:00",
+          "datemodified": "2026-11-17T08:50:11",
+          "iso3": "IND",
+          "source": "JTWC",
+          "sourceid": "",
+          "polygonlabel": "Centroid",
+          "Class": "Point_Centroid",
+          "countryonland": "",
+          "affectedcountries": [
+            {
+              "iso2": "IN",
+              "iso3": "IND",
+              "countryname": "India"
+            }
+          ],
+          "severitydata": {
+            "severity": 92.592,
+            "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+            "severityunit": "km/h"
+          }
+        }
+      },
+      {
+        "type": "Feature",
+        "bbox": [139.7, 22.5, 139.7, 22.5],
+        "geometry": {
+          "type": "Point",
+          "coordinates": [139.7, 22.5]
+        },
+        "properties": {
+          "eventtype": "TC",
+          "eventid": 1001336,
+          "episodeid": 14,
+          "eventname": "TWENTYEIGHT-26",
+          "glide": "",
+          "name": "Tropical Cyclone TWENTYEIGHT-26",
+          "description": "Tropical Cyclone TWENTYEIGHT-26",
+          "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+          "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+          "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+          "url": {
+            "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+            "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+            "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+          },
+          "alertlevel": "Green",
+          "alertscore": 1,
+          "episodealertlevel": "Green",
+          "episodealertscore": 1,
+          "istemporary": "false",
+          "iscurrent": "false",
+          "country": "",
+          "fromdate": "2026-10-12T00:00:00",
+          "todate": "2026-10-15T06:00:00",
+          "datemodified": "2026-10-16T10:16:29",
+          "iso3": "",
+          "source": "JTWC",
+          "sourceid": "",
+          "polygonlabel": "Centroid",
+          "Class": "Point_Centroid",
+          "countryonland": "",
+          "affectedcountries": [],
+          "severitydata": {
+            "severity": 55.5552,
+            "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+            "severityunit": "km/h"
+          }
+        }
+      }
+    ]
+  },
+  "geometri": {
+    "1001336": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "bbox": [139.7, 22.5, 139.7, 22.5],
+          "geometry": {
+            "type": "Point",
+            "coordinates": [139.7, 22.5]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygonlabel": "Centroid",
+            "Class": "Point_Centroid",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            }
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [136.1, 23.1, 137.9, 23.3],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [137.9, 23.1],
+              [136.1, 23.3]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_0",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [137.9, 22.5, 139.7, 23.1],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [139.7, 22.5],
+              [137.9, 23.1]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_1",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [139.7, 22.3, 140.6, 22.5],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [140.6, 22.3],
+              [139.7, 22.5]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_2",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [140.6, 22.3, 141.1, 22.7],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [141.1, 22.7],
+              [140.6, 22.3]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_3",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [141.1, 22, 142.1, 22.7],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [142.1, 22],
+              [141.1, 22.7]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_4",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [142.1, 21.3, 142.8, 22],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [142.8, 21.3],
+              [142.1, 22]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_5",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [142.8, 20.7, 143.5, 21.3],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [143.5, 20.7],
+              [142.8, 21.3]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_6",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [143.5, 20.1, 144.5, 20.7],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [144.5, 20.1],
+              [143.5, 20.7]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_7",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [144.5, 19.4, 145.4, 20.1],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [145.4, 19.4],
+              [144.5, 20.1]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_8",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [145.4, 18.8, 146.3, 19.4],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [146.3, 18.8],
+              [145.4, 19.4]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_9",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [146.3, 18, 147.3, 18.8],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [147.3, 18],
+              [146.3, 18.8]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_10",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [147.3, 17.5, 148.2, 18],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [148.2, 17.5],
+              [147.3, 18]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_11",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [148.2, 17.1, 149.1, 17.5],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [149.1, 17.1],
+              [148.2, 17.5]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_12",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [149.1, 16.8, 149.8, 17.1],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [149.8, 16.8],
+              [149.1, 17.1]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_13",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [149.8, 16.4, 150.8, 16.8],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [150.8, 16.4],
+              [149.8, 16.8]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_14",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [150.77, 16.37, 150.83, 16.43],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [150.8, 16.37],
+                [150.8249, 16.3833],
+                [150.8277, 16.4115],
+                [150.8059, 16.4294],
+                [150.7788, 16.4212],
+                [150.7706, 16.3941],
+                [150.7885, 16.3723],
+                [150.8, 16.37]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "12/10 00:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10120000",
+            "Class": "Point_Polygon_Point_0",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [149.77, 16.77, 149.83, 16.83],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [149.8, 16.77],
+                [149.8249, 16.7833],
+                [149.8277, 16.8115],
+                [149.8059, 16.8294],
+                [149.7788, 16.8212],
+                [149.7706, 16.7941],
+                [149.7885, 16.7723],
+                [149.8, 16.77]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "12/10 06:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10120600",
+            "Class": "Point_Polygon_Point_1",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [149.07, 17.07, 149.13, 17.13],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [149.1, 17.07],
+                [149.1249, 17.0833],
+                [149.1277, 17.1115],
+                [149.1059, 17.1294],
+                [149.0788, 17.1212],
+                [149.0706, 17.0941],
+                [149.0885, 17.0723],
+                [149.1, 17.07]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "12/10 12:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10121200",
+            "Class": "Point_Polygon_Point_2",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [148.17, 17.47, 148.23, 17.53],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [148.2, 17.47],
+                [148.2249, 17.4833],
+                [148.2277, 17.5115],
+                [148.2059, 17.5294],
+                [148.1788, 17.5212],
+                [148.1706, 17.4941],
+                [148.1885, 17.4723],
+                [148.2, 17.47]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "12/10 18:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10121800",
+            "Class": "Point_Polygon_Point_3",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [147.27, 17.97, 147.33, 18.03],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [147.3, 17.97],
+                [147.3249, 17.9833],
+                [147.3277, 18.0115],
+                [147.3059, 18.0294],
+                [147.2788, 18.0212],
+                [147.2706, 17.9941],
+                [147.2885, 17.9723],
+                [147.3, 17.97]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "13/10 00:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10130000",
+            "Class": "Point_Polygon_Point_4",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [146.27, 18.77, 146.33, 18.83],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [146.3, 18.77],
+                [146.3249, 18.7833],
+                [146.3277, 18.8115],
+                [146.3059, 18.8294],
+                [146.2788, 18.8212],
+                [146.2706, 18.7941],
+                [146.2885, 18.7723],
+                [146.3, 18.77]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "13/10 06:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10130600",
+            "Class": "Point_Polygon_Point_5",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [145.37, 19.37, 145.43, 19.43],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [145.4, 19.37],
+                [145.4249, 19.3833],
+                [145.4277, 19.4115],
+                [145.4059, 19.4294],
+                [145.3788, 19.4212],
+                [145.3706, 19.3941],
+                [145.3885, 19.3723],
+                [145.4, 19.37]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "13/10 12:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10131200",
+            "Class": "Point_Polygon_Point_6",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [144.47, 20.07, 144.53, 20.13],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [144.5, 20.07],
+                [144.5249, 20.0833],
+                [144.5277, 20.1115],
+                [144.5059, 20.1294],
+                [144.4788, 20.1212],
+                [144.4706, 20.0941],
+                [144.4885, 20.0723],
+                [144.5, 20.07]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "13/10 18:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10131800",
+            "Class": "Point_Polygon_Point_7",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [143.47, 20.67, 143.53, 20.73],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [143.5, 20.67],
+                [143.5249, 20.6833],
+                [143.5277, 20.7115],
+                [143.5059, 20.7294],
+                [143.4788, 20.7212],
+                [143.4706, 20.6941],
+                [143.4885, 20.6723],
+                [143.5, 20.67]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "14/10 00:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10140000",
+            "Class": "Point_Polygon_Point_8",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [142.77, 21.27, 142.83, 21.33],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [142.8, 21.27],
+                [142.8249, 21.2833],
+                [142.8277, 21.3115],
+                [142.8059, 21.3294],
+                [142.7788, 21.3212],
+                [142.7706, 21.2941],
+                [142.7885, 21.2723],
+                [142.8, 21.27]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "14/10 06:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10140600",
+            "Class": "Point_Polygon_Point_9",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [142.07, 21.97, 142.13, 22.03],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [142.1, 21.97],
+                [142.1249, 21.9833],
+                [142.1277, 22.0115],
+                [142.1059, 22.0294],
+                [142.0788, 22.0212],
+                [142.0706, 21.9941],
+                [142.0885, 21.9723],
+                [142.1, 21.97]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "14/10 12:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10141200",
+            "Class": "Point_Polygon_Point_10",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [141.07, 22.67, 141.13, 22.73],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [141.1, 22.67],
+                [141.1249, 22.6833],
+                [141.1277, 22.7115],
+                [141.1059, 22.7294],
+                [141.0788, 22.7212],
+                [141.0706, 22.6941],
+                [141.0885, 22.6723],
+                [141.1, 22.67]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "14/10 18:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10141800",
+            "Class": "Point_Polygon_Point_11",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [140.57, 22.27, 140.63, 22.33],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [140.6, 22.27],
+                [140.6249, 22.2833],
+                [140.6277, 22.3115],
+                [140.6059, 22.3294],
+                [140.5788, 22.3212],
+                [140.5706, 22.2941],
+                [140.5885, 22.2723],
+                [140.6, 22.27]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "15/10 00:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10150000",
+            "Class": "Point_Polygon_Point_12",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [139.67, 22.47, 139.73, 22.53],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [139.7, 22.47],
+                [139.7249, 22.4833],
+                [139.7277, 22.5115],
+                [139.7059, 22.5294],
+                [139.6788, 22.5212],
+                [139.6706, 22.4941],
+                [139.6885, 22.4723],
+                [139.7, 22.47]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "15/10 06:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10150600",
+            "Class": "Point_Polygon_Point_13",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [137.87, 23.07, 137.93, 23.13],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [137.9, 23.07],
+                [137.9249, 23.0833],
+                [137.9277, 23.1115],
+                [137.9059, 23.1294],
+                [137.8788, 23.1212],
+                [137.8706, 23.0941],
+                [137.8885, 23.0723],
+                [137.9, 23.07]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "15/10 18:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10151800",
+            "Class": "Point_Polygon_Point_14",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [136.07, 23.27, 136.13, 23.33],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [136.1, 23.27],
+                [136.1249, 23.2833],
+                [136.1277, 23.3115],
+                [136.1059, 23.3294],
+                [136.0788, 23.3212],
+                [136.0706, 23.2941],
+                [136.0885, 23.2723],
+                [136.1, 23.27]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001336,
+            "episodeid": 14,
+            "eventname": "TWENTYEIGHT-26",
+            "glide": "",
+            "name": "Tropical Cyclone TWENTYEIGHT-26",
+            "description": "Tropical Cyclone TWENTYEIGHT-26",
+            "htmldescription": "Green Tropical Cyclone TWENTYEIGHT-26 off-shore from: 12 Oct 2026  to: 15 Oct 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001336&episodeid=14",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001336&episodeid=14&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001336"
+            },
+            "alertlevel": "Green",
+            "alertscore": 1,
+            "episodealertlevel": "Green",
+            "episodealertscore": 1,
+            "istemporary": "false",
+            "iscurrent": "false",
+            "country": "",
+            "fromdate": "2026-10-12T00:00:00",
+            "todate": "2026-10-15T06:00:00",
+            "datemodified": "2026-10-16T10:16:29",
+            "iso3": "",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-10-15T06:00:00",
+            "polygonlabel": "16/10 06:00 UTC",
+            "countryonland": "",
+            "affectedcountries": [],
+            "severitydata": {
+              "severity": 55.5552,
+              "severitytext": "Tropical Depression (maximum wind speed of 56 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "10160600",
+            "Class": "Point_Polygon_Point_15",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Green/TC.png"
+          }
+        }
+      ]
+    },
+    "1001351": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "bbox": [87.3, 12, 87.3, 12],
+          "geometry": {
+            "type": "Point",
+            "coordinates": [87.3, 12]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygonlabel": "Centroid",
+            "Class": "Point_Centroid",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            }
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [82, 17.4, 82.7, 19.9],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [82.7, 17.4],
+              [82, 19.9]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TD",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_0",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [82.7, 16.2, 83.2, 17.4],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [83.2, 16.2],
+              [82.7, 17.4]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_1",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [83.2, 15.1, 84, 16.2],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [84, 15.1],
+              [83.2, 16.2]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_2",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [84, 14.1, 85, 15.1],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [85, 14.1],
+              [84, 15.1]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_3",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [85, 13.2, 86, 14.1],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [86, 13.2],
+              [85, 14.1]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_4",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [86.7, 11.3, 87.2, 11.6],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [86.7, 11.3],
+              [87.2, 11.6]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_5",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [86, 12.5, 86.8, 13.2],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [86.8, 12.5],
+              [86, 13.2]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_6",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [87.2, 11.6, 87.3, 12],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [87.2, 11.6],
+              [87.3, 12]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": false,
+            "Class": "Line_Line_7",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [86.8, 12, 87.3, 12.5],
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [87.3, 12],
+              [86.8, 12.5]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "TS",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "forecast": true,
+            "Class": "Line_Line_8",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [86.67, 11.27, 86.73, 11.33],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [86.7, 11.27],
+                [86.7249, 11.2833],
+                [86.7277, 11.3115],
+                [86.7059, 11.3294],
+                [86.6788, 11.3212],
+                [86.6706, 11.2941],
+                [86.6885, 11.2723],
+                [86.7, 11.27]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "16/11 18:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11161800",
+            "Class": "Point_Polygon_Point_0",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [87.17, 11.57, 87.23, 11.63],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [87.2, 11.57],
+                [87.2249, 11.5833],
+                [87.2277, 11.6115],
+                [87.2059, 11.6294],
+                [87.1788, 11.6212],
+                [87.1706, 11.5941],
+                [87.1885, 11.5723],
+                [87.2, 11.57]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "17/11 00:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11170000",
+            "Class": "Point_Polygon_Point_1",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [87.27, 11.97, 87.33, 12.03],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [87.3, 11.97],
+                [87.3249, 11.9833],
+                [87.3277, 12.0115],
+                [87.3059, 12.0294],
+                [87.2788, 12.0212],
+                [87.2706, 11.9941],
+                [87.2885, 11.9723],
+                [87.3, 11.97]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "17/11 06:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11170600",
+            "Class": "Point_Polygon_Point_2",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [86.77, 12.47, 86.83, 12.53],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [86.8, 12.47],
+                [86.8249, 12.4833],
+                [86.8277, 12.5115],
+                [86.8059, 12.5294],
+                [86.7788, 12.5212],
+                [86.7706, 12.4941],
+                [86.7885, 12.4723],
+                [86.8, 12.47]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "17/11 18:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11171800",
+            "Class": "Point_Polygon_Point_3",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [85.97, 13.17, 86.03, 13.23],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [86, 13.17],
+                [86.0249, 13.1833],
+                [86.0277, 13.2115],
+                [86.0059, 13.2294],
+                [85.9788, 13.2212],
+                [85.9706, 13.1941],
+                [85.9885, 13.1723],
+                [86, 13.17]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "18/11 06:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11180600",
+            "Class": "Point_Polygon_Point_4",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [84.97, 14.07, 85.03, 14.13],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [85, 14.07],
+                [85.0249, 14.0833],
+                [85.0277, 14.1115],
+                [85.0059, 14.1294],
+                [84.9788, 14.1212],
+                [84.9706, 14.0941],
+                [84.9885, 14.0723],
+                [85, 14.07]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "18/11 18:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11181800",
+            "Class": "Point_Polygon_Point_5",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [83.97, 15.07, 84.03, 15.13],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [84, 15.07],
+                [84.0249, 15.0833],
+                [84.0277, 15.1115],
+                [84.0059, 15.1294],
+                [83.9788, 15.1212],
+                [83.9706, 15.0941],
+                [83.9885, 15.0723],
+                [84, 15.07]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "19/11 06:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11190600",
+            "Class": "Point_Polygon_Point_6",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [83.17, 16.17, 83.23, 16.23],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [83.2, 16.17],
+                [83.2249, 16.1833],
+                [83.2277, 16.2115],
+                [83.2059, 16.2294],
+                [83.1788, 16.2212],
+                [83.1706, 16.1941],
+                [83.1885, 16.1723],
+                [83.2, 16.17]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "19/11 18:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11191800",
+            "Class": "Point_Polygon_Point_7",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [82.67, 17.37, 82.73, 17.43],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [82.7, 17.37],
+                [82.7249, 17.3833],
+                [82.7277, 17.4115],
+                [82.7059, 17.4294],
+                [82.6788, 17.4212],
+                [82.6706, 17.3941],
+                [82.6885, 17.3723],
+                [82.7, 17.37]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "20/11 06:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11200600",
+            "Class": "Point_Polygon_Point_8",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        },
+        {
+          "type": "Feature",
+          "bbox": [81.97, 19.87, 82.03, 19.93],
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [82, 19.87],
+                [82.0249, 19.8833],
+                [82.0277, 19.9115],
+                [82.0059, 19.9294],
+                [81.9788, 19.9212],
+                [81.9706, 19.8941],
+                [81.9885, 19.8723],
+                [82, 19.87]
+              ]
+            ]
+          },
+          "properties": {
+            "eventtype": "TC",
+            "eventid": 1001351,
+            "episodeid": 3,
+            "eventname": "AKVAN-26",
+            "glide": "",
+            "name": "Tropical Cyclone AKVAN-26",
+            "description": "Tropical Cyclone AKVAN-26",
+            "htmldescription": "Orange Tropical Cyclone AKVAN-26 in India from: 16 Nov 2026  to: 17 Nov 2026 .",
+            "icon": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconoverall": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "url": {
+              "geometry": "https://www.gdacs.org/gdacsapi/api/polygons/getgeometry?eventtype=TC&eventid=1001351&episodeid=3",
+              "report": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=3&eventtype=TC",
+              "details": "https://www.gdacs.org/gdacsapi/api/events/geteventdata?eventtype=TC&eventid=1001351"
+            },
+            "alertlevel": "Orange",
+            "alertscore": 2,
+            "episodealertlevel": "Orange",
+            "episodealertscore": 2,
+            "istemporary": "false",
+            "iscurrent": "true",
+            "country": "India",
+            "fromdate": "2026-11-16T18:00:00",
+            "todate": "2026-11-17T06:00:00",
+            "datemodified": "2026-11-17T08:50:11",
+            "iso3": "IND",
+            "source": "JTWC",
+            "sourceid": "",
+            "polygondate": "2026-11-17T06:00:00",
+            "polygonlabel": "21/11 06:00 UTC",
+            "countryonland": "India",
+            "affectedcountries": [
+              {
+                "iso2": "IN",
+                "iso3": "IND",
+                "countryname": "India"
+              }
+            ],
+            "severitydata": {
+              "severity": 92.592,
+              "severitytext": "Tropical Storm (maximum wind speed of 93 km/h)",
+              "severityunit": "km/h"
+            },
+            "featuretype": "PointRadii",
+            "key": "11210600",
+            "Class": "Point_Polygon_Point_9",
+            "iconeventlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png",
+            "iconitemlink": "https://www.gdacs.org/images/gdacs_icons/maps/Orange/TC.png"
+          }
+        }
+      ]
+    }
+  }
+}

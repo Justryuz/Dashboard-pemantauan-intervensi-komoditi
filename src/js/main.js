@@ -63,4 +63,5 @@ window.DASHBOARD_TEST = {
   bukaPopupAmaran,
   gmapsUrl,
   amaranDGMuat: initAmaranDG,
+  cuaca: window.FamaCuaca ? FamaCuaca.ujian : null,
 };

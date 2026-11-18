@@ -1,0 +1,358 @@
+/* ===== Lapisan cuaca (menu, legenda, garis masa) =====
+   Dimuat selepas base.css. Warna UI guna pemboleh ubah tema sedia ada; hanya ramp data ada warna tetap (skala.js). */
+
+/* Bingkai peta: ketinggian tetap supaya menu, legenda dan garis masa muat */
+.map-svg-frame.peta-berlapis {
+  height: 540px;
+}
+@media (max-width: 800px) {
+  .map-svg-frame.peta-berlapis {
+    height: 500px;
+  }
+}
+@media (max-width: 640px) {
+  .map-svg-frame.peta-berlapis {
+    height: 480px;
+  }
+}
+.map-svg-frame.peta-berlapis .peta-kawalan {
+  max-height: calc(100% - 20px);
+}
+
+/* Menu lapisan (dalam #petaMenu) */
+.cuaca-menu {
+  display: flex;
+  flex-direction: column;
+  width: 215px;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--b0b1c37);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+.cuaca-menu-tajuk {
+  padding: 5px 10px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tdceeff);
+  opacity: 0.7;
+}
+.cuaca-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--line2);
+  background: transparent;
+  color: var(--tdceeff);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.cuaca-btn svg {
+  flex: none;
+}
+.cuaca-btn .cuaca-label {
+  flex: 1;
+}
+.cuaca-btn:hover:not(:disabled) {
+  filter: brightness(1.25);
+}
+.cuaca-btn[aria-pressed='true'] {
+  background: var(--cyan);
+  color: #04202e;
+}
+.cuaca-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cuaca-btn:focus-visible,
+.cuaca-main:focus-visible,
+.cuaca-mod-btn:focus-visible,
+.cuaca-w-btn:focus-visible,
+.cuaca-slider:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+.cuaca-tambah {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  line-height: 13px;
+  text-align: center;
+  font-size: 12px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+/* Papan bawah: legenda di atas, garis masa di bawah (disusun supaya tidak bertindih) */
+.cuaca-papan {
+  position: absolute;
+  left: 10px;
+  right: 275px;
+  bottom: 10px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-height: 45%;
+  pointer-events: none;
+}
+.cuaca-papan > * {
+  pointer-events: auto;
+}
+.cuaca-legenda,
+.cuaca-bawah {
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--b0b1c37);
+  color: var(--tdceeff);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  font-size: 11px;
+}
+.cuaca-legenda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 340px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 7px 10px;
+}
+.cuaca-legenda[hidden],
+.cuaca-bawah[hidden],
+.cuaca-mod[hidden] {
+  display: none;
+}
+.cuaca-leg-baris + .cuaca-leg-baris {
+  border-top: 1px solid var(--line2);
+  padding-top: 6px;
+}
+.cuaca-leg-tajuk {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.cuaca-leg-tajuk b {
+  font-size: 12px;
+}
+.cuaca-leg-unit {
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.cuaca-legenda-bar {
+  height: 9px;
+  margin: 4px 0 2px;
+  border-radius: 4px;
+  border: 1px solid var(--line2);
+}
+.cuaca-leg-julat {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.cuaca-leg-kelas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+}
+.cuaca-leg-kelas-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cuaca-leg-kelas-item i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+.cuaca-leg-nota,
+.cuaca-leg-mesej {
+  margin-top: 3px;
+  opacity: 0.9;
+}
+.cuaca-leg-global {
+  font-weight: 700;
+}
+.cuaca-leg-atr {
+  margin-top: 3px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+.cuaca-w {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+}
+.cuaca-w-btn,
+.cuaca-mod-btn {
+  appearance: none;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+.cuaca-w-btn[aria-pressed='true'],
+.cuaca-mod-btn[aria-pressed='true'] {
+  background: var(--cyan);
+  color: #04202e;
+}
+.cuaca-w-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Garis masa */
+.cuaca-bawah {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  padding: 6px 8px;
+}
+.cuaca-main {
+  appearance: none;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line2);
+  border-radius: 50%;
+  background: var(--cyan);
+  color: #04202e;
+  cursor: pointer;
+}
+.cuaca-slider {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--cyan);
+}
+.cuaca-masa {
+  flex: none;
+  min-width: 112px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cuaca-mod {
+  display: flex;
+  gap: 4px;
+}
+
+/* Penanda petir dan pop-up */
+.cuaca-petir {
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
+}
+.cuaca-popup .maplibregl-popup-content {
+  font-size: 12px;
+  padding: 8px 10px;
+}
+.cuaca-popup-isi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+}
+.cuaca-baris {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cuaca-popup .gmaps-link {
+  color: #0b64b0;
+}
+
+@media (max-width: 640px) {
+  .cuaca-menu {
+    width: 100%;
+    max-height: 60vh;
+  }
+  .cuaca-papan {
+    right: 10px;
+    max-height: 62%;
+  }
+  .cuaca-legenda {
+    max-width: none;
+    align-self: stretch;
+    gap: 4px;
+    padding: 4px 8px;
+  }
+  .cuaca-leg-baris + .cuaca-leg-baris {
+    padding-top: 3px;
+  }
+  .cuaca-leg-baris {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 8px;
+  }
+  .cuaca-leg-tajuk {
+    flex: none;
+  }
+  .cuaca-legenda-bar {
+    flex: 1;
+    min-width: 70px;
+    margin: 0;
+  }
+  .cuaca-leg-julat {
+    flex: none;
+    gap: 6px;
+  }
+  .cuaca-leg-nota {
+    display: none;
+  }
+  .cuaca-leg-atr,
+  .cuaca-leg-mesej,
+  .cuaca-w,
+  .cuaca-leg-kelas {
+    flex-basis: 100%;
+    margin-top: 0;
+  }
+  .cuaca-bawah {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    grid-template-areas: 'main slider slider' 'masa masa mod';
+    align-items: center;
+    gap: 3px 8px;
+    padding: 4px 8px;
+  }
+  .cuaca-main {
+    grid-area: main;
+  }
+  .cuaca-slider {
+    grid-area: slider;
+  }
+  .cuaca-masa {
+    grid-area: masa;
+    min-width: 0;
+    font-size: 10.5px;
+  }
+  .cuaca-mod {
+    grid-area: mod;
+  }
+  .cuaca-mod-btn {
+    padding: 1px 6px;
+  }
+}

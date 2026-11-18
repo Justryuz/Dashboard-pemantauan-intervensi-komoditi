@@ -40,6 +40,10 @@ const banjir = require('./services/banjir.js');
 const kualitiUdara = require('./services/kualiti-udara.js');
 const muse = require('./services/muse.js');
 const amaranDG = require('./services/amaran-datagov.js');
+const gridCuaca = require('./services/grid-cuaca.js');
+const radar = require('./services/radar.js');
+const satelit = require('./services/satelit.js');
+const siklon = require('./services/siklon.js');
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP + "; frame-ancestors 'none'",
@@ -176,6 +180,81 @@ const server = http.createServer((req, res) => {
     );
   }
 
+  if (pathname === '/api/grid/meta' || pathname === '/api/grid' || pathname === '/api/grid/titik') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const balas = (status, obj) =>
+      send(res, status, req.method === 'HEAD' ? '' : JSON.stringify(obj), JSON_HDR);
+    const g = gridCuaca.bacaGrid();
+    if (!g)
+      return balas(503, {
+        ralat: 'Data grid cuaca belum tersedia',
+        sedangDikemaskini: gridCuaca.sedangAmbil(),
+      });
+    if (pathname === '/api/grid/meta') {
+      const m = gridCuaca.ringkasMeta(g);
+      return balas(200, m);
+    }
+    const q = new URL(req.url, 'http://localhost').searchParams;
+    if (pathname === '/api/grid') {
+      const nama = gridCuaca.parsePembolehubah(q.get('var'));
+      if (!nama) return balas(400, { ralat: 'Parameter var tidak sah' });
+      const jam = gridCuaca.parseJam(q.get('jam'), g.times.length);
+      if (Number.isNaN(jam)) return balas(400, { ralat: 'Parameter jam tidak sah' });
+      if (!g.vars[nama]) return balas(404, { ralat: 'Data ' + nama + ' tidak tersedia' });
+      return balas(200, gridCuaca.ambilVar(g, nama, jam));
+    }
+    const k = gridCuaca.parseKoordinat(q.get('lat'), q.get('lon'), g.bbox);
+    if (!k) return balas(400, { ralat: 'Koordinat tidak sah atau di luar liputan data cuaca' });
+    return balas(200, gridCuaca.nilaiTitik(g, k.lat, k.lon));
+  }
+
+  if (pathname === '/api/radar' || pathname === '/api/satelit') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const [servis, fn, label] =
+      pathname === '/api/radar'
+        ? [radar, 'ambilRadar', 'radar']
+        : [satelit, 'ambilSatelit', 'satelit'];
+    return servis[fn]().then(
+      (data) => send(res, 200, req.method === 'HEAD' ? '' : JSON.stringify(data), JSON_HDR),
+      () =>
+        send(
+          res,
+          502,
+          JSON.stringify({ ralat: `Data ${label} tidak dapat diambil sekarang` }),
+          JSON_HDR,
+        ),
+    );
+  }
+
+  if (pathname === '/api/siklon') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const cache = siklon.bacaCache();
+    // Lapisan pilihan: tanpa cache pulangkan 200 kosong (sama seperti /api/met-malaysia).
+    if (!cache)
+      return send(
+        res,
+        200,
+        JSON.stringify({
+          versi: 1,
+          fetchedAt: null,
+          atribusi: siklon.ATRIBUSI,
+          sumber: { status: 'belum_tersedia', mesej: '' },
+          sedangDikemaskini: siklon.sedangAmbil(),
+          siklon: [],
+        }),
+        JSON_HDR,
+      );
+    const umur = siklon.umurJam(cache);
+    return send(
+      res,
+      200,
+      req.method === 'HEAD'
+        ? ''
+        : JSON.stringify({ ...cache, umurJam: Number.isFinite(umur) ? umur : null }),
+      JSON_HDR,
+    );
+  }
+
   const API_CACHE = {
     '/api/cuaca': [cuaca, 'cuaca'],
     '/api/banjir': [banjir, 'banjir'],
@@ -225,6 +304,8 @@ if (require.main === module) {
     kualitiUdara.mulaPenjadual();
     muse.mulaPenjadual();
     amaranDG.mulaPenjadual();
+    gridCuaca.mulaPenjadual();
+    siklon.mulaPenjadual();
   });
 }
 module.exports = server;
