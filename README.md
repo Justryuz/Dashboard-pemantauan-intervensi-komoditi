@@ -199,6 +199,7 @@ Menu **Lapisan cuaca** pada peta utama (dalam butang `Lapisan` pada mobil): Rada
 - Rekod tindakan yang rosak dalam `localStorage` ditapis supaya tidak memecahkan modal.
 - Tag `</div>` penutup `.wrap` yang hilang ditambah (DOM yang terhasil kekal sama).
 - Ralat 404 `/favicon.ico` dihentikan.
+- AI Muse pada larian pertama: `/api/muse` dulu membalas 503 semasa cache sedang dibina dari Google Drive, dan panel kekal ralat. Kini pelayan membalas `202` + `Retry-After: 10`. Panel memaparkan "sedang diambil" dan cuba semula secara automatik (maksimum ~5 minit). 503 hanya dibalas jika tiada cache dan tiada pengambilan berjalan. Diuji dengan `tests/frontend/muse-first-run.js`.
 
 **Keselamatan**
 

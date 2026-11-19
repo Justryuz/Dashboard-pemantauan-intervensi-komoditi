@@ -2666,6 +2666,13 @@
         headers: { Accept: 'application/json' },
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (r.status === 202) {
+        // Pelayan masih membina cache (larian pertama). Tunggu dan cuba semula.
+        const e = new Error('Data AI Muse sedang dikemas kini');
+        e.kind = 'pending';
+        e.retryMs = Math.min(60, Math.max(3, Number(r.headers.get('Retry-After')) || 10)) * 1000;
+        throw e;
+      }
       const d = await r.json();
       if (!d || !Array.isArray(d.rekod) || typeof d.minggu !== 'string')
         throw new Error('Respons AI Muse tidak sah');
@@ -2673,9 +2680,10 @@
       return d;
     },
   };
-  async function ivLoadMuse(minggu) {
+  const MUSE_MAX_PENDING = 30; // ~5 minit pada 10 s setiap cubaan
+  async function ivLoadMuse(minggu, cubaan = 0) {
     const seq = ++_museSeq;
-    ivState.muse.status = 'loading';
+    ivState.muse.status = cubaan ? 'pending' : 'loading';
     ivState.muse.page = 0;
     museMdClose(false);
     ivRender(['muse']);
@@ -2687,6 +2695,14 @@
       ivState.muse.status = 'ready';
     } catch (err) {
       if (seq !== _museSeq) return;
+      if (err && err.kind === 'pending' && cubaan < MUSE_MAX_PENDING) {
+        ivState.muse.status = 'pending';
+        ivRender(['muse']);
+        setTimeout(() => {
+          if (seq === _museSeq) ivLoadMuse(minggu, cubaan + 1);
+        }, err.retryMs);
+        return;
+      }
       console.warn('Data AI Muse tidak dapat dimuatkan', err && err.message);
       ivState.muse.status = err && err.kind === 'file' ? 'file' : 'error';
     }
@@ -2820,6 +2836,11 @@
     if (ms.status !== 'ready') museMdClose(false);
     if (ms.status === 'loading') {
       body.innerHTML = '<div class="iv-empty" aria-busy="true">Memuatkan data AI Muse…</div>';
+      return;
+    }
+    if (ms.status === 'pending') {
+      body.innerHTML =
+        '<div class="iv-empty" aria-busy="true">Data AI Muse sedang diambil dari Google Drive buat kali pertama. Halaman akan dikemas kini secara automatik…</div>';
       return;
     }
     if (ms.status === 'file') {

@@ -128,14 +128,18 @@ const server = http.createServer((req, res) => {
         JSON_HDR,
       );
     const cache = muse.bacaCache();
+    // Larian pertama: cache sedang dibina dari Google Drive. 202 + Retry-After supaya klien
+    // menunggu tanpa ralat konsol. 503 hanya jika tiada cache dan tiada pengambilan berjalan.
+    if (!cache && muse.sedangAmbil())
+      return send(res, 202, JSON.stringify({ status: 'sedang_dikemaskini', cubaSemulaSaat: 10 }), {
+        ...JSON_HDR,
+        'Retry-After': '10',
+      });
     if (!cache)
       return send(
         res,
         503,
-        JSON.stringify({
-          ralat: 'Data AI Muse belum tersedia',
-          sedangDikemaskini: muse.sedangAmbil(),
-        }),
+        JSON.stringify({ ralat: 'Data AI Muse belum tersedia', sedangDikemaskini: false }),
         JSON_HDR,
       );
     return send(
