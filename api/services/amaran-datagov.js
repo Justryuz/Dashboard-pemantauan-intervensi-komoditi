@@ -6,7 +6,8 @@ const util = require('./util-rangkaian.js');
 const { negeriDalamTeks } = require('./cuaca.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'amaran-datagov.json');
+const DATA_DIR = require('./laluan-data.js');
+const CACHE_LALAI = path.join(DATA_DIR, 'amaran-datagov.json');
 const URL_AMARAN = 'https://api.data.gov.my/weather/warning';
 const ATRIBUSI = 'MET Malaysia (data.gov.my)';
 const TOLERANSI_PENDUA_MS = 60 * 6e4;

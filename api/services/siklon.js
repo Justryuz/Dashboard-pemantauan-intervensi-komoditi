@@ -4,7 +4,8 @@ const path = require('node:path');
 const util = require('./util-rangkaian.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'siklon.json');
+const DATA_DIR = require('./laluan-data.js');
+const CACHE_LALAI = path.join(DATA_DIR, 'siklon.json');
 const URL_SENARAI = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH';
 const ATRIBUSI = 'GDACS';
 const BBOX = { lonMin: 90, lonMax: 140, latMin: -15, latMax: 25 };

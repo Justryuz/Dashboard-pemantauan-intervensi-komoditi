@@ -8,8 +8,9 @@ const util = require('./util-rangkaian.js');
 const { ekstrakLokasi } = require('./muse-lokasi.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'muse-curated.json');
-const DIR_LALAI = path.join(ROOT, 'data', 'processed', 'muse');
+const DATA_DIR = require('./laluan-data.js');
+const CACHE_LALAI = path.join(DATA_DIR, 'muse-curated.json');
+const DIR_LALAI = path.join(DATA_DIR, 'muse');
 const FOLDER_LALAI = '1wXNm0nG7dUOvNWkepN9ev3BcgwFZEn8M';
 const SUMBER = 'AI Muse (db-curated, Google Drive)';
 const ATRIBUSI = 'Sumber: ' + SUMBER;

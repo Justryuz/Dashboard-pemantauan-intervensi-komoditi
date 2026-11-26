@@ -9,6 +9,7 @@ const komoditiDiliputi = require('./komoditi-diliputi.js');
 const pemetaanPo = require('./pemetaan-po.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
+const DATA_DIR = require('./laluan-data.js');
 const HALAMAN = 1000; // had max-rows PostgREST
 const JADUAL = [
   ['harga_ladang_mingguan', 'LADANG'],
@@ -23,7 +24,7 @@ const REKONSILIASI_HARI = 14; // 3 minggu ISO terakhir (Isnin minggu ke-3 dikira
 const TAHUN_ASAS = [2022, 2023, 2024, 2025];
 
 function laluan(env, nama) {
-  return process.env[env] || path.join(ROOT, 'data', 'processed', nama);
+  return process.env[env] || path.join(DATA_DIR, nama);
 }
 const laluanRingkas = () => laluan('HARGA_RINGKAS_FILE', 'harga-ringkas.json');
 const laluanAmbang = () => laluan('HARGA_AMBANG_FILE', 'harga-ambang.json');

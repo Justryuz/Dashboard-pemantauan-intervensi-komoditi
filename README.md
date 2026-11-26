@@ -164,6 +164,11 @@ Komoditi dan varieti yang diliputi Pemantauan dan Intervensi ditetapkan di `conf
 - Setiap status membawa `sebab` (cth. `z = -2.3σ (asas 2025)`, `di bawah lantai dasar RM 4.90`) dan `asas` (tahun).
 - Pengeluar tanpa data ladang: status kelabu "Tiada harga ladang" dengan `ganti` (harga borong berlabel). Alarm tidak dijana daripada harga ganti.
 
+**Hos di Vercel.** Vercel ialah serverless: tiada penjadual dan sistem fail hanya boleh dibaca. Oleh itu:
+- `api/index.js` ialah satu fungsi untuk semua `/api/*` (`vercel.json` rewrite); ia memanggil pengendali `api/server.js`. Cache dibaca daripada `DATA_DIR` (`api/services/laluan-data.js`; lalai `data/processed`).
+- `.github/workflows/vercel-deploy.yml` (setiap jam, setiap push ke `main`, atau manual) menjalankan skrip `*:ambil`, menyalin cache ke `api/_data` dan menjalankan `vercel deploy --prod`. Deployment automatik Git dimatikan (`git.deploymentEnabled: false`) supaya deployment sentiasa ada cache.
+- GitHub Secrets diperlukan: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `DB_HARGA_URL`, `DB_HARGA_PUBLISHABLE_KEY`, `PBI_*` (5) dan `MET_API_TOKEN` (pilihan). `.vercelignore` mengecualikan rahsia, data mentah, ujian dan dokumen.
+- Had: data dikemas kini setiap jam (bukan 30 minit); sejarah amaran banjir JPS bermula semula setiap larian.
 **Harga Cadangan PSI (tab Intervensi > Simulasi Margin & Harga AI).** Formula daripada `Prompt_Dashboard_Harga_Cadangan_PSI.md` (bulanan, setiap PO utama dan varieti; BELIAN = ladang, JUALAN = borong, tiada campur aras). Enjin tulen `api/services/psi-kira.js` (diuji dengan contoh Seksyen 9: RM3.42, julat RM3.08–RM3.76; `tests/api/psi-unit.js`). Harga RM dibundarkan ke sen pada setiap langkah seperti contoh itu. Ambang: margin minimum 5%, data lapuk 35 hari (`TETAPAN`).
 - Sumber: AMI = DB Harga (Supabase, purata bulanan PO); FIS = Power BI FIS 2.1 jadual `Master` (Sumber FIS, Peringkat LADANG/BORONG, "Tiada Maklumat" dikecualikan, lajur `pusat operasi`); SISDA = Supabase `v3_harga_forecast_2026` aras NEGERI (negeri PO).
 - Padanan varieti FIS kepada varieti DB Harga: `config/psi-padanan-fis.json` (cadangan awal, perlu disahkan; telur PAPAN 30 biji ditukar ke per biji).

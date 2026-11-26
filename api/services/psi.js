@@ -7,8 +7,8 @@ const kira = require('./harga-db-kira.js');
 const P = require('./psi-kira.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const laluan = () =>
-  process.env.PSI_FILE || path.join(ROOT, 'data', 'processed', 'psi-bulanan.json');
+const DATA_DIR = require('./laluan-data.js');
+const laluan = () => process.env.PSI_FILE || path.join(DATA_DIR, 'psi-bulanan.json');
 let memo = null;
 function bacaCache() {
   const f = laluan();

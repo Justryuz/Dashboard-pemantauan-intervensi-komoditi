@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
+const DATA_DIR = require('./laluan-data.js');
 try {
   process.loadEnvFile(path.join(ROOT, '.env'));
 } catch {
@@ -12,7 +13,7 @@ try {
 }
 
 const TZ = 'Asia/Kuala_Lumpur';
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'cuaca-terkini.json');
+const CACHE_LALAI = path.join(DATA_DIR, 'cuaca-terkini.json');
 const MET_BASE_LALAI = 'https://api.met.gov.my/v2';
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const NOTA_RISIKO = 'Risiko cuaca ialah anggaran sistem, bukan amaran rasmi.';
