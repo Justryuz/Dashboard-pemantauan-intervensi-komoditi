@@ -21,7 +21,9 @@ if (!process.env.DATA_DIR) {
   }
 }
 
-// api/server.js mengeksport http.Server; pengendali permintaannya dipanggil terus. Penjadual tidak dimulakan
+// lib/server.js mengeksport http.Server; pengendali permintaannya dipanggil terus. Penjadual tidak dimulakan
 // (hanya bila server.js dijalankan dengan npm start).
-const server = require('./server.js');
+// Kod pelayan sengaja di luar api/: Vercel menjadikan setiap fail .js dalam api/ satu fungsi, dan pelan Hobby
+// hanya membenarkan 12. Dengan susunan ini hanya ada satu fungsi (fail ini).
+const server = require('../lib/server.js');
 module.exports = (req, res) => server.emit('request', req, res);

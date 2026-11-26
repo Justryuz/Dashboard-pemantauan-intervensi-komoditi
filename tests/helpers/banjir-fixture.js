@@ -4,9 +4,9 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const banjir = require('../../api/services/banjir.js');
-const ipu = require('../../api/services/kualiti-udara.js');
-const { muatPO } = require('../../api/services/cuaca.js');
+const banjir = require('../../lib/services/banjir.js');
+const ipu = require('../../lib/services/kualiti-udara.js');
+const { muatPO } = require('../../lib/services/cuaca.js');
 const { buatFixture, pasangCache } = require('./cuaca-fixture.js');
 const { buatFixtureMuse, pasangCacheMuse } = require('./muse-fixture.js');
 

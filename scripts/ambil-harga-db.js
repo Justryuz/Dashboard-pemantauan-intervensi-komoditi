@@ -1,13 +1,13 @@
 'use strict';
 // Ambil harga sebenar (DB Harga, Supabase) secara tokokan dan tulis cache. Jalankan: npm run harga:ambil
-// Memuat .env sendiri kerana skrip ini tidak melalui api/server.js. Kunci dan URL tidak pernah dicetak.
+// Memuat .env sendiri kerana skrip ini tidak melalui lib/server.js. Kunci dan URL tidak pernah dicetak.
 const path = require('node:path');
 try {
   process.loadEnvFile(path.join(__dirname, '..', '.env'));
 } catch {
   // tiada .env: guna pemboleh ubah persekitaran sedia ada
 }
-const hargaDb = require('../api/services/harga-db.js');
+const hargaDb = require('../lib/services/harga-db.js');
 
 const nombor = (n) => Number(n).toLocaleString('en-US');
 hargaDb

@@ -10,8 +10,8 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'muse-first-'));
 process.env.MUSE_CACHE_FILE = path.join(tmp, 'muse-curated.json');
 process.env.MUSE_DIR = path.join(tmp, 'muse');
 
-const server = require('../../api/server.js');
-const muse = require('../../api/services/muse.js');
+const server = require('../../lib/server.js');
+const muse = require('../../lib/services/muse.js');
 const puppeteer = require(
   path.resolve(__dirname, '../../.agents/tasks/bt/node_modules/puppeteer-core'),
 );

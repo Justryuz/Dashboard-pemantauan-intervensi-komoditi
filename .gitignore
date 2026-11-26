@@ -29,3 +29,6 @@ Sampel_Data_Dashboard_FAMA.xlsx
 docs/pembentangan/video-dashboard/*.mp4
 snapshot-out/
 .vercel
+
+# Cache deploy Vercel (dibina oleh GitHub Actions, jangan commit)
+api/_data/

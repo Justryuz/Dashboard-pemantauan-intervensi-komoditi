@@ -4,7 +4,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 60,
-      "includeFiles": "{api/_data/**,config/**,src/data/**}"
+      "includeFiles": "{api/_data/**,lib/**,config/**,src/data/**}"
     }
   },
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index" }],

@@ -4,8 +4,8 @@
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const radar = require('../../api/services/radar.js');
-const sat = require('../../api/services/satelit.js');
+const radar = require('../../lib/services/radar.js');
+const sat = require('../../lib/services/satelit.js');
 const FX = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'rainviewer-maps.json'), 'utf8'),
 );
