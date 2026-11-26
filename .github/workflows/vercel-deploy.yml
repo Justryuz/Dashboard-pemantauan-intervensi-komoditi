@@ -86,6 +86,19 @@ jobs:
           rm -f api/_data/.gitkeep
           echo "Fail cache:"; ls -la api/_data | head -40
 
+      # Pengawal: runner bermula tanpa cache lama. Jika data wajib gagal diambil (secret tiada, API tamat
+      # masa), JANGAN deploy. Produksi kekal pada deployment terakhir yang baik dan bukan diganti versi 503.
+      - name: Semak cache wajib sebelum deploy
+        run: |
+          kurang=0
+          for f in harga-ringkas.json harga-meta.json cuaca-terkini.json; do
+            if [ -s "api/_data/$f" ]; then echo "ada: $f"; else echo "::error::Cache wajib tiada: $f"; kurang=1; fi
+          done
+          if [ "$kurang" = 1 ]; then
+            echo "::error::Deploy dibatalkan supaya laman kekal pada versi terakhir yang baik. Semak log langkah ambil data di atas."
+            exit 1
+          fi
+
       - name: Deploy ke Vercel (produksi)
         run: |
           npx --yes vercel@latest pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
