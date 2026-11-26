@@ -2670,8 +2670,8 @@
     box.dataset.sig = sig;
     box.innerHTML = `<div class="iv-ctl">
   ${pilihPO}
-  ${IV_MOB_PAPAR.keperluan && kg ? `<label>Keperluan/lebihan (MT)<input class="iv-in" type="number" id="ivNeed" data-iv-in="need" min="0.1" max="500" step="0.1" value="${r.need}"><span class="iv-err" id="ivNeedErr"></span><small id="ivNeedHint"></small></label>` : ''}
-  <label>Harga rujukan pasaran (${E(unit)})<input class="iv-in" type="number" id="ivRef" data-iv-in="ref" min="0.01" max="999" step="0.01" value="${r.ref}"><span class="iv-err" id="ivRefErr"></span><small id="ivRefHint"></small></label>
+  ${IV_MOB_PAPAR.keperluan && kg ? `<label>Keperluan/lebihan (MT)<input class="iv-in" type="number" id="ivNeed" data-iv-in="need" min="0.1" max="500" step="0.1" value="${fin(r.need) ? r.need : ''}"><span class="iv-err" id="ivNeedErr"></span><small id="ivNeedHint"></small></label>` : ''}
+  <label>Harga rujukan pasaran (${E(unit)})<input class="iv-in" type="number" id="ivRef" data-iv-in="ref" min="0.01" max="999" step="0.01" value="${fin(r.ref) ? r.ref : ''}"><span class="iv-err" id="ivRefErr"></span><small id="ivRefHint"></small></label>
   ${
     IV_MOB_PAPAR.wajaran
       ? `<label>Wajaran harga <b id="ivWPL">${s.mob.wPrice}%</b><input type="range" id="ivWP" data-iv-in="wp" min="0" max="100" step="5" value="${s.mob.wPrice}" aria-label="Wajaran harga"></label>
