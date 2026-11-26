@@ -1,21 +1,30 @@
 # Fail yang TIDAK dimuat naik ke Vercel (rahsia, data mentah, fail kerja, ujian, dokumen besar).
 # Cache data dimuat naik melalui api/_data (dibina oleh GitHub Actions), bukan data/processed.
+#
+# PENTING: folder diikat ke root dengan "/" di depan. Tanpa "/", corak seperti "data/" juga
+# mengecualikan src/data/ (dashboard-data.js, pemetaan-po-*.js, geo/) dan dashboard rosak di Vercel.
+
+# Rahsia (di mana-mana tahap)
 .env
 .env.*
 !.env.example
-.agents/
-.git/
-.github/
-node_modules/
-data/
-tests/
-docs/
-snapshot-out/
-scripts/
+
+# Folder kerja / alat (root sahaja)
+/.agents/
+/.git/
+/.github/
+/node_modules/
+/data/
+/tests/
+/docs/
+/snapshot-out/
+/scripts/
+
+# Fail besar / dokumen
 *.xlsx
 ~$*
 *.mp4
 *.md
 !README.md
-malaysia_district.geojson
-SISDA infographic with added green scenario.png
+/malaysia_district.geojson
+/SISDA infographic with added green scenario.png
