@@ -3,19 +3,23 @@
   "private": true,
   "version": "1.0.0",
   "engines": {
-    "node": ">=20.12"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node api/server.js",
+    "dev": "node --watch-path=api --watch-path=config --watch-path=scripts --watch-preserve-output api/server.js",
     "cuaca:ambil": "node scripts/ambil-cuaca.js",
     "banjir:ambil": "node scripts/ambil-banjir.js",
     "ipu:ambil": "node scripts/ambil-ipu.js",
     "muse:ambil": "node scripts/ambil-muse.js",
-    "test": "node --no-warnings tests/api/interp-unit.js && node --no-warnings tests/api/grid-unit.js && node --no-warnings tests/api/grid-api.js && node --no-warnings tests/api/radar-satelit-unit.js && node --no-warnings tests/api/siklon-unit.js && node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js && node --no-warnings tests/api/cuaca-api.js && node --no-warnings tests/api/banjir-api.js && node --no-warnings tests/api/ipu-api.js && node --no-warnings tests/api/muse-api.js && node --no-warnings tests/api/amaran-datagov-api.js && node --no-warnings tests/frontend/cuaca.js && node --no-warnings tests/frontend/banjir.js && node --no-warnings tests/frontend/ipu.js && node --no-warnings tests/frontend/muse.js && node --no-warnings tests/frontend/filter-bar.js && node --no-warnings tests/frontend/ams.js && node --no-warnings tests/frontend/peta.js && node --no-warnings tests/frontend/lapisan-cuaca.js && node --no-warnings tests/frontend/startup-csp.js",
+    "harga:ambil": "node scripts/ambil-harga-db.js",
+    "po:ambil": "node scripts/ambil-pemetaan-po-pbi.js",
+    "test": "node --no-warnings tests/api/interp-unit.js && node --no-warnings tests/api/grid-unit.js && node --no-warnings tests/api/grid-api.js && node --no-warnings tests/api/radar-satelit-unit.js && node --no-warnings tests/api/siklon-unit.js && node --no-warnings tests/api/harga-unit.js && node --no-warnings tests/api/pemetaan-po-unit.js && node --no-warnings tests/api/harga-db-unit.js && node --no-warnings tests/api/psi-unit.js && node --no-warnings tests/api/harga-db-api.js && node --no-warnings tests/frontend/harga-pemantauan.js && node --no-warnings tests/frontend/harga-intervensi.js && node --no-warnings tests/frontend/komoditi-diliputi.js && node --no-warnings tests/frontend/smoke.js && node --no-warnings tests/frontend/click-all.js && node --no-warnings tests/api/cuaca-api.js && node --no-warnings tests/api/banjir-api.js && node --no-warnings tests/api/ipu-api.js && node --no-warnings tests/api/muse-api.js && node --no-warnings tests/api/amaran-datagov-api.js && node --no-warnings tests/frontend/cuaca.js && node --no-warnings tests/frontend/banjir.js && node --no-warnings tests/frontend/ipu.js && node --no-warnings tests/frontend/muse.js && node --no-warnings tests/frontend/ews-ai.js && node --no-warnings tests/frontend/filter-bar.js && node --no-warnings tests/frontend/penapis-pemantauan.js && node --no-warnings tests/frontend/ams.js && node --no-warnings tests/frontend/peta.js && node --no-warnings tests/frontend/amaran-peta.js && node --no-warnings tests/frontend/lapisan-cuaca.js && node --no-warnings tests/frontend/startup-csp.js && node --no-warnings tests/frontend/harga-seragam.js && node --no-warnings tests/frontend/daerah.js && node --no-warnings tests/frontend/susun-harga.js && node --no-warnings tests/frontend/sentimen-peta.js && node --no-warnings tests/frontend/popup-zindex.js && node --no-warnings tests/frontend/label-po.js && node --no-warnings tests/frontend/po-tambahan.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "grid:ambil": "node scripts/ambil-grid.js",
-    "siklon:ambil": "node scripts/ambil-siklon.js"
+    "siklon:ambil": "node scripts/ambil-siklon.js",
+    "psi:ambil": "node scripts/ambil-psi.js"
   },
   "devDependencies": {
     "prettier": "^3.10.1"

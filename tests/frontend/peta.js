@@ -1,5 +1,5 @@
 'use strict';
-// Peta utama: tukar peta asas (lapisan tindihan kekal), pilihan diingati selepas muat semula, lapisan Amaran Cuaca
+// Peta utama: tukar peta asas (lapisan tindihan kekal), pilihan diingati selepas muat semula, lapisan Amaran Rasmi
 // (/api/met-malaysia distub), pautan Google Maps, kad Amaran Rasmi (sumber data.gov.my) dan CSP.
 // Iframe radar luar telah dibuang (digantikan lapisan cuaca natif; lihat tests/frontend/lapisan-cuaca.js).
 // Tile distub (PNG 1x1). Tangkapan skrin: PETA_SHOTS=<folder> PETA_ASLI=1 (tile sebenar).
@@ -260,14 +260,17 @@ function fixtureDG() {
     ok('(iii) nilai tidak sah -> lalai', (await info(page)).asas === 'lalai');
     await tukar(page, 'lalai');
 
-    // (iv) lapisan Amaran Cuaca
+    // (iv) lapisan Amaran Rasmi (satu sumber dengan panel Rasmi; ujian terperinci: tests/frontend/amaran-peta.js)
     i = await info(page);
-    const negeri = i.fiturAmaran.map((f) => f.negeri);
-    ok('(iv) ada titik amaran aktif', negeri.length > 5, negeri);
-    ok('(iv) kedudukan: Selangor ada', negeri.includes('Selangor'));
+    const panelTag = await page.$eval('#metAlertTag', (e) => e.textContent.trim());
+    const mt = /^(\d+) aktif · (\d+) terkini$/.exec(panelTag);
+    ok('(iv) tag panel Rasmi berformat N aktif · M terkini', !!mt, panelTag);
+    ok('(iv) ada titik amaran pada peta', i.fiturAmaran.length > 0, i.fiturAmaran.length);
+    const teksBtn = await page.$eval('#petaAmaranBtn', (b) => b.textContent);
     ok(
-      '(iv) butang Amaran Cuaca menunjukkan kiraan',
-      /Amaran Cuaca \(\d+\)/.test(await page.$eval('#petaAmaranBtn', (b) => b.textContent)),
+      '(iv) butang Amaran Rasmi: kiraan sama dengan panel',
+      !!mt && teksBtn === `Amaran Rasmi (${mt[1]} aktif)`,
+      [panelTag, teksBtn],
     );
     await page.click('#petaAmaranBtn');
     ok(
@@ -278,11 +281,13 @@ function fixtureDG() {
     await page.click('#petaAmaranBtn');
     ok('(iv) togol menghidupkan semula', (await info(page)).lapisan.amaranTunjuk === 'visible');
     const pop = await page.evaluate(() => {
-      const p = DASHBOARD_TEST.bukaPopupAmaran('Selangor');
+      const k = FamaAmaranPeta.ujian().kumpulan.find((g) => g.jenis !== 'laut');
+      const p = FamaAmaranPeta.bukaPopup(k.kunci);
       const n = p && p.getElement();
       const a = n && n.querySelector('.gmaps-link');
       return (
         n && {
+          k,
           teks: n.innerText,
           href: a && a.getAttribute('href'),
           target: a && a.target,
@@ -291,33 +296,26 @@ function fixtureDG() {
         }
       );
     });
-    ok('(iv) pop-up amaran dibuka', !!pop && /Amaran cuaca · Selangor/.test(pop.teks), pop);
+    ok('(iv) pop-up amaran dibuka', !!pop && /Amaran Rasmi · /.test(pop.teks), pop);
     ok(
       '(iv) pop-up: tajuk, tempoh sah, sumber',
-      pop &&
-        /LAUT BERGELORA/.test(pop.teks) &&
-        /Sah:/.test(pop.teks) &&
-        /data\.gov\.my/.test(pop.teks),
+      pop && /Sah hingga/.test(pop.teks) && /Sumber: /.test(pop.teks),
       pop && pop.teks,
     );
     ok('(iv) pop-up: Lihat lagi', pop && pop.lagi);
     ok(
-      '(iv) pop-up: Google Maps href (tengah negeri Selangor)',
-      pop && pop.href === 'https://www.google.com/maps/search/?api=1&query=3.55%2C101.3',
-      pop && pop.href,
+      '(iv) pop-up: Google Maps href (titik kumpulan)',
+      pop &&
+        pop.href ===
+          'https://www.google.com/maps/search/?api=1&query=' +
+            encodeURIComponent(pop.k.lat + ',' + pop.k.lng),
+      pop && [pop.href, pop.k],
     );
     ok(
       '(iv) pop-up: target=_blank rel=noopener noreferrer',
       pop && pop.target === '_blank' && pop.rel === 'noopener noreferrer',
       pop,
     );
-    const panjangSebelum = await page.$eval('.amaran-popup-teks', (e) => e.textContent.length);
-    await page.click('.amaran-popup .alert-more');
-    const panjangSelepas = await page.$eval('.amaran-popup-teks', (e) => e.textContent.length);
-    ok('(iv) Lihat lagi mengembangkan teks', panjangSelepas > panjangSebelum, [
-      panjangSebelum,
-      panjangSelepas,
-    ]);
     await foto(page, '1440-gelap-amaran');
 
     // (v) kad Amaran Rasmi: sumber data.gov.my tanpa pendua
@@ -366,6 +364,10 @@ function fixtureDG() {
       const p = DASHBOARD_TEST.DATA.po[0];
       return { id: p.id, lat: p.lat, lon: p.lon };
     });
+    // Pop-up amaran (klik) kini di atas penanda; tutup dahulu supaya hover mengena penanda PO.
+    await page.evaluate(() =>
+      document.querySelectorAll('.maplibregl-popup:not(.po-hover-popup)').forEach((e) => e.remove()),
+    );
     await page.hover('.po-marker');
     await page.waitForSelector('.po-hover-popup .gmaps-link');
     const gl = await page.$eval('.po-hover-popup .gmaps-link', (a) => ({

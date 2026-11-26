@@ -1,0 +1,52 @@
+{
+  "versi": 1,
+  "_nota": "Padanan varieti DB Harga (AMI/SISDA) kepada varieti FIS (Power BI FIS 2.1, jadual Master, lajur Varieti dan Unit) untuk Harga Cadangan PSI. CADANGAN AWAL, PERLU DISAHKAN: sunting fail ini; tiada kod keras. faktor menukar harga FIS ke unit DB Harga (cth. PAPAN 30 biji -> per biji = 1/30). Varieti tanpa padanan: trek dipaparkan 'Data tidak lengkap'.",
+  "sumber": {
+    "ami": { "sistem": "DB Harga (Supabase)", "jadual": { "LADANG": "harga_ladang_mingguan", "BORONG": "harga_borong_mingguan" } },
+    "fis": { "sistem": "Power BI FIS Version 2.1", "jadual": "Master", "tapis": "Sumber = FIS; Peringkat LADANG (Belian FIS) atau BORONG (Jualan FIS); Tiada Maklumat dikecualikan" },
+    "sisda": { "sistem": "Supabase", "jadual": "v3_harga_forecast_2026", "aras": "NEGERI (geo_name = negeri PO)" }
+  },
+  "padanan": [
+    { "variety": "AYAM PROSES STANDARD", "fis": [{ "varieti": "AYAM PROSES STANDARD", "unit": "KG", "faktor": 1 }] },
+    { "variety": "BAWANG MERAH ROSE", "fis": [{ "varieti": "BAWANG MERAH ROSE", "unit": "KG", "faktor": 1 }] },
+    { "variety": "BAYAM", "fis": [{ "varieti": "BAYAM HIJAU", "unit": "KG", "faktor": 1 }] },
+    { "variety": "CILI HIJAU", "fis": [{ "varieti": "CILI HIJAU", "unit": "KG", "faktor": 1 }] },
+    { "variety": "CILI MERAH KULAI / KULAI HIBRID", "fis": [{ "varieti": "CILI MERAH", "unit": "KG", "faktor": 1 }] },
+    { "variety": "KACANG PANJANG HIJAU", "fis": [{ "varieti": "KACANG PANJANG", "unit": "KG", "faktor": 1 }] },
+    { "variety": "KANGKUNG", "fis": [{ "varieti": "KANGKUNG", "unit": "KG", "faktor": 1 }] },
+    { "variety": "KUBIS BULAT (TANAH TINGGI)", "fis": [{ "varieti": "KUBIS BULAT", "unit": "KG", "faktor": 1 }] },
+    { "variety": "KUBIS BULAT BEIJING (IMPORT)", "fis": [{ "varieti": "KUBIS BULAT BEIJING (IMPORT)", "unit": "KG", "faktor": 1 }] },
+    { "variety": "SAWI BUNGA", "fis": [{ "varieti": "SAWI BUNGA", "unit": "KG", "faktor": 1 }] },
+    { "variety": "SAWI HIJAU (TANAH RENDAH)", "fis": [{ "varieti": "SAWI HIJAU", "unit": "KG", "faktor": 1 }] },
+    {
+      "variety": "TELUR AYAM A",
+      "fis": [
+        { "varieti": "TELUR AYAM A 30BIJI", "unit": "BIJI", "faktor": 1 },
+        { "varieti": "TELUR AYAM A 30BIJI", "unit": "PAPAN", "faktor": 0.0333333333 }
+      ]
+    },
+    {
+      "variety": "TELUR AYAM B",
+      "fis": [
+        { "varieti": "TELUR AYAM B 30BIJI", "unit": "BIJI", "faktor": 1 },
+        { "varieti": "TELUR AYAM B 30BIJI", "unit": "PAPAN", "faktor": 0.0333333333 }
+      ]
+    },
+    {
+      "variety": "TELUR AYAM C",
+      "fis": [
+        { "varieti": "TELUR AYAM C 30BIJI", "unit": "BIJI", "faktor": 1 },
+        { "varieti": "TELUR AYAM C 30BIJI", "unit": "PAPAN", "faktor": 0.0333333333 }
+      ]
+    },
+    { "variety": "TEMBIKAI KUNING", "fis": [{ "varieti": "TEMBIKAI KUNING", "unit": "KG", "faktor": 1 }] },
+    { "variety": "TERUNG BULAT", "fis": [{ "varieti": "TERUNG BULAT", "unit": "KG", "faktor": 1 }] },
+    { "variety": "TERUNG PANJANG / PEPARU (TANAH RENDAH)", "fis": [{ "varieti": "TERUNG PANJANG", "unit": "KG", "faktor": 1 }] },
+    { "variety": "TIMUN HIJAU", "fis": [{ "varieti": "TIMUN", "unit": "KG", "faktor": 1 }] },
+    { "variety": "TIMUN JEPUN", "fis": [{ "varieti": "TIMUN JEPUN", "unit": "KG", "faktor": 1 }] },
+    { "variety": "TOMATO (TANAH TINGGI)", "fis": [{ "varieti": "TOMATO", "unit": "KG", "faktor": 1 }] },
+    { "variety": "PISANG BERANGAN", "fis": [{ "varieti": "PISANG BERANGAN", "unit": "KG", "faktor": 1 }] },
+    { "variety": "PISANG CAVENDISH (MP14)", "fis": [{ "varieti": "PISANG CAVENDISH (MP14)", "unit": "KG", "faktor": 1 }] },
+    { "variety": "PISANG MAS", "fis": [{ "varieti": "PISANG MAS", "unit": "KG", "faktor": 1 }] }
+  ]
+}

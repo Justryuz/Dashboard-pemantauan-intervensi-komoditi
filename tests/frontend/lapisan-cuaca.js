@@ -834,6 +834,9 @@ const siklonAda = () => ({
     await page.evaluate(() =>
       document.querySelectorAll('.maplibregl-popup').forEach((p) => p.remove()),
     );
+    // Penanda DOM (petak PO tambahan, titik tengah daerah) boleh menutup stesen fixture; sembunyikan sementara
+    await page.evaluate(() => window.FamaPOT && FamaPOT.tetap(false));
+    await sleep(400);
     const stesen = await page.evaluate(() => {
       const f = map.queryRenderedFeatures({ layers: ['banjir-stesen'] })[0];
       if (!f) return null;
@@ -854,6 +857,7 @@ const siklonAda = () => ({
         p.semua >= 1 && p.cuaca === 0,
         p,
       );
+      await page.evaluate(() => window.FamaPOT && FamaPOT.tetap(true));
     }
     // klik penanda PO (elemen DOM): tiada pemeriksa
     await page.evaluate(() =>

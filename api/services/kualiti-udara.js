@@ -5,7 +5,8 @@ const { muatPO } = require('./cuaca.js');
 const util = require('./util-rangkaian.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'kualiti-udara-terkini.json');
+const DATA_DIR = require('./laluan-data.js');
+const CACHE_LALAI = path.join(DATA_DIR, 'kualiti-udara-terkini.json');
 // JANGAN guna resultRecordCount: pelayan memulangkan HTTP 400.
 const URL_PETA =
   'https://eqms.doe.gov.my/api3/publicmapproxy/PUBLIC_DISPLAY/CAQM_MCAQM_Current_Reading/MapServer/0/query?where=1%3D1&outFields=*&returnGeometry=false&f=json';

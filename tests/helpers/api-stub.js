@@ -1,6 +1,6 @@
 'use strict';
 // Satu pemintas permintaan puppeteer bagi /api/cuaca, /api/banjir, /api/kualiti-udara, /api/muse dan API lapisan cuaca
-// (grid, grid/meta, grid/titik, radar, satelit, siklon).
+// (grid, grid/meta, grid/titik, radar, satelit, siklon) dan harga (harga, hargaMeta, hargaAmbang).
 // Fungsi pengendali menerima URL permintaan (berguna untuk /api/muse?minggu= dan /api/grid?var=).
 // Dua pemintas pada satu halaman akan bertembung, jadi gunakan hanya ini.
 // Setiap kunci: fungsi () => nilai, 'abort', {status}, {body} atau objek JSON terus.
@@ -11,6 +11,9 @@ const LALUAN = {
   banjir: /\/api\/banjir(\?|$)/,
   ipu: /\/api\/kualiti-udara(\?|$)/,
   muse: /\/api\/muse(\?|$)/,
+  hargaMeta: /\/api\/harga\/meta(\?|$)/,
+  hargaAmbang: /\/api\/harga\/ambang(\?|$)/,
+  harga: /\/api\/harga(\?|$)/,
   metmy: /\/api\/met-malaysia(\?|$)/,
   gridMeta: /\/api\/grid\/meta(\?|$)/,
   gridTitik: /\/api\/grid\/titik(\?|$)/,

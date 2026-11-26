@@ -188,7 +188,9 @@
     const ls = map.getStyle().layers || [];
     const sim = ls.find((l) => l.type === 'symbol');
     if (sim) return sim.id;
-    return ['banjir-stesen', 'amaran-cuaca-halo', 'amaran-cuaca'].find((i) => map.getLayer(i));
+    return ['daerah-isi', 'banjir-stesen', 'amaran-cuaca-halo', 'amaran-cuaca'].find((i) =>
+      map.getLayer(i),
+    );
   }
   function sisipDi(pangkat) {
     let terbaik = null;

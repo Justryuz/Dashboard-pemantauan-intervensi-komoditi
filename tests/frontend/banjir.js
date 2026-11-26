@@ -113,32 +113,34 @@ function amaranCampur() {
       const nota = await teks(page, '#amsFloodNote');
       ok('(i) nota banjir sebenar', /data sebenar JPS Malaysia \/ JPS Selangor/.test(nota), nota);
       ok('(i) tajuk bahagian', (await teks(page, '.ams-section')) === 'Senario yang Dikesan');
-      // drill-down
-      const id = banjirKad.split('|')[0].split(' · ')[0];
-      await page.click(`#amsList .ams-card[data-sid="${id}"]`);
-      await sleep(500);
-      await page.click('#amsDetail .ams-po-row');
-      await sleep(500);
-      const laci = await teks(page, '#amsPoDrawer');
-      ok(
-        '(i) laci: STESEN JPS BERHAMPIRAN',
-        laci.includes('STESEN JPS BERHAMPIRAN'),
-        laci.slice(0, 300),
-      );
-      ok(
-        '(i) laci: stesen Duyong + status + paras + trend + masa + sumber',
-        /Duyong/.test(laci) &&
-          /Amaran/.test(laci) &&
-          /Paras/.test(laci) &&
-          /Trend/.test(laci) &&
-          /MYT/.test(laci) &&
-          /Sumber: JPS/.test(laci),
-        laci,
-      );
-      ok(
-        '(i) laci: label anggaran sistem',
-        laci.includes('Anggaran sistem berdasarkan data JPS, bukan amaran rasmi'),
-      );
+      // drill-down (panel AMS disembunyikan atas permintaan; dilangkau selagi tersembunyi)
+      if (await page.$eval('#amsList', (e) => e.offsetParent !== null)) {
+        const id = banjirKad.split('|')[0].split(' · ')[0];
+        await page.click(`#amsList .ams-card[data-sid="${id}"]`);
+        await sleep(500);
+        await page.click('#amsDetail .ams-po-row');
+        await sleep(500);
+        const laci = await teks(page, '#amsPoDrawer');
+        ok(
+          '(i) laci: STESEN JPS BERHAMPIRAN',
+          laci.includes('STESEN JPS BERHAMPIRAN'),
+          laci.slice(0, 300),
+        );
+        ok(
+          '(i) laci: stesen Duyong + status + paras + trend + masa + sumber',
+          /Duyong/.test(laci) &&
+            /Amaran/.test(laci) &&
+            /Paras/.test(laci) &&
+            /Trend/.test(laci) &&
+            /MYT/.test(laci) &&
+            /Sumber: JPS/.test(laci),
+          laci,
+        );
+        ok(
+          '(i) laci: label anggaran sistem',
+          laci.includes('Anggaran sistem berdasarkan data JPS, bukan amaran rasmi'),
+        );
+      } else ok('(i) drill-down dilangkau: panel AMS disembunyikan', true);
       ok('(i) tiada ralat konsol/CSP', masalah.length === 0, masalah);
       await page.close();
     }
@@ -203,7 +205,10 @@ function amaranCampur() {
       );
       ok(
         '(iii) tajuk kad',
-        (await teks(page, '.alert-head')).includes('Amaran Rasmi (MET Malaysia & JPS)'),
+        (await teks(page, '#ewsTitle')) === 'EWS (AI)' &&
+          (await page.$eval('#ewsTabAmaran', (e) => e.getAttribute('aria-label'))).includes(
+            'Amaran Rasmi (MET Malaysia & JPS)',
+          ),
       );
       // teks penuh boleh dikembangkan
       const sebelum = await page.$eval(

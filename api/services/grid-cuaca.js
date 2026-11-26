@@ -7,7 +7,8 @@ const util = require('./util-rangkaian.js');
 const Interp = require('../../src/js/lapisan-cuaca/interp.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const DIR_LALAI = path.join(ROOT, 'data', 'processed', 'grid');
+const DATA_DIR = require('./laluan-data.js');
+const DIR_LALAI = path.join(DATA_DIR, 'grid');
 const BBOX = { latMin: 0.5, latMax: 7.5, lonMin: 99.5, lonMax: 119.5 };
 const JAM = 96; // forecast_days=4 bermula 00:00 UTC hari ini
 const SENTINEL = -32768;

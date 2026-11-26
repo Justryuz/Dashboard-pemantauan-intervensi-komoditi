@@ -254,8 +254,9 @@ html[data-theme='cerah'] .iv-filters .ctrl select {
 }
 .iv-filters #ivReset[data-idle='true'] {
   border-style: dashed;
+  border-color: #198754;
   background: transparent;
-  color: var(--muted);
+  color: #198754;
 }
 @media (max-width: 1199px) {
   .iv-filters {
@@ -649,6 +650,28 @@ html[data-theme='cerah'] .iv-filters .ctrl select {
 }
 .iv-dot.r {
   background: var(--red);
+}
+.iv-dot.n {
+  background: var(--grey, #8a94a6);
+}
+.iv-harga-lencana {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.iv-harga-lencana:empty {
+  display: none;
+}
+#ivHargaKeadaan {
+  margin: 8px 0;
+}
+.iv-ganti {
+  margin-top: 8px;
+}
+.iv-ganti ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
 }
 .iv-note {
   font-size: 11.5px;
@@ -1501,6 +1524,9 @@ html[data-theme='cerah'] .iv-filters .ctrl select {
   min-height: 0;
   margin: 0;
 }
+#ivMusePanel[hidden] {
+  display: none;
+}
 #ivMusePanel .iv-ptitle {
   padding: 14px 16px 8px;
   min-height: 62px;
@@ -2329,4 +2355,163 @@ details.iv-crit p {
   .iv-mm-foot {
     padding: 8px 12px 12px;
   }
+}
+/* Tab Simulasi Margin & Harga AI: harga semasa + kad cadangan */
+.iv-mr-dua {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.iv-mr-harga {
+  position: relative;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.iv-mr-harga-l {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.iv-mr-harga-v {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+.iv-mr-harga-v small,
+.iv-mr-cad-v small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.iv-mr-kosong {
+  font-size: 15px;
+  color: var(--muted);
+}
+.iv-mr-tkh {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 11.5px;
+  color: var(--green);
+  border: 1px solid var(--b177a57);
+  background: var(--b08261d);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.iv-mr-sek {
+  margin-top: 14px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.iv-mr-sek h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.iv-mr-cad {
+  border-radius: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--b177a57);
+  background: var(--b08261d);
+}
+.iv-mr-cad.borong {
+  border-color: var(--b187498);
+  background: rgba(56, 120, 220, 0.1);
+}
+.iv-mr-cad-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.iv-mr-lencana {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--yellow);
+  border: 1px solid var(--b7a5c14);
+  background: var(--b2a2108);
+  border-radius: 6px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.iv-mr-cad-v {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 6px 0 4px;
+}
+.iv-mr-cad-n {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+/* Harga Cadangan PSI: lencana status, amaran, margin dan diagnostik */
+.iv-mr-lencana.ok {
+  color: var(--green);
+  border-color: var(--b177a57);
+  background: var(--b08261d);
+}
+.iv-mr-lencana.bad {
+  color: var(--red);
+  border-color: var(--b8a2a3a);
+  background: rgba(220, 60, 60, 0.12);
+}
+.iv-mr-tiada {
+  font-size: 15px;
+  color: var(--red);
+}
+.iv-mr-cad-n + .iv-mr-cad-n {
+  margin-top: 4px;
+}
+.iv-mr-amaran {
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--tffe09b);
+  border: 1px solid var(--b7a5c14);
+  background: var(--b2a2108);
+}
+.iv-mr-margin {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.iv-mr-margin.bad {
+  color: var(--red);
+  border-color: var(--b8a2a3a);
+  background: rgba(220, 60, 60, 0.1);
+}
+.iv-mr-sumber {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.iv-mr-diag {
+  margin-top: 6px;
+  font-size: 11.5px;
+}
+.iv-mr-diag summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.iv-mr-diag table {
+  margin-top: 4px;
+  border-collapse: collapse;
+}
+.iv-mr-diag th,
+.iv-mr-diag td {
+  padding: 2px 10px 2px 0;
+  text-align: left;
+  font-weight: 400;
+}
+.iv-mr-diag th {
+  color: var(--muted);
 }

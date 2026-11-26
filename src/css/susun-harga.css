@@ -1,0 +1,175 @@
+/* Empat panel harga dalam satu baris di bawah peta (tab Pemantauan).
+   Dimuat selepas base.css. */
+
+/* TURUTAN PANEL (kiri ke kanan): ubah nombor di sini sahaja.
+   Untuk terbalikkan: rendah=4, tinggi=3, banding=2, trend=1. */
+:root {
+  --sh-urut-rendah: 1;
+  --sh-urut-tinggi: 2;
+  --sh-urut-banding: 3;
+  --sh-urut-trend: 4;
+  --sh-tinggi: 420px;
+}
+
+/* Peta + ruang kosong di kanan */
+.main-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.main-grid > .left-col {
+  display: block;
+}
+.peta-kanan-kosong {
+  display: none;
+}
+@media (min-width: 1400px) {
+  .main-grid {
+    grid-template-columns: minmax(0, 2.4fr) minmax(300px, 0.8fr);
+  }
+  .peta-kanan-kosong {
+    display: block;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    min-height: 100%;
+  }
+}
+
+/* Baris empat panel */
+.susun-harga {
+  margin-top: 14px;
+  min-width: 0;
+}
+.susun-harga .analytics-header {
+  margin: 0 0 10px;
+}
+.susun-harga-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+  min-width: 0;
+}
+.susun-harga-row > .panel {
+  display: flex;
+  flex-direction: column;
+  height: var(--sh-tinggi);
+  min-width: 0;
+  min-height: 0;
+}
+.susun-harga-row > .panel[hidden] {
+  display: none;
+}
+#susunHarga > .listpanel:has(#lowestPrices) {
+  order: var(--sh-urut-rendah);
+}
+#susunHarga > .listpanel:has(#highestPrices) {
+  order: var(--sh-urut-tinggi);
+}
+#susunHarga > .compare-panel {
+  order: var(--sh-urut-banding);
+}
+#susunHarga > .chart-panel {
+  order: var(--sh-urut-trend);
+}
+
+/* Kepala padat, pilihan di kanan */
+.susun-harga-row .list-head {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.susun-harga-row .list-head strong {
+  min-width: 0;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.susun-harga-row .list-head .mini-select,
+.susun-harga-row .list-head .note {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.susun-harga-row .titlebar {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+}
+.susun-harga-row .panel-title {
+  font-size: 12.5px;
+}
+
+/* Senarai 5 item: baris padat */
+.susun-harga-row .listbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  padding: 6px 10px 8px;
+}
+.susun-harga-row .listbody > .price-row {
+  flex: 0 0 auto;
+  min-height: 48px;
+  max-height: 56px;
+  padding: 5px 8px;
+}
+.susun-harga-row .price-row .price-value {
+  font-size: 14px;
+}
+
+/* Jadual */
+.susun-harga-row .table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+.susun-harga-row .table {
+  font-size: 10.5px;
+}
+.susun-harga-row .table th {
+  padding: 8px 4px;
+  font-size: 9.5px;
+}
+.susun-harga-row .table td {
+  padding: 7px 4px;
+}
+
+/* Carta */
+.susun-harga-row .chart-svg {
+  flex: 1 1 auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0 8px 4px;
+}
+.susun-harga-row .chart-legend {
+  flex: 0 0 auto;
+  padding: 0 12px 10px;
+  gap: 4px 10px;
+  font-size: 10.5px;
+}
+
+/* 1024-1399px: 2 x 2, peta lebar penuh */
+@media (max-width: 1399px) {
+  .susun-harga-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mudah alih: satu lajur */
+@media (max-width: 767px) {
+  .susun-harga-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .susun-harga-row > .panel {
+    height: auto;
+  }
+  .susun-harga-row .listbody,
+  .susun-harga-row .table-scroll {
+    max-height: 340px;
+  }
+  .susun-harga-row .chart-svg {
+    flex: none;
+  }
+}

@@ -22,3 +22,10 @@ Thumbs.db
 
 # Fail kerja ejen
 .agents/
+# Data sebenar FAMA (repo public) dan fail kunci Office
+Sampel_Data_Dashboard_FAMA.xlsx
+~$*
+# Fail besar / output sementara
+docs/pembentangan/video-dashboard/*.mp4
+snapshot-out/
+.vercel

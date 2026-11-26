@@ -460,9 +460,11 @@ function closeScenarioPO() {
 function viewPOPrices(poId) {
   const sc = state.scenario && scenarioById(state.scenario);
   const m = sc ? sc.affectedCommodities.map(commodityMatch).find(Boolean) : null;
-  if (m) {
-    state.komoditi = m;
-    $('filterCommodity').value = m;
+  const km = m ? komoditiHarga(m) : null;
+  if (km) {
+    state.komoditi = km;
+    state.varieti = 'all';
+    $('filterCommodity').value = km;
   }
   selectPO(poId);
 }

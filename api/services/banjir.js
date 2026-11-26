@@ -6,8 +6,9 @@ const { muatPO } = require('./cuaca.js');
 const util = require('./util-rangkaian.js');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const CACHE_LALAI = path.join(ROOT, 'data', 'processed', 'banjir-terkini.json');
-const SEJARAH_LALAI = path.join(ROOT, 'data', 'processed', 'banjir-sejarah.json');
+const DATA_DIR = require('./laluan-data.js');
+const CACHE_LALAI = path.join(DATA_DIR, 'banjir-terkini.json');
+const SEJARAH_LALAI = path.join(DATA_DIR, 'banjir-sejarah.json');
 
 const URL_NASIONAL =
   'https://publicinfobanjir.water.gov.my/wp-content/themes/enlighten/data/latestreadingstrendabc.json';

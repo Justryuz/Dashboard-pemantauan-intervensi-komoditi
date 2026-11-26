@@ -59,21 +59,21 @@
     crossZoneRules: [],
     minHistory: 8,
     labelShift: {
-      perlis: [-8, -16],
-      kedah: [-5, 21],
-      penang: [12, -10],
-      perak: [-9, 20],
-      selangor: [12, 22],
-      selayang: [-10, -14],
-      negerisembilan: [-12, 20],
-      melaka: [18, 13],
-      kelantan: [-8, -15],
-      terengganu: [16, -6],
-      pahang: [15, -10],
-      johor: [16, 16],
-      simpangrenggam: [-8, -16],
-      sabah: [18, -13],
-      sarawak: [14, -12],
+      perlis: ['l'],
+      kedah: ['l', 0, 6],
+      penang: ['l'],
+      perak: ['r'],
+      selayang: ['l', 0, -8],
+      selangor: ['l', 0, -2],
+      negerisembilan: ['r', 0, -6],
+      melaka: ['l', 0, 6],
+      kelantan: ['r'],
+      terengganu: ['r'],
+      pahang: ['r'],
+      johor: ['r', 0, 6],
+      simpangrenggam: ['r', 0, -6],
+      sabah: ['l'],
+      sarawak: ['r'],
     },
   };
   const IV_THR_DEFAULT = JSON.parse(JSON.stringify(IV_CONFIG.thresholds));
@@ -123,21 +123,98 @@
     origin: 'DATA.po',
   }));
   const IV_POBY = Object.fromEntries(IV_PO.map((p) => [p.id, p]));
+  // PO tambahan (FIS 2.1): calon dan PO terpilih mobilisasi sahaja. Lokasi = titik tengah daerah seliaan (anggaran),
+  // tiada data logistik, cuaca atau banjir.
+  const IV_TBH = ((typeof DATA !== 'undefined' && DATA.poTambahan) || []).map((p) => ({
+    id: p.id,
+    name: p.label + ' (PO tambahan)',
+    label: p.label,
+    negeri: p.negeri,
+    stateId: slug(p.negeri),
+    lat: p.lat,
+    lon: p.lon,
+    districts: p.districts,
+    tambahan: true,
+  }));
+  const IV_TBHBY = Object.fromEntries(IV_TBH.map((p) => [p.id, p]));
+  const poObj = (id) => IV_POBY[id] || IV_TBHBY[id] || null;
+  // Daerah liputan PO (nama dinormalkan) untuk mengecualikan calon yang berkongsi liputan.
+  const liputan = (p) => new Set((p.districts || []).map((d) => HARGADB.normDaerah(d[0])));
   const IV_STATES = [...new Map(IV_PO.map((p) => [p.stateId, p.negeri])).entries()].map(
     ([id, name]) => ({ id, name }),
   );
-  const IV_COMM = DATA.komoditi.map((k) => ({
-    id: slug(k.name),
-    name: k.name,
-    unit: k.unit,
-    base: k.base,
-    floor: k.floor,
-    ceiling: k.ceiling,
-    source: 'dummy',
-    origin: 'DATA.rekod',
-  }));
-  const IV_COMMBY = Object.fromEntries(IV_COMM.map((c) => [c.id, c]));
+  /* Komoditi Intervensi = pasangan (jenis, varieti) senarai putih config/komoditi-diliputi.json, diterima daripada
+     /api/harga/meta (komoditiSenarai) dan diisi oleh ivPasangKomoditi(); tiada salinan senarai di klien.
+     DATA.komoditi (dummy) kini hanya sumber bekalan/stok dummy (IV_DUMMY_COMM), dipetakan ke varieti senarai
+     melalui IV_BEKALAN_PETA (kunci = id dummy, nilai = nama varieti DB). Varieti tanpa petaan = tiada data bekalan. */
+  const IV_COMM = [];
+  const IV_COMMBY = {};
+  const IV_JENIS = [];
+  const IV_DUMMY_COMM = DATA.komoditi.map((k) => ({ id: slug(k.name), unit: k.unit }));
+  const IV_BEKALAN_PETA = {
+    'cili-merah': 'CILI MERAH KULAI / KULAI HIBRID',
+    'cili-hijau': 'CILI HIJAU',
+    'tomato-bulat': 'TOMATO (TANAH TINGGI)',
+    'bawang-merah-kecil': 'BAWANG MERAH / KECIL (IMPORT)',
+    'ayam-proses-super': 'AYAM PROSES STANDARD',
+    'kubis-bulat': 'KUBIS BULAT (TANAH TINGGI)',
+    'telur-gred-a': 'TELUR AYAM A',
+  };
+  const IV_BEKALAN_DUMMY = {}; // id varieti -> id dummy
+  const IV_DUMMY_PAIR = {}; // id dummy -> id varieti
+  Object.keys(IV_BEKALAN_PETA).forEach((d) => {
+    IV_BEKALAN_DUMMY[slug(IV_BEKALAN_PETA[d])] = d;
+    IV_DUMMY_PAIR[d] = slug(IV_BEKALAN_PETA[d]);
+  });
+  const IV_LALAI_ID = IV_DUMMY_PAIR['cili-merah']; // komoditi panel lalai (mobilisasi, margin) bila penapis Semua
+  IV_COMMBY[IV_LALAI_ID] = {
+    id: IV_LALAI_ID,
+    name: '\u2014',
+    unit: 'RM/kg',
+    jenis: '',
+    variety: '',
+  };
+  function ivPasangKomoditi(m) {
+    const s = m && m.penapis && m.penapis.komoditiSenarai;
+    if (!Array.isArray(s)) return;
+    IV_COMM.length = 0;
+    IV_JENIS.length = 0;
+    Object.keys(IV_COMMBY).forEach((k) => delete IV_COMMBY[k]);
+    s.forEach((k) => {
+      IV_JENIS.push({ kod: k.kod, label: k.label });
+      k.varieti.forEach((v) => {
+        const c = {
+          id: slug(v.kod),
+          name: v.label,
+          jenis: k.kod,
+          jenisLabel: k.label,
+          variety: v.kod,
+          tiadaData: !!v.tiadaData,
+          unit: 'RM/kg',
+          source: 'senarai',
+          origin: 'config/komoditi-diliputi.json',
+        };
+        IV_COMM.push(c);
+        IV_COMMBY[c.id] = c;
+      });
+    });
+    if (!IV_COMMBY[IV_LALAI_ID])
+      IV_COMMBY[IV_LALAI_ID] = {
+        id: IV_LALAI_ID,
+        name: '\u2014',
+        unit: 'RM/kg',
+        jenis: '',
+        variety: '',
+      };
+  }
   const isKg = (cid) => IV_COMMBY[cid] && IV_COMMBY[cid].unit === 'RM/kg';
+  // RM dengan unit bukan kg (cth. 'RM 0.45 /biji'); RM/kg dipapar seperti biasa.
+  const rmUnit = (x, cid) =>
+    rmAny(x) +
+    (fin(x) && cid && !isKg(cid) && IV_COMMBY[cid]
+      ? ' /' + IV_COMMBY[cid].unit.replace(/^RM\//, '')
+      : '');
+  const ivEffCid = () => effCommodity().id;
 
   /* Pemetaan daerah ke PO (dummy, eksplisit) */
   const IV_DISTRICTS = [];
@@ -194,7 +271,7 @@
         ['OUT-PMS-03', 'RAKR Pasir Mas', 'rakr'],
       ],
     };
-    const commPool = IV_COMM.filter((c) => c.unit === 'RM/kg').map((c) => c.id);
+    const commPool = IV_DUMMY_COMM.filter((c) => c.unit === 'RM/kg').map((c) => c.id);
     const stat = (h) =>
       h % 7 === 0 ? 'Tidak beroperasi' : h % 11 === 0 ? 'Data tidak tersedia' : 'Beroperasi';
     IV_DISTRICTS.forEach((d, i) => {
@@ -284,191 +361,206 @@
     return { cat, po, empty, total: IV_OUTLETS.length };
   }
 
-  /* ===== Harga: ivPrice ===== */
-  const IV_REK = new Map();
-  DATA.rekod.forEach((r) =>
-    IV_REK.set(r.poId + '|' + r.daerah + '|' + slug(r.komoditi) + '|' + r.peringkat, r),
-  );
-  const IV_PRICE_OVERLAY = [
-    {
-      id: 'T1',
-      poId: 'simpangrenggam',
-      district: 'Kluang',
-      commodityId: 'cili-merah',
-      stage: 'Ladang',
-      dev: -17.5,
-      devF: -19,
-      note: 'Senario ujian 1 (dummy)',
-    },
-    ...['Kinta', 'Kampar', 'Kuala Kangsar', 'Manjung'].map((d) => ({
-      id: 'T1b',
-      poId: 'perak',
-      district: d,
-      commodityId: 'cili-merah',
-      stage: 'Borong',
-      dev: 6,
-      devF: 6,
-      note: 'Senario ujian 1b (dummy)',
-    })),
-    {
-      id: 'T2',
-      poId: 'johor',
-      district: 'Johor Bahru',
-      commodityId: 'cili-merah',
-      stage: 'Runcit',
-      dev: 16,
-      devF: 18,
-      note: 'Senario ujian 2 (dummy)',
-    },
-    {
-      id: 'T3',
-      poId: 'kelantan',
-      district: 'Pasir Mas',
-      commodityId: 'bawang-merah-kecil',
-      stage: 'Runcit',
-      dev: 17,
-      devF: 19,
-      note: 'Senario ujian 3 (dummy)',
-    },
-    {
-      id: 'T4',
-      poId: 'perlis',
-      district: 'Kangar',
-      commodityId: 'cili-merah',
-      stage: 'Ladang',
-      dev: -16,
-      devF: -16,
-      note: 'Senario ujian 4 (dummy)',
-    },
-    {
-      id: 'T5',
-      poId: 'sarawak',
-      district: 'Serian',
-      commodityId: 'kubis-bulat',
-      stage: 'Ladang',
-      dev: -18,
-      devF: -18,
-      note: 'Senario ujian 5 (dummy)',
-    },
-    {
-      id: 'T6',
-      poId: 'pahang',
-      district: 'Temerloh',
-      commodityId: 'cili-hijau',
-      stage: 'Ladang',
-      dev: -10,
-      devF: -10,
-      note: 'Senario ujian 6 (dummy)',
-    },
-    {
-      id: 'T6',
-      poId: 'sabah',
-      district: 'Tuaran',
-      commodityId: 'tomato-bulat',
-      stage: 'Ladang',
-      dev: -9,
-      devF: -9,
-      note: 'Senario ujian 6 (dummy)',
-    },
-    {
-      id: 'T7',
-      poId: 'pahang',
-      district: 'Kuantan',
-      commodityId: 'tomato-bulat',
-      stage: 'Runcit',
-      dev: 18,
-      devF: 18,
-      note: 'Senario ujian 7 (dummy)',
-    },
-    {
-      id: 'T8',
-      poId: 'selangor',
-      district: 'Sepang',
-      commodityId: 'cili-hijau',
-      stage: 'Runcit',
-      dev: 9,
-      devF: 9,
-      note: 'Senario ujian 8 (dummy)',
-    },
-    {
-      id: 'T8',
-      poId: 'sarawak',
-      district: 'Kuching',
-      commodityId: 'ayam-proses-super',
-      stage: 'Runcit',
-      dev: 10,
-      devF: 10,
-      note: 'Senario ujian 8 (dummy)',
-    },
-  ];
-  const IV_OVBY = new Map(
-    IV_PRICE_OVERLAY.map((o) => [
-      o.poId + '|' + o.district + '|' + o.commodityId + '|' + o.stage,
-      o,
-    ]),
-  );
+  /* ===== Harga sebenar (DB Harga) melalui HARGADB =====
+     Pelayan (/api/harga) ialah satu-satunya pengira status dan sebab; klien hanya membaca baris.
+     Lima pertanyaan dikongsi dengan tab Pemantauan (URL sama, cache HARGADB sama): LADANG (mod pengeluar,
+     kunci tanpa ladang diganti borong berlabel) dan RUNCIT pada aras PO dan daerah, serta BORONG aras PO. */
   const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN);
-  function recPrice(r, days) {
-    const cid = slug(r.komoditi);
-    const th = IV_CONFIG.thresholds;
-    const arr = r.prices.slice(-Math.max(1, Math.min(days, r.prices.length)));
-    const baseline = mean(arr);
-    let actual = r.prices[r.prices.length - 1],
-      forecast = r.ramalan,
-      overlay = null;
-    const ov = IV_OVBY.get(r.poId + '|' + r.daerah + '|' + cid + '|' + r.peringkat);
-    if (ov) {
-      actual = baseline * (1 + ov.dev / 100);
-      forecast = baseline * (1 + ov.devF / 100);
-      overlay = { id: ov.id, note: ov.note };
+  const IVH_Q = [
+    ['po', 'LADANG', { mod: 'pengeluar', aras: 'po' }],
+    ['daerah', 'LADANG', { mod: 'pengeluar', aras: 'daerah' }],
+    ['po', 'RUNCIT', { peringkat: 'RUNCIT', aras: 'po' }],
+    ['daerah', 'RUNCIT', { peringkat: 'RUNCIT', aras: 'daerah' }],
+    ['po', 'BORONG', { peringkat: 'BORONG', aras: 'po' }],
+    ['po_tambahan', 'BORONG', { peringkat: 'BORONG', aras: 'po_tambahan' }],
+  ];
+  const IVH = {
+    sedia: false,
+    memuat: false,
+    ralat: null,
+    ver: 0,
+    meta: null,
+    idxPO: {},
+    idxDaerah: {},
+    pasang: {},
+    siriGagal: new Set(),
+  };
+  const STAGE_KEY = { Ladang: 'LADANG', Runcit: 'RUNCIT', Borong: 'BORONG' };
+  const STAGE_LABEL = { LADANG: 'Ladang', RUNCIT: 'Runcit', BORONG: 'Borong' };
+  const STATUS_W = { kelabu: -1, hijau: 0, kuning: 1, merah: 2 };
+  // Label status kongsi (sama dengan tab Pemantauan).
+  const STATUS_LABEL = {
+    merah: 'Amaran harga',
+    kuning: 'Berwaspada',
+    hijau: 'Stabil',
+    kelabu: 'Tiada ambang',
+  };
+  const ivNorm = HARGADB.normDaerah;
+  const ivNama = (s) =>
+    String(s || '')
+      .toUpperCase()
+      .replace(/\s*\(.*?\)/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  function ivTerapHarga() {
+    IVH.idxPO = {};
+    IVH.idxDaerah = {};
+    IVH.pasang = {};
+    IVH.meta = HARGADB.segerak('meta') || null;
+    ivPasangKomoditi(IVH.meta);
+    const s0 = ivState;
+    if (s0.selectedCommodityId && !IV_COMMBY[s0.selectedCommodityId]) s0.selectedCommodityId = null;
+    if (s0.selectedJenis && !IV_JENIS.some((j) => j.kod === s0.selectedJenis))
+      s0.selectedJenis = null;
+    IVH_Q.forEach(([aras, pr, params]) => {
+      const rows = (HARGADB.segerak('ringkasan', params) || {}).baris || [];
+      const idx = new Map();
+      rows.forEach((r) => {
+        const kc = IV_COMMBY[slug(r.variety)];
+        if (kc && r.unit)
+          kc.unit = /^(KG|KILOGRAM)$/i.test(r.unit)
+            ? 'RM/kg'
+            : 'RM/' + String(r.unit).toLowerCase();
+        if (!r.po) return;
+        const k =
+          aras === 'po' || aras === 'po_tambahan'
+            ? [r.po, r.commodity, r.variety].join('|')
+            : [r.po, ivNorm(r.daerah), r.commodity, r.variety].join('|');
+        idx.set(k, r);
+      });
+      if (aras === 'po_tambahan') {
+        // Digabung ke indeks PO (id PO tambahan unik, awalan tbh-)
+        const t = IVH.idxPO[pr] || (IVH.idxPO[pr] = new Map());
+        idx.forEach((v, k) => t.set(k, v));
+      } else (aras === 'po' ? IVH.idxPO : IVH.idxDaerah)[pr] = idx;
+    });
+    IVH.sedia = true;
+    IVH.memuat = false;
+    IVH.ralat = null;
+    IVH.ver++;
+    if (!ivState.margin.touched) {
+      ivState.margin.ctx = null;
+      const mc = $i('ivMarCtl');
+      if (mc) mc.dataset.sig = '';
     }
+  }
+  // Muat data harga sekali; ralat disimpan (tiada percubaan semula senyap) sehingga "Cuba semula".
+  function ivMuatHarga() {
+    if (IVH.sedia || IVH.memuat || IVH.ralat) return;
+    if (HARGADB.segerak('meta') && IVH_Q.every((q) => HARGADB.segerak('ringkasan', q[2]))) {
+      ivTerapHarga();
+      return;
+    }
+    IVH.memuat = true;
+    Promise.all([HARGADB.meta(), ...IVH_Q.map((q) => HARGADB.ringkasan(q[2]))]).then(
+      () => {
+        ivTerapHarga();
+        ivRender(ALL_PANELS);
+      },
+      (e) => {
+        IVH.memuat = false;
+        IVH.ralat = e && e.kind === 'file' ? 'file' : (e && e.message) || 'ralat';
+        ivRender(ALL_PANELS);
+      },
+    );
+  }
+  function ivCubaSemulaHarga() {
+    HARGADB.cubaSemula();
+    IVH.sedia = false;
+    IVH.memuat = false;
+    IVH.ralat = null;
+    IVH.siriGagal = new Set();
+    ivMuatHarga();
+    ivRender(ALL_PANELS);
+  }
+  // Pasangan (jenis, varieti DB) bagi komoditi Intervensi (satu pasangan senarai putih).
+  function ivDbPairs(cid) {
+    if (IVH.pasang[cid]) return IVH.pasang[cid];
+    const c = IV_COMMBY[cid];
+    if (!c || !c.variety || !IVH.meta) return [];
+    const out = [[c.jenis, c.variety]];
+    IVH.pasang[cid] = out;
+    return out;
+  }
+  // Baris paling teruk (merah > kuning > hijau > kelabu); sama taraf: ada harga, kemudian |z| terbesar.
+  function ivPickRow(rows) {
+    let best = null;
+    const key = (r) => [
+      STATUS_W[r.amaranPo ? r.amaranPo.status : r.status] ?? -1,
+      fin(r.harga) ? 1 : 0,
+      Math.abs(r.z || 0),
+    ];
+    rows.forEach((r) => {
+      if (!best) return (best = r);
+      const a = key(r),
+        b = key(best);
+      for (let i = 0; i < 3; i++) {
+        if (a[i] > b[i]) return (best = r);
+        if (a[i] < b[i]) return;
+      }
+    });
+    return best;
+  }
+  function ivPoRow(poId, cid, stage) {
+    const idx = IVH.idxPO[STAGE_KEY[stage]];
+    if (!idx) return null;
+    return ivPickRow(
+      ivDbPairs(cid)
+        .map(([k, v]) => idx.get([poId, k, v].join('|')))
+        .filter(Boolean),
+    );
+  }
+  function ivDistrictRow(poId, districtName, cid, stage) {
+    const idx = IVH.idxDaerah[STAGE_KEY[stage]];
+    if (!idx) return null;
+    const dn = ivNorm(districtName);
+    return ivPickRow(
+      ivDbPairs(cid)
+        .map(([k, v]) => idx.get([poId, dn, k, v].join('|')))
+        .filter(Boolean),
+    );
+  }
+  // Semua nombor harga datang daripada baris /api/harga (sama seperti Pemantauan); tiada ramalan.
+  function ivPriceFromRow(r) {
+    if (!r) return null;
+    const mg = r.minggu || {};
     return {
-      actual,
-      forecast,
-      baseline,
-      devPct: ((actual - baseline) / baseline) * 100,
-      forecastDevPct: ((forecast - baseline) / baseline) * 100,
-      thresholdLow: baseline * (1 + th.pengeluar.warnPct / 100),
-      thresholdHigh: baseline * (1 + th.pengguna.warnPct / 100),
-      floor: r.hargaLantai,
-      ceiling: r.hargaSiling,
+      actual: fin(r.harga) ? r.harga : null,
+      previous: fin(r.hargaSebelum) ? r.hargaSebelum : null,
+      weeklyPct: fin(r.pctMinggu) ? r.pctMinggu : null,
+      weeklyRm: fin(r.rmMinggu) ? r.rmMinggu : null,
+      floor: fin(r.lantai) ? r.lantai : null,
+      ceiling: fin(r.siling) ? r.siling : null,
+      mean: fin(r.mean) ? r.mean : null,
+      sigma: fin(r.sd) ? r.sd : null,
+      z: fin(r.z) ? r.z : null,
+      asas: r.asas || null,
+      forecast: null,
       unit: r.unit,
-      priceLevel: r.peringkat,
+      priceLevel: STAGE_LABEL[r.peringkat] || r.peringkat,
       grade: null,
       gradeNote: 'gred tidak tersedia dalam data sedia ada',
-      windowDays: days,
-      overlay,
-      source: 'dummy',
-      origin: 'DATA.rekod',
+      statusKongsi: (r.amaranPo ? r.amaranPo.status : r.status) || null,
+      sebabKongsi: (r.amaranPo ? r.amaranPo.sebab : r.sebab) || '',
+      ganti: r.ganti || null,
+      variety: r.variety,
+      dbCommodity: r.commodity,
+      minggu: mg,
+      priceAsOf: HARGADB.terkini,
+      windowLabel: mg.iso
+        ? 'Minggu ISO ' + mg.iso + ' (' + mg.mula + ' hingga ' + mg.akhir + ')'
+        : '',
+      source: 'db-harga',
+      origin: '/api/harga',
     };
   }
-  function ivPrice(poId, commodityId, stage, days) {
-    days = days || ivState.selectedDateRange.days;
-    const p = IV_POBY[poId];
-    if (!p) return null;
-    const ps = p.districts
-      .map((d) => IV_REK.get(poId + '|' + d[0] + '|' + commodityId + '|' + stage))
-      .filter(Boolean)
-      .map((r) => recPrice(r, days));
-    if (!ps.length) return null;
-    const m = (k) => mean(ps.map((x) => x[k]));
-    return {
-      actual: m('actual'),
-      forecast: m('forecast'),
-      baseline: m('baseline'),
-      devPct: m('devPct'),
-      forecastDevPct: m('forecastDevPct'),
-      floor: m('floor'),
-      ceiling: m('ceiling'),
-      unit: ps[0].unit,
-      priceLevel: stage,
-      grade: null,
-      gradeNote: ps[0].gradeNote,
-      overlay: ps.find((x) => x.overlay) ? ps.find((x) => x.overlay).overlay : null,
-      windowDays: days,
-      source: 'dummy',
-      origin: 'DATA.rekod',
-    };
+  function recPrice(poId, districtName, cid, stage) {
+    return ivPriceFromRow(ivDistrictRow(poId, districtName, cid, stage));
+  }
+  // Harga aras PO (purata daerah dalam PO, dikira pelayan). `days` dikekalkan untuk keserasian tandatangan.
+  function ivPrice(poId, commodityId, stage) {
+    if (!IVH.sedia || !poObj(poId)) return null;
+    return ivPriceFromRow(ivPoRow(poId, commodityId, stage));
   }
 
   /* ===== Bekalan (dummy) ===== */
@@ -525,7 +617,7 @@
   const IV_SUPPLY = (function () {
     const rows = {};
     IV_PO.forEach((p) =>
-      IV_COMM.forEach((c) => {
+      IV_DUMMY_COMM.forEach((c) => {
         if (c.unit !== 'RM/kg') return;
         const k = p.id + '|' + c.id;
         if (IV_SUPPLY_OVERRIDE[k]) {
@@ -547,7 +639,9 @@
     );
     return rows;
   })();
-  const supplyRow = (poId, cid) => IV_SUPPLY[poId + '|' + cid] || null;
+  // Bekalan dummy hanya wujud bagi varieti yang dipetakan (IV_BEKALAN_PETA); selainnya null = tiada data bekalan.
+  const supplyRow = (poId, cid) =>
+    IV_BEKALAN_DUMMY[cid] ? IV_SUPPLY[poId + '|' + IV_BEKALAN_DUMMY[cid]] || null : null;
 
   /* ===== Logistik ===== */
   const IV_LOGISTICS_AVAIL = {
@@ -599,7 +693,7 @@
     now = now == null ? nowMs() : now;
     const cfg = IV_CONFIG.supply;
     if (!row || row.availableStockMT == null || row.requiredMT == null)
-      return { state: 'tiada', reason: 'Tiada data bekalan' };
+      return { state: 'tiada', reason: 'Tiada data bekalan (dummy)' };
     if ((now - Date.parse(row.lastUpdated)) / 36e5 > cfg.staleHours)
       return { state: 'lapuk', reason: 'Data stok lapuk' };
     if (mode === 'pengeluar') {
@@ -613,40 +707,35 @@
       return { state: 'disahkan', reason: 'Kekurangan bekalan dikesan' };
     return { state: 'tidak-disahkan', reason: 'Menunggu pengesahan bekalan' };
   }
+  // Tahap harga = status kongsi pelayan, selari dengan Pemantauan: merah = Kritikal (amaran harga), kuning = Waspada,
+  // hijau = Normal, kelabu = tiada ambang (tidak pernah hijau). Pengesahan bekalan DIKECUALIKAN buat masa ini (tiada
+  // data bekalan sebenar); `supply` masih dikira untuk paparan maklumat sahaja dan tidak mengubah tahap.
   function ivClassify(mode, price, row) {
-    const th = IV_CONFIG.thresholds[mode];
-    const crit = Math.abs(th.critPct),
-      warn = Math.abs(th.warnPct);
-    const harm = mode === 'pengeluar' ? -price.devPct : price.devPct,
-      harmF = mode === 'pengeluar' ? -price.forecastDevPct : price.forecastDevPct;
-    const floorHit =
-      mode === 'pengeluar'
-        ? fin(price.floor) && price.actual <= price.floor
-        : fin(price.ceiling) && price.actual >= price.ceiling;
-    let pl = 'normal';
-    if (harm >= crit || floorHit) pl = 'kritikal';
-    else if (harm >= warn || harmF >= warn) pl = 'waspada';
+    const st = price.statusKongsi || null;
+    const noThreshold = !st || st === 'kelabu';
+    const pl = st === 'merah' ? 'kritikal' : st === 'kuning' ? 'waspada' : 'normal';
+    // Skor: |z| arah merugikan mod ini (Pengeluar z negatif, Pengguna z positif); tiada z = 0.
+    const harm = fin(price.z) ? (mode === 'pengeluar' ? -price.z : price.z) : 0;
     const sc = supplyConfirm(mode, row);
-    let level,
+    const level = pl,
       flag = null,
       early = false;
-    if (pl === 'kritikal') {
-      if (sc.state === 'disahkan') level = 'kritikal';
-      else {
-        level = 'waspada';
-        flag = sc.state === 'tidak-disahkan' ? 'Menunggu pengesahan bekalan' : sc.reason;
-      }
-    } else if (pl === 'waspada') level = 'waspada';
-    else {
-      level = 'normal';
-      early = sc.state === 'disahkan';
-    }
-    return { priceLevel: pl, level, flag, earlySignal: early, supply: sc, harm, harmF };
+    return {
+      priceLevel: pl,
+      level,
+      flag,
+      earlySignal: early,
+      supply: sc,
+      harm,
+      harmF: 0,
+      noThreshold,
+      amaranHarga: false,
+      sharedStatus: st,
+    };
   }
   function priorityScore(mode, price, row, cls) {
-    const crit = Math.abs(IV_CONFIG.thresholds[mode].critPct);
-    const P = clamp(cls.harm / (2 * crit), 0, 1),
-      F = clamp(cls.harmF / (2 * crit), 0, 1);
+    const P = clamp(cls.harm / 4, 0, 1),
+      F = 0;
     let gap = 0;
     if (row)
       gap =
@@ -654,45 +743,52 @@
           ? row.surplusMT / Math.max(row.net, 1)
           : row.shortageMT / Math.max(row.requiredMT, 1);
     const S = clamp(gap, 0, 1);
-    const C = cls.supply.state === 'disahkan' ? 1 : cls.supply.state === 'lapuk' ? 0.5 : 0;
+    const C = 0; // pengesahan bekalan dikecualikan (tiada data sebenar)
     return { score: Math.round(100 * (0.45 * P + 0.35 * S + 0.1 * F + 0.1 * C)), P, S, F, C };
   }
   const LV_W = { normal: 0, waspada: 1, kritikal: 2 };
-  const LV_LABEL = { normal: 'Normal', waspada: 'Waspada', kritikal: 'Kritikal' };
+  const LV_LABEL = {
+    normal: 'Normal',
+    waspada: 'Waspada',
+    kritikal: 'Kritikal',
+    tiada: 'Tiada ambang',
+  };
   const MODE_STAGE = { pengeluar: 'Ladang', pengguna: 'Runcit' };
   const _recCache = {};
-  function computeRecs(mode, days) {
-    const key = mode + '|' + days + '|' + JSON.stringify(IV_CONFIG.thresholds) + '|' + refNow;
+  function computeRecs(mode) {
+    if (!IVH.sedia) return [];
+    const key = mode + '|' + IVH.ver + '|' + refNow;
     if (_recCache[key]) return _recCache[key];
     const stage = MODE_STAGE[mode];
     const out = [];
-    DATA.rekod.forEach((r) => {
-      if (r.peringkat !== stage) return;
-      const cid = slug(r.komoditi);
-      const price = recPrice(r, days);
-      const row = isKg(cid) ? supplyRow(r.poId, cid) : null;
-      const cls = ivClassify(mode, price, row);
-      const sc = priorityScore(mode, price, row, cls);
-      const po = IV_POBY[r.poId];
-      out.push({
-        id: `${mode}:${r.poId}:${po.stateId}/${slug(r.daerah)}:${cid}`,
-        mode,
-        poId: r.poId,
-        poName: po.name,
-        stateId: po.stateId,
-        negeri: po.negeri,
-        district: r.daerah,
-        districtId: po.stateId + '/' + slug(r.daerah),
-        commodityId: cid,
-        commodity: r.komoditi,
-        price,
-        row,
-        cls,
-        score: sc.score,
-        comp: sc,
-        legacyStatus: r.status,
-      });
-    });
+    IV_DISTRICTS.forEach((d) =>
+      IV_COMM.forEach((c) => {
+        const rw = ivDistrictRow(d.poId, d.name, c.id, stage);
+        if (!rw) return;
+        const price = ivPriceFromRow(rw);
+        const row = isKg(c.id) ? supplyRow(d.poId, c.id) : null;
+        const cls = ivClassify(mode, price, row);
+        const sc = priorityScore(mode, price, row, cls);
+        const po = IV_POBY[d.poId];
+        out.push({
+          id: `${mode}:${d.poId}:${d.districtId}:${c.id}`,
+          mode,
+          poId: d.poId,
+          poName: po.name,
+          stateId: po.stateId,
+          negeri: po.negeri,
+          district: d.name,
+          districtId: d.districtId,
+          commodityId: c.id,
+          commodity: c.name,
+          price,
+          row,
+          cls,
+          score: sc.score,
+          comp: sc,
+        });
+      }),
+    );
     Object.keys(_recCache).forEach((k) => delete _recCache[k]);
     _recCache[key] = out;
     return out;
@@ -749,55 +845,41 @@
       trigger: { ok: false, reason: null },
       inputsEcho: { ...inp },
     };
-    const anchor = IV_POBY[anchorPOId];
-    if (!anchor || !isKg(commodityId)) {
+    const anchor = poObj(anchorPOId);
+    if (!anchor) {
       out.trigger.reason = 'tiada';
       return out;
     }
-    const aRow = supplyRow(anchorPOId, commodityId);
-    const sc = supplyConfirm(mode, aRow, inp.now);
-    if (sc.state !== 'disahkan') {
-      out.trigger = { ok: false, reason: sc.state, text: sc.reason };
-      return out;
-    }
-    out.trigger = { ok: true, reason: 'disahkan', text: sc.reason };
+    // Buat masa ini calon PO dinilai pada jarak dan harga sahaja: bekalan (data dummy) diabaikan, tiada syarat
+    // pengesahan bekalan, lebihan/kekurangan stok atau zon.
+    out.trigger = { ok: true, reason: 'bekalan-diabaikan', text: 'Bekalan tidak dinilai' };
     const wP = clamp(inp.wPrice, 0, 100) / 100,
       wD = 1 - wP;
     const need = inp.needMT;
     const refPrice = inp.refPrice;
     const el = [];
-    IV_PO.forEach((c) => {
+    const lipA = liputan(anchor);
+    [...IV_PO, ...IV_TBH].forEach((c) => {
       const ex = (r) => out.excluded.push({ poId: c.id, name: c.name, reason: r });
       if (c.id === anchorPOId) return ex('PO terpilih sendiri');
-      const row = supplyRow(c.id, commodityId);
+      // PO tambahan (atau PO terpilih tambahan) yang berkongsi daerah liputan dikecualikan
+      if ((c.tambahan || anchor.tambahan) && [...liputan(c)].some((d) => lipA.has(d)))
+        return ex('Liputan daerah sama dengan PO terpilih');
       const pr = ivPrice(c.id, commodityId, 'Borong', inp.days);
-      if (!row || !pr) return ex('Data tidak lengkap');
-      const stock = mode === 'pengguna' ? row.surplusMT : row.shortageMT;
-      if (!(stock > 0))
-        return ex(
-          mode === 'pengguna'
-            ? 'Tiada lebihan stok'
-            : 'Tiada permintaan tambahan (tiada kekurangan)',
-        );
-      if (
-        c.zone !== anchor.zone &&
-        !IV_CONFIG.crossZoneRules.some(
-          (r) => r.approved && r.from === anchor.zone && r.to === c.zone,
-        )
-      )
-        return ex(`Zon berbeza (${c.zone} lawan ${anchor.zone})`);
+      if (!pr || !fin(pr.actual)) return ex('Tiada harga Borong (DB Harga)');
       const km = hav(anchor.lat, anchor.lon, c.lat, c.lon) * IV_CONFIG.detour;
       if (km > inp.distLimitKm)
         return ex(`Jarak ${Math.round(km)} km melebihi had ${inp.distLimitKm} km`);
-      const dis = disruptionLevel(c.id, inp.now);
-      const banjir = banjirDisruption(c.id);
+      const dis = c.tambahan ? null : disruptionLevel(c.id, inp.now);
+      const banjir = c.tambahan ? null : banjirDisruption(c.id);
       if (dis && dis.level === 'Amaran') return ex(dis.source);
       const adv = mode === 'pengguna' ? refPrice - pr.actual : pr.actual - refPrice;
       if (!(adv > 0)) return ex('Harga tidak lebih baik daripada harga rujukan');
-      const lg = logisticsOf(c.id);
-      let qty = Math.min(need, stock),
+      const lg = c.tambahan ? null : logisticsOf(c.id);
+      // Kuantiti (MT) hanya bermakna untuk komoditi RM/kg; unit lain (cth. RM/biji) tiada penukaran ke MT.
+      let qty = isKg(commodityId) ? need : null,
         cap = null;
-      if (lg.availableVehicleCount != null) {
+      if (qty != null && lg && lg.availableVehicleCount != null) {
         cap = (lg.availableVehicleCount * lg.muatanMaxMT) / lg.kenderaanMax;
         qty = Math.min(qty, cap);
       }
@@ -807,18 +889,18 @@
         negeri: c.negeri,
         zone: c.zone,
         sameState: c.negeri === anchor.negeri,
-        stockMT: stock,
+        stockMT: null, // bekalan diabaikan
         price: pr.actual,
         km,
         priceAdv: adv,
         qty,
         vehicleCapMT: cap,
-        vehicleKnown: lg.availableVehicleCount != null,
-        maxCapMT: lg.muatanMaxMT,
-        sameGroup: c.group === anchor.group,
+        vehicleKnown: !!lg && lg.availableVehicleCount != null,
+        maxCapMT: lg ? lg.muatanMaxMT : null,
+        sameGroup: !c.tambahan && !anchor.tambahan && c.group === anchor.group,
+        tambahan: !!c.tambahan,
         flood: dis && dis.level === 'Waspada' ? dis : null,
         banjir,
-        overlay: pr.overlay,
       });
     });
     const rank = (list) => {
@@ -834,7 +916,11 @@
         );
       });
       list.sort(
-        (a, b) => b.score - a.score || b.qty - a.qty || a.km - b.km || a.name.localeCompare(b.name),
+        (a, b) =>
+          b.score - a.score ||
+          (b.qty || 0) - (a.qty || 0) ||
+          a.km - b.km ||
+          a.name.localeCompare(b.name),
       );
       list.slice(0, 5).forEach((x, i) => (x.rank = i + 1));
       return list.slice(0, 5);
@@ -877,51 +963,71 @@
     IV_PO.map((p) => [p.id, +(0.35 + (hash32('kos' + p.id) % 26) / 100).toFixed(2)]),
   );
   IV_OPCOST.simpangrenggam = 0.45;
-  const IV_HISTORY_OVERRIDE = {
-    'simpangrenggam|cili-merah': [1.1, 1.2, 1.3, 1.2, 1.1, 1.2, 1.3, 1.2, 1.1, 1.2, 1.3, 1.2].map(
-      (s, i) => ({
-        week: addDays('2026-11-15', -7 * (11 - i)),
-        beli: 12.5,
-        jual: +(12.5 + s).toFixed(2),
-      }),
-    ),
-    'penang|kubis-bulat': [0, 1, 2, 3].map((i) => ({
-      week: addDays('2026-11-15', -7 * (3 - i)),
-      beli: 4.1 + i * 0.02,
-      jual: +(4.55 + i * 0.01).toFixed(2),
-    })),
-  };
-  const IV_MARGIN_DEFAULT_OVERRIDE = { 'simpangrenggam|cili-merah': { ladang: 9.8 } };
-  function historyOf(poId, cid) {
-    const k = poId + '|' + cid;
-    if (IV_HISTORY_OVERRIDE[k]) return IV_HISTORY_OVERRIDE[k];
-    const pr = ivPrice(poId, cid, 'Borong', 30);
-    if (!pr) return [];
-    const r = mulberry32(hash32('h' + k));
-    const out = [];
-    for (let i = 0; i < 12; i++) {
-      const jual = pr.baseline * (1 + (r() - 0.5) * 0.08);
-      const sp = 0.06 + r() * 0.06;
-      out.push({
-        week: addDays('2026-11-15', -7 * (11 - i)),
-        beli: +(jual * (1 - sp)).toFixed(2),
-        jual: +jual.toFixed(2),
-      });
+  // Sejarah spread (data sebenar DB Harga): untuk setiap minggu ISO lengkap, jual = harga Borong PO dan
+  // beli = harga Ladang PO (purata harian dalam minggu itu, siri /api/harga?siri=1). Harga Borong Beli
+  // sebenar FAMA PO tiada dalam DB Harga, maka spread sejarah ialah Borong tolak Ladang. Kurang
+  // minHistory minggu: julat sokongan pasaran tidak dipaparkan (tiada ralat).
+  function ivSiriMingguan(stage, poId, cid) {
+    const row = ivPoRow(poId, cid, stage);
+    if (!row) return null;
+    const params = {
+      peringkat: STAGE_KEY[stage],
+      po: poId,
+      commodity: row.commodity,
+      variety: row.variety,
+    };
+    const d = HARGADB.segerak('siri', params);
+    if (!d) {
+      const u = HARGADB.url('siri', params);
+      if (!IVH.siriGagal.has(u)) {
+        HARGADB.siri(params).then(
+          () => ivRender(['mar', 'marres']),
+          () => IVH.siriGagal.add(u),
+        );
+      }
+      return null;
     }
+    const terkini = HARGADB.terkini || '';
+    const by = new Map();
+    ((d.siri && d.siri.titik) || []).forEach((p) => {
+      if (!fin(p.h) || !p.t) return;
+      const w = weekStart(p.t);
+      if (!by.has(w)) by.set(w, []);
+      by.get(w).push(p.h);
+    });
+    const out = new Map();
+    by.forEach((v, w) => {
+      if (addDays(w, 6) <= terkini) out.set(w, mean(v));
+    });
     return out;
   }
+  function historyOf(poId, cid) {
+    if (!IVH.sedia) return [];
+    const jual = ivSiriMingguan('Borong', poId, cid),
+      beli = ivSiriMingguan('Ladang', poId, cid);
+    if (!jual || !beli) return [];
+    return [...jual.keys()]
+      .filter((w) => beli.has(w))
+      .sort()
+      .slice(-12)
+      .map((w) => ({
+        week: w,
+        beli: +beli.get(w).toFixed(2),
+        jual: +jual.get(w).toFixed(2),
+      }));
+  }
+  // Harga Borong Jual = harga Borong PO minggu terkini (jadual harga_borong_mingguan dianggap padanan bagi
+  // "harga jualan borong yang diperhatikan"); Harga Borong Beli kekal input pengguna; ladang = harga ladang PO.
   function marginDefaults(poId, cid) {
-    const h = historyOf(poId, cid),
-      last = h[h.length - 1] || null;
-    const lad = ivPrice(poId, cid, 'Ladang', 30);
-    const ov = IV_MARGIN_DEFAULT_OVERRIDE[poId + '|' + cid];
+    const bor = ivPrice(poId, cid, 'Borong'),
+      lad = ivPrice(poId, cid, 'Ladang');
     return {
-      jual: last ? last.jual : null,
-      beli: last ? last.beli : null,
-      ladang: ov ? ov.ladang : lad ? +lad.actual.toFixed(2) : null,
+      jual: bor && fin(bor.actual) ? +bor.actual.toFixed(2) : null,
+      beli: null,
+      ladang: lad && fin(lad.actual) ? +lad.actual.toFixed(2) : null,
       kos: IV_OPCOST[poId],
       target: 15,
-      override: !!ov,
+      override: false,
     };
   }
   function validateMargin(m) {
@@ -1011,6 +1117,7 @@
   const ivState = {
     selectedMode: 'pengeluar',
     selectedCommodityId: null,
+    selectedJenis: null,
     selectedStateId: null,
     selectedDistrictId: null,
     selectedPOId: null,
@@ -1049,7 +1156,7 @@
           typeof d.interventionId === 'string' &&
           typeof d.sourcePOId === 'string' &&
           typeof d.destinationPOId === 'string' &&
-          fin(d.quantityMT),
+          (d.quantityMT === null || fin(d.quantityMT)),
       );
     } catch (_) {
       return [];
@@ -1082,10 +1189,25 @@
       const x = ivState.selectedInterventionId.split(':')[3];
       if (IV_COMMBY[x]) return { id: x, def: false };
     }
-    return { id: 'cili-merah', def: true };
+    if (ivState.selectedJenis) {
+      const c = IV_COMM.find((x) => x.jenis === ivState.selectedJenis && !x.tiadaData);
+      if (c) return { id: c.id, def: true };
+    }
+    return { id: IV_LALAI_ID, def: true };
   }
-  const poName = (id) => (IV_POBY[id] ? IV_POBY[id].name : '—');
-  const commName = (id) => (IV_COMMBY[id] ? IV_COMMBY[id].name : '—');
+  // Penapis komoditi (jenis dan/atau varieti) terpakai pada id varieti ini?
+  function commOk(cid) {
+    const s = ivState;
+    if (s.selectedCommodityId) return cid === s.selectedCommodityId;
+    if (s.selectedJenis) return !!IV_COMMBY[cid] && IV_COMMBY[cid].jenis === s.selectedJenis;
+    return true;
+  }
+  const poName = (id) => (poObj(id) ? poObj(id).name : '—');
+  // id dummy lama (cth. outlet dummy) dipaparkan sebagai varieti senarai yang dipetakan kepadanya.
+  const commName = (id) => {
+    const c = IV_COMMBY[id] || IV_COMMBY[IV_DUMMY_PAIR[id]];
+    return c ? c.name : '—';
+  };
 
   /* ===== Penyesuai AI (simulasi, deterministik) ===== */
   const aiAdapter = (function () {
@@ -1132,39 +1254,36 @@
 
   /* ===== Penyaringan dan tahap ===== */
   function recsNow() {
-    return computeRecs(ivState.selectedMode, ivState.selectedDateRange.days);
+    return computeRecs(ivState.selectedMode);
   }
   function recsForPO(poId, commOnly = true) {
-    return recsNow().filter(
-      (r) =>
-        r.poId === poId &&
-        (!commOnly ||
-          !ivState.selectedCommodityId ||
-          r.commodityId === ivState.selectedCommodityId),
-    );
+    return recsNow().filter((r) => r.poId === poId && (!commOnly || commOk(r.commodityId)));
   }
+  // Tahap PO = amaranPo pelayan (sama dengan Pemantauan: merah >= 1 daerah merah, kuning >= 30% daerah kuning atau
+  // purata PO kuning, hijau perlu liputan data >= 50%) bagi peringkat mod semasa, terburuk merentas komoditi tertapis.
+  // 'tiada' = tiada rekod atau semua kelabu: kelabu, tidak pernah hijau.
+  const AMARAN_LV = { merah: 'kritikal', kuning: 'waspada', hijau: 'normal' };
   function poLevel(poId) {
-    let l = 'normal';
-    recsForPO(poId).forEach((r) => {
-      l = worst(l, r.cls.level);
+    const stage = MODE_STAGE[ivState.selectedMode];
+    let l = 'tiada';
+    IV_COMM.forEach((c) => {
+      if (!commOk(c.id)) return;
+      const rw = ivPoRow(poId, c.id, stage);
+      if (!rw) return;
+      const lv = AMARAN_LV[rw.amaranPo ? rw.amaranPo.status : rw.status];
+      if (lv) l = worst(l === 'tiada' ? 'normal' : l, lv);
     });
     return l;
   }
   function districtLevel(did) {
-    let l = 'normal',
-      any = false;
+    let l = 'tiada';
     recsNow().forEach((r) => {
-      if (
-        r.districtId === did &&
-        (!ivState.selectedCommodityId || r.commodityId === ivState.selectedCommodityId)
-      ) {
-        any = true;
-        l = worst(l, r.cls.level);
-      }
+      if (r.districtId === did && commOk(r.commodityId) && !r.cls.noThreshold)
+        l = worst(l === 'tiada' ? 'normal' : l, r.cls.level);
     });
-    return any ? l : 'tiada';
+    return l;
   }
-  const STATUS_CLS = { normal: 'hijau', waspada: 'kuning', kritikal: 'merah' };
+  const STATUS_CLS = { normal: 'hijau', waspada: 'kuning', kritikal: 'merah', tiada: 'kelabu' };
   function poPasses(p, lvl) {
     const s = ivState;
     return (
@@ -1185,7 +1304,7 @@
         (r) =>
           r.cls.level !== 'normal' &&
           (s.selectedRisk === 'all' || r.cls.level === s.selectedRisk) &&
-          (!s.selectedCommodityId || r.commodityId === s.selectedCommodityId) &&
+          commOk(r.commodityId) &&
           (!s.selectedStateId || r.stateId === s.selectedStateId) &&
           (!s.selectedPOId || r.poId === s.selectedPOId) &&
           (!s.selectedDistrictId || r.districtId === s.selectedDistrictId),
@@ -1194,21 +1313,17 @@
   }
   function issueLabel(r) {
     const m = r.mode;
-    const base =
-      r.cls.priceLevel !== 'normal'
+    // Merah = Kritikal terus (pengesahan bekalan dikecualikan), selari dengan Pemantauan.
+    const base = r.cls.amaranHarga
+      ? 'Amaran harga'
+      : r.cls.priceLevel === 'kritikal'
         ? m === 'pengeluar'
           ? 'Harga ladang jatuh'
           : 'Kenaikan harga runcit'
         : m === 'pengeluar'
-          ? 'Ramalan di bawah ambang'
-          : 'Ramalan di atas ambang';
-    const suf =
-      r.cls.supply.state === 'disahkan'
-        ? m === 'pengeluar'
-          ? ' + lebihan bekalan dikesan (data dummy)'
-          : ' + kekurangan bekalan dikesan (data dummy)'
-        : '';
-    return base + suf;
+          ? 'Harga ladang berwaspada'
+          : 'Harga runcit berwaspada';
+    return base; // pengesahan bekalan dikecualikan
   }
   function intervType(r) {
     const k = r.cls.level === 'kritikal';
@@ -1223,8 +1338,33 @@
   const tagD = '<span class="iv-tag dummy">DATA DUMMY</span>',
     tagR = '<span class="iv-tag real">Data sedia ada</span>';
   const chip = (t, c = '') => `<span class="iv-chip ${c}">${E(t)}</span>`;
+  const tagH = '<span class="iv-tag real">DB Harga</span>';
+  const statusKongsiChips = (r) =>
+    r.price.statusKongsi
+      ? chip(
+          'Pemantauan: ' + STATUS_LABEL[r.price.statusKongsi],
+          r.price.statusKongsi === 'hijau' || r.price.statusKongsi === 'kelabu' ? 'grey' : 'warn',
+        )
+      : '';
+  const pctTxt = (x) => (fin(x) ? sgn(x, 1) + '%' : '—');
+  // Satu baris harga: harga semasa, minggu sebelum + perubahan, sebab status dan tahun asas.
+  function hargaRingkas(p) {
+    if (!fin(p.actual)) {
+      return p.ganti && fin(p.ganti.harga)
+        ? `Tiada harga ladang · ${E(p.ganti.label)}: ${rmAny(p.ganti.harga)}`
+        : 'Tiada harga ladang';
+    }
+    return `Harga semasa ${rmAny(p.actual)}${fin(p.previous) ? ` (minggu sebelum ${rmAny(p.previous)}, ${pctTxt(p.weeklyPct)})` : ''} · ${E(p.sebabKongsi)}${p.asas ? ` · asas ${p.asas}` : ''}`;
+  }
 
   /* ===== Dispatch ===== */
+  // ubah kepada true untuk papar semula panel AI Muse (sementara disembunyikan); ?muse=1 hanya untuk ujian
+  const IV_SHOW_MUSE = false;
+  const ivShowMuse = IV_SHOW_MUSE || /[?&]muse=1(&|$)/.test(location.search);
+  (function () {
+    const p = document.getElementById('ivMusePanel');
+    if (p) p.hidden = !ivShowMuse;
+  })();
   const ALL_PANELS = ['filters', 'map', 'log', 'pri', 'mob', 'draft', 'mar', 'muse'];
   function resetMobSel() {
     ivState.mob.needMT = null;
@@ -1265,8 +1405,14 @@
       }
       case 'setFilter': {
         const [k, v] = payload;
-        if (k === 'komoditi') {
-          s.selectedCommodityId = v === 'all' || !IV_COMMBY[v] ? null : v;
+        if (k === 'komoditi' || k === 'varieti') {
+          if (k === 'komoditi') {
+            s.selectedJenis = v === 'all' || !IV_JENIS.some((j) => j.kod === v) ? null : v;
+            s.selectedCommodityId = null;
+          } else {
+            const c = v === 'all' ? null : IV_COMMBY[v];
+            s.selectedCommodityId = c && c.variety && !c.tiadaData ? v : null;
+          }
           s.selectedInterventionId = null;
           s.mob.candidateKey = null;
           s.mob.needMT = null;
@@ -1300,6 +1446,7 @@
         Object.assign(s, {
           selectedMode: 'pengeluar',
           selectedCommodityId: null,
+          selectedJenis: null,
           selectedStateId: null,
           selectedDistrictId: null,
           selectedPOId: null,
@@ -1320,6 +1467,16 @@
         focus = true;
         break;
       }
+      case 'setMobAnchor': {
+        // PO tambahan sebagai PO terpilih mobilisasi (tidak mengubah PO terpilih panel lain)
+        if (!IV_TBHBY[payload]) return;
+        s.mob.anchorTbh = payload;
+        s.mob.candidateKey = null;
+        s.mob.needMT = null;
+        s.mob.refPrice = null;
+        dirty = ['mob', 'map'];
+        break;
+      }
       case 'selectPO': {
         const p = IV_POBY[payload];
         if (!p) {
@@ -1328,6 +1485,7 @@
           return;
         }
         s.selectedPOId = p.id;
+        s.mob.anchorTbh = null;
         s.selectedStateId = p.stateId;
         s.selectedDistrictId = null;
         s.selectedOutletId = null;
@@ -1376,6 +1534,7 @@
         s.selectedStateId = r.stateId;
         s.selectedDistrictId = r.districtId;
         s.selectedCommodityId = r.commodityId;
+        s.selectedJenis = IV_COMMBY[r.commodityId] ? IV_COMMBY[r.commodityId].jenis : null;
         s.selectedOutletId = null;
         resetMobSel();
         applyRoles();
@@ -1533,6 +1692,10 @@
         },
       });
       ivMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+      if (window.FamaPOT) {
+        FamaPOT.pasangZum(ivMap);
+        FamaPOT.pasangButang($i('ivPoTbhCtl'));
+      }
       if (window.ResizeObserver) {
         if (ivMap._ro) ivMap._ro.disconnect();
         ivMap._ro = new ResizeObserver(() => {
@@ -1606,14 +1769,22 @@
     const s = ivState;
     try {
       const d = s.selectedDistrictId && IV_DISTBY[s.selectedDistrictId];
+      const FD = window.FamaDaerah && window.FamaDaerah.sedia() ? window.FamaDaerah : null;
       if (d && !ivWithheld[d.poId]) {
-        ivMap.flyTo({ center: [d.lon, d.lat], zoom: 10.5, duration: 700 });
+        const rf = FD && FD.fitur(d.negeri, d.name);
+        if (rf) ivMap.fitBounds(FD.sempadan(rf), { padding: 60, maxZoom: 11, duration: 700 });
+        else ivMap.flyTo({ center: [d.lon, d.lat], zoom: 10.5, duration: 700 });
         return;
       }
       const p = s.selectedPOId && IV_POBY[s.selectedPOId];
       if (p) {
         const b = new maplibregl.LngLatBounds([p.lon, p.lat], [p.lon, p.lat]);
-        if (!ivWithheld[p.id]) p.districts.forEach((x) => b.extend([x[2], x[1]]));
+        if (!ivWithheld[p.id])
+          p.districts.forEach((x) => {
+            const rf = FD && FD.fitur(p.negeri, x[0]);
+            if (rf) FD.sempadan(rf).forEach((c) => b.extend(c));
+            else b.extend([x[2], x[1]]);
+          });
         ivMap.fitBounds(b, { padding: 60, maxZoom: 10, duration: 700 });
         return;
       }
@@ -1664,19 +1835,42 @@
     try {
       const s = ivState,
         p = s.selectedPOId && IV_POBY[s.selectedPOId];
-      const feats =
-        p && !ivWithheld[p.id]
-          ? IV_DISTRICTS.filter((d) => d.poId === p.id).map((d) => ({
-              type: 'Feature',
-              properties: {
-                name: d.name + ' (anggaran)',
-                lvl: districtLevel(d.districtId),
-                sel: d.districtId === s.selectedDistrictId ? 1 : 0,
-              },
-              geometry: { type: 'Polygon', coordinates: [circlePoly(d.lon, d.lat, 10)] },
-            }))
-          : [];
+      // Poligon sebenar (FamaDaerah) jika nama daerah dipadankan; selainnya bulatan anggaran lama.
+      const FD = window.FamaDaerah && window.FamaDaerah.sedia() ? window.FamaDaerah : null;
+      const dipakai = new Map();
+      const feats = [];
+      if (p && !ivWithheld[p.id])
+        IV_DISTRICTS.filter((d) => d.poId === p.id).forEach((d) => {
+          const rf = FD && FD.fitur(d.negeri, d.name);
+          const sel = d.districtId === s.selectedDistrictId ? 1 : 0;
+          if (rf && dipakai.has(rf)) {
+            if (sel) dipakai.get(rf).properties.sel = 1;
+            return;
+          }
+          if (FD && !rf)
+            console.debug('Daerah tiada padanan GeoJSON, guna kawasan anggaran:', d.name);
+          const f = {
+            type: 'Feature',
+            properties: {
+              name: rf ? d.name : d.name + ' (anggaran)',
+              lvl: districtLevel(d.districtId),
+              sel,
+            },
+            geometry: rf
+              ? rf.geometry
+              : { type: 'Polygon', coordinates: [circlePoly(d.lon, d.lat, 10)] },
+          };
+          if (rf) dipakai.set(rf, f);
+          feats.push(f);
+        });
       const data = { type: 'FeatureCollection', features: feats };
+      // Kawasan Kritikal berdenyut lembut (tiada denyut jika pengguna pilih kurang gerak)
+      if (window.FamaDaerah)
+        window.FamaDaerah.denyut(
+          ivMap,
+          'iv-districts-denyut',
+          feats.some((f) => f.properties.lvl === 'kritikal'),
+        );
       const src = ivMap.getSource('iv-districts');
       if (src) {
         src.setData(data);
@@ -1698,7 +1892,14 @@
         id: 'iv-districts-fill',
         type: 'fill',
         source: 'iv-districts',
-        paint: { 'fill-color': col, 'fill-opacity': 0.16 },
+        paint: { 'fill-color': col, 'fill-opacity': 0.28 },
+      });
+      ivMap.addLayer({
+        id: 'iv-districts-denyut',
+        type: 'fill',
+        source: 'iv-districts',
+        filter: ['==', ['get', 'lvl'], 'kritikal'],
+        paint: { 'fill-color': '#ff4e63', 'fill-opacity': 0.14 },
       });
       ivMap.addLayer({
         id: 'iv-districts-line',
@@ -1706,7 +1907,7 @@
         source: 'iv-districts',
         paint: {
           'line-color': col,
-          'line-width': ['case', ['==', ['get', 'sel'], 1], 3, 1.5],
+          'line-width': ['case', ['==', ['get', 'sel'], 1], 3.5, 2],
           'line-dasharray': [2, 2],
         },
       });
@@ -1714,6 +1915,7 @@
       console.warn('Lapisan kawasan daerah gagal', err);
     }
   }
+  window.addEventListener('fama-daerah-sedia', ivDrawDistrictLayer);
   function outletPopupNode(o) {
     const n = mkEl('div', '');
     n.append(mkEl('strong', '', o.nama));
@@ -1740,7 +1942,85 @@
     if (s.selectedDistrictId) l = l.filter((o) => o.districtId === s.selectedDistrictId);
     return l;
   }
+  /* ----- PO tambahan (FIS 2.1): penanda petak, status harga daripada /api/harga?aras=po_tambahan ----- */
+  const TBHD = { sedia: false, memuat: false, rows: [] };
+  const TBHQ = [
+    { mod: 'pengeluar', aras: 'po_tambahan' },
+    { peringkat: 'RUNCIT', aras: 'po_tambahan' },
+  ];
+  function ivTbhMuat() {
+    if (!window.FamaPOT || !FamaPOT.bil() || TBHD.sedia || TBHD.memuat) return;
+    TBHD.memuat = true;
+    Promise.all(TBHQ.map((q) => HARGADB.ringkasan(q))).then(
+      (rs) => {
+        TBHD.rows = rs.flatMap((r) => r.baris || []);
+        TBHD.sedia = true;
+        TBHD.memuat = false;
+        ivRenderMapMarkers();
+      },
+      () => {
+        TBHD.memuat = false;
+      },
+    );
+  }
+  function ivTbhInfo(p) {
+    let t = null;
+    TBHD.rows.forEach((r) => {
+      if (r.po === p.id && (!t || HARGADB.BOBOT[r.status] > HARGADB.BOBOT[t.status])) t = r;
+    });
+    const st = t ? t.status : 'kelabu';
+    return { status: st, statusTeks: labels[st], sebab: t ? t.sebab : null };
+  }
+  function ivRenderTbhMarkers() {
+    if (!ivMap || !window.FamaPOT || !FamaPOT.tunjuk()) return;
+    ivTbhMuat();
+    const s = ivState;
+    FamaPOT.senarai().forEach((p) => {
+      const inf = ivTbhInfo(p);
+      const el = FamaPOT.penanda(p, inf.status, inf.statusTeks, { kecil: !!s.selectedPOId });
+      FamaPOT.pasangHover(ivMap, el, p, () => ivTbhInfo(p));
+      const go = () => {
+        if (IV_TBHBY[p.id]) ivDispatch('setMobAnchor', p.id);
+        if (ivPopup) ivPopup.remove();
+        ivPopup = null;
+        FamaPOT.tutup();
+        FamaPOT.sorot(ivMap, p);
+        // Pop-up dibuka selepas peta zum supaya anchor dan kedudukannya muat dalam kotak peta
+        ivMap.once('moveend', () => {
+          if (ivPopup) ivPopup.remove();
+          // Peranti sentuh tiada hover: pop-up kekal dibuka sehingga diketik di tempat lain
+          if (FamaPOT.sentuh()) ivPopup = FamaPOT.bukaPopup(ivMap, p, ivTbhInfo(p));
+        });
+        ivMap.fitBounds(FamaPOT.sempadan(p), {
+          padding: { top: 40, left: 60, right: 60, bottom: 220 },
+          maxZoom: 10,
+          duration: 700,
+        });
+      };
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        go();
+      });
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          go();
+        }
+      });
+      ivTbhMk.push(
+        new maplibregl.Marker({ element: el, anchor: 'center' })
+          .setLngLat([p.lon, p.lat])
+          .addTo(ivMap),
+      );
+    });
+  }
+  let ivTbhMk = [];
+  window.addEventListener('fama-po-tambahan', () => ivRenderMapMarkers());
   function ivRenderMapMarkers() {
+    ivTbhMk.forEach((m) => m.remove());
+    ivTbhMk = [];
+    if (window.FamaPOT) FamaPOT.tutup();
+    if (ivMap && window.FamaPOT) FamaPOT.sorot(ivMap, null);
     ivPoMk.forEach((m) => m.remove());
     ivDistMk.forEach((m) => m.remove());
     ivOutMk.forEach((m) => m.remove());
@@ -1753,6 +2033,8 @@
     }
     if (!ivMap) return;
     const s = ivState;
+    // PO tambahan (petak) dahulu supaya berada di bawah penanda PO utama
+    ivRenderTbhMarkers();
     IV_PO.forEach((p) => {
       const lvl = poLevel(p.id),
         sel = s.selectedPOId === p.id,
@@ -1770,10 +2052,10 @@
       el.dataset.ivPo = p.id;
       el.append(mkEl('span', 'halo'), mkEl('span', 'core'));
       if (!s.selectedPOId) {
-        const [dx, dy] = IV_CONFIG.labelShift[p.id] || [9, -10];
-        const t = mkEl('span', 'iv-lbl', p.label);
-        t.style.left = `calc(50% + ${dx}px)`;
-        t.style.top = `calc(50% + ${dy}px)`;
+        const [sauh, lx = 0, ly = 0] = IV_CONFIG.labelShift[p.id] || ['r'];
+        const t = mkEl('span', `map-label po-label sauh-${sauh}`, p.label);
+        t.style.setProperty('--lx', lx + 'px');
+        t.style.setProperty('--ly', ly + 'px');
         el.append(t);
       }
       const go = () => ivDispatch('selectPO', p.id);
@@ -1861,7 +2143,7 @@
         ? 'Penunjuk: Harga Ladang · amaran apabila harga turun'
         : 'Penunjuk: Harga Runcit · amaran apabila harga naik';
     $i('ivMapBack').hidden = !s.selectedPOId;
-    const cnt = { normal: 0, waspada: 0, kritikal: 0 };
+    const cnt = { normal: 0, waspada: 0, kritikal: 0, tiada: 0 };
     IV_PO.forEach((p) => cnt[poLevel(p.id)]++);
     const sel = s.selectedPOId ? IV_POBY[s.selectedPOId] : null;
     const outside = sel && !poPasses(sel, poLevel(sel.id));
@@ -1869,8 +2151,12 @@
       chip('Kritikal ' + cnt.kritikal, 'bad') +
       chip('Waspada ' + cnt.waspada, 'warn') +
       chip('Normal ' + cnt.normal, 'ok') +
+      chip('Tiada ambang ' + cnt.tiada, 'grey') +
       (outside ? chip('Terpilih (di luar penapis)', 'info') : '') +
       (sel ? chip(sel.name, 'info') : '') +
+      (s.mob.anchorTbh && IV_TBHBY[s.mob.anchorTbh]
+        ? `<button type="button" class="iv-chip info" data-iv-act="openMob">Mobilisasi dari ${E(IV_TBHBY[s.mob.anchorTbh].name)}</button>`
+        : '') +
       notApplicable('map');
     const outs =
       sel && !ivWithheld[sel.id]
@@ -1884,7 +2170,10 @@
     ).join('');
     $i('ivLegend').innerHTML =
       IV_CATS.map((c) => `<span><i class="iv-leg-i c-${c.id}"></i>${c.label}</span>`).join('') +
-      `<span><i class="iv-dot g"></i>Normal</span><span><i class="iv-dot y"></i>Waspada</span><span><i class="iv-dot r"></i>Merah berkelip: kritikal disahkan bekalan</span>`;
+      `<span><i class="iv-dot g"></i>Normal</span><span><i class="iv-dot y"></i>Waspada</span><span><i class="iv-dot r"></i>Merah: kritikal (amaran harga, sama dengan Pemantauan)</span><span><i class="iv-dot n"></i>Kelabu: tiada ambang</span>` +
+      (window.FamaPOT && FamaPOT.bil()
+        ? '<span><i class="tbh-leg" aria-hidden="true"></i>Petak = PO tambahan · Bulatan = PO utama</span>'
+        : '');
     let dc = '';
     if (sel && !ivWithheld[sel.id]) {
       dc = IV_DISTRICTS.filter((d) => d.poId === sel.id)
@@ -1913,7 +2202,7 @@
       if (on) act.push(n);
     };
     if (panel === 'log' || (panel === 'map' && false)) {
-      f('Komoditi', !!s.selectedCommodityId);
+      f('Komoditi', !!(s.selectedCommodityId || s.selectedJenis));
       f('Negeri', !!s.selectedStateId);
       f('Daerah', !!s.selectedDistrictId);
       f('Tempoh', s.selectedDateRange.days !== 30);
@@ -1929,23 +2218,79 @@
     }
     return act.length ? chip('Penapis tidak terpakai: ' + act.join(', '), 'grey') : '';
   }
-  function fillSel(id, opts, val) {
+  function fillSel(id, opts, val, mati) {
     const e = $i(id);
     const h = opts
-      .map(([v, l]) => `<option value="${E(v)}"${v === val ? ' selected' : ''}>${E(l)}</option>`)
+      .map(
+        ([v, l, off]) =>
+          `<option value="${E(v)}"${v === val ? ' selected' : ''}${off ? ' disabled' : ''}>${E(l)}</option>`,
+      )
       .join('');
     if (e.dataset.sig !== h) {
       e.innerHTML = h;
       e.dataset.sig = h;
     }
     e.value = val;
+    if (mati !== undefined) e.disabled = !!mati;
+  }
+  // Teks keadaan data harga (memuat / ralat / file://); '' bila sedia.
+  function ivHargaMesej() {
+    if (IVH.sedia) return '';
+    if (IVH.ralat === 'file' || HARGADB.keadaan === 'file')
+      return 'Data harga sebenar memerlukan npm start (tidak tersedia pada file://).';
+    if (IVH.ralat) return 'Data harga tidak dapat dimuatkan.';
+    return 'Memuat harga…';
+  }
+  // Lencana tarikh data, lapuk dan minggu separa + blok keadaan; sama dengan tab Pemantauan.
+  function ivRenderHargaBar() {
+    const lc = $i('ivHargaLencana'),
+      k = $i('ivHargaKeadaan');
+    if (lc) {
+      const b = [];
+      const t = HARGADB.terkini;
+      if (t)
+        b.push(
+          HARGADB.lapuk
+            ? `<span class="harga-lencana lapuk" title="Data terkini lebih lapan hari lalu">⚠ Data lapuk · terkini ${E(t)}</span>`
+            : `<span class="harga-lencana">Data harga terkini: ${E(t)}</span>`,
+        );
+      if (HARGADB.mingguSeparaIso)
+        b.push(
+          `<span class="harga-lencana separa" title="Minggu ISO semasa belum lengkap dan tidak dinilai">Minggu semasa: separa (${E(HARGADB.mingguSeparaIso)})</span>`,
+        );
+      lc.innerHTML = b.join('');
+    }
+    if (!k) return;
+    const msg = ivHargaMesej();
+    const ralat = !IVH.sedia && (IVH.ralat || HARGADB.keadaan === 'file');
+    k.hidden = !msg;
+    k.className = 'harga-keadaan' + (ralat ? ' ralat' : '');
+    if (!msg) {
+      k.textContent = '';
+      return;
+    }
+    const boleh = ralat && IVH.ralat !== 'file' && HARGADB.keadaan !== 'file';
+    k.innerHTML = `<span>${E(msg)}</span>${boleh ? '<button type="button" class="button tiny ghost" id="ivHargaCubaSemula" data-iv-act="hargaRetry">Cuba semula</button>' : ''}`;
   }
   function ivRenderFilters() {
+    ivRenderHargaBar();
     const s = ivState;
     fillSel(
       'ivFKomoditi',
-      [['all', 'Semua komoditi'], ...IV_COMM.map((c) => [c.id, c.name])],
+      [['all', 'Semua komoditi'], ...IV_JENIS.map((j) => [j.kod, j.label])],
+      s.selectedJenis || 'all',
+    );
+    const vs = s.selectedJenis ? IV_COMM.filter((c) => c.jenis === s.selectedJenis) : [];
+    fillSel(
+      'ivFVarieti',
+      vs.length
+        ? [
+            ['all', 'Semua varieti'],
+            ...vs.map((c) => [c.id, c.name + (c.tiadaData ? ' (tiada data)' : ''), c.tiadaData]),
+          ]
+        : [['all', 'Pilih komoditi']],
       s.selectedCommodityId || 'all',
+      !vs.length,
     );
     fillSel(
       'ivFNegeri',
@@ -1980,12 +2325,12 @@
       [['all', 'Semua daerah'], ...ds.map((d) => [d.districtId, d.name])],
       s.selectedDistrictId || 'all',
     );
-    $i('ivFTempoh').value = String(s.selectedDateRange.days);
+    // Penapis Tarikh / Tempoh Analisis dibuang daripada UI; tempoh kekal lalai 30 hari.
+    if ($i('ivFTempoh')) $i('ivFTempoh').value = String(s.selectedDateRange.days);
     $i('ivFRisiko').value = s.selectedRisk;
     const nAktif =
-      [s.selectedCommodityId, s.selectedStateId, s.selectedPOId, s.selectedDistrictId].filter(
-        Boolean,
-      ).length +
+      [s.selectedJenis, s.selectedStateId, s.selectedPOId, s.selectedDistrictId].filter(Boolean)
+        .length +
       (s.selectedDateRange.days !== 30 ? 1 : 0) +
       (s.selectedRisk !== 'all' ? 1 : 0);
     const rb = $i('ivResetBadge');
@@ -2084,7 +2429,7 @@
         '<div class="iv-empty" id="ivLogTotal">Tiada PO dalam skop penapis ini</div>';
       return;
     }
-    let h = `<div id="ivLogTotal"><div class="iv-chips"><b>${E(scope)}</b>${tagR}</div>
+    let h = `<div id="ivLogTotal"><div class="iv-chips"><b>${E(scope)}</b></div>
  <div class="iv-note">Dikira daripada ${T.withData.length} daripada ${pos.length} PO${T.noData.length ? `; ${T.noData.length} PO belum mempunyai data logistik (dikecualikan, tiada nilai direka)` : ''}. Pilih PO pada peta untuk melihat butiran PO.</div>
  <div class="iv-sec">JUMLAH KAPASITI MAKSIMUM STATIK</div><div class="iv-stats" id="ivLogTotStats">${tile(ICON_TRUCK, T.tot.kenderaan, 'Bilangan Kenderaan')}${tile(ICON_TRUCK, f2(T.tot.muatan), 'Kapasiti Muatan (MT)')}${tile(ICON_SNOW, T.tot.bilikSejuk, 'Bilangan Bilik Sejuk')}${tile(ICON_WH, f2(T.tot.simpanan), 'Kapasiti Simpanan (MT)')}</div>`;
     if (T.shared.length)
@@ -2135,7 +2480,7 @@
     const names = lg.groupMemberPOIds.map(poName);
     const tile = (ico, v, l) =>
       `<div class="iv-stat">${ico}<div><b>${v}</b><span>${l}</span></div></div>`;
-    let h = `<div class="iv-chips"><b>${E(p.name)}</b>${chip(p.negeri)}${chip('lokasi anggaran bandar', 'grey')}${tagR}</div>
+    let h = `<div class="iv-chips"><b>${E(p.name)}</b>${chip(p.negeri)}</div>
  <div class="iv-sec">KAPASITI MAKSIMUM STATIK</div><div class="iv-stats">${tile(ICON_TRUCK, lg.kenderaanMax, 'Bilangan Kenderaan')}${tile(ICON_TRUCK, f2(lg.muatanMaxMT), 'Kapasiti Muatan (MT)')}${tile(ICON_SNOW, lg.bilikSejukMax, 'Bilangan Bilik Sejuk')}${tile(ICON_WH, f2(lg.simpananMaxMT), 'Kapasiti Simpanan (MT)')}</div>`;
     if (lg.groupShared)
       h += `<div class="iv-banner info">Angka gabungan ${E(names.join(' dan '))}. Tidak digandakan. ${lg.groupMemberPOIds
@@ -2166,6 +2511,29 @@
     ivState.ui.priBanner = { id: r.id, text: res.text, loading: false, ai: res.ai };
     ivRender(['pri']);
   }
+  // Pengeluar tanpa harga ladang: tiada alarm; harga borong dipaparkan sebagai ganti berlabel (aras PO).
+  function ivGantiHTML() {
+    const s = ivState;
+    if (!IVH.sedia || s.selectedMode !== 'pengeluar') return '';
+    const idx = IVH.idxPO.LADANG;
+    if (!idx) return '';
+    const items = [];
+    IV_PO.forEach((p) => {
+      if (s.selectedStateId && p.stateId !== s.selectedStateId) return;
+      if (s.selectedPOId && p.id !== s.selectedPOId) return;
+      IV_COMM.forEach((c) => {
+        if (!commOk(c.id)) return;
+        const rw = ivPoRow(p.id, c.id, 'Ladang');
+        if (rw && !fin(rw.harga) && rw.ganti && fin(rw.ganti.harga))
+          items.push(
+            `<li>${E(c.name)} · ${E(p.name)}: Tiada harga ladang · ${E(rw.ganti.label)}: ${rmAny(rw.ganti.harga)}</li>`,
+          );
+      });
+    });
+    return items.length
+      ? `<div class="iv-ganti" id="ivPriGanti"><b>Tiada harga ladang (${items.length})</b><ul>${items.slice(0, 8).join('')}</ul>${items.length > 8 ? `<div>…dan ${items.length - 8} lagi</div>` : ''}</div>`
+      : '';
+  }
   function ivRenderPri() {
     const s = ivState,
       rows = priRows();
@@ -2175,6 +2543,10 @@
       chip('Mod: ' + modeLbl(s.selectedMode), 'info') +
       chip('Harga ' + (s.selectedMode === 'pengeluar' ? 'Ladang' : 'Runcit'), 'grey') +
       chip(rows.length + ' isu', rows.length ? 'warn' : 'ok') +
+      (IVH.sedia
+        ? chip('Tiada ambang ' + recsNow().filter((r) => r.cls.noThreshold).length, 'grey')
+        : '') +
+      tagH +
       tagD;
     const bn = s.ui.priBanner;
     let bh = '';
@@ -2182,7 +2554,9 @@
       bh = `<div class="iv-banner info" id="ivPriBannerBox" tabindex="-1">${bn.loading ? 'Menyediakan cadangan…' : E(bn.text)} <button type="button" class="button tiny ghost" data-iv-act="openMob">Buka Mobilisasi Stok</button></div>`;
     }
     $i('ivPriBanner').innerHTML = bh;
-    if (!rows.length) {
+    if (!IVH.sedia) {
+      list.innerHTML = `<div class="iv-empty" id="ivPriKeadaan">${E(ivHargaMesej())}</div>`;
+    } else if (!rows.length) {
       list.innerHTML = '<div class="iv-empty">Tiada isu keutamaan untuk penapis ini</div>';
     } else
       list.innerHTML = shown
@@ -2192,8 +2566,8 @@
           return `<div class="iv-row" role="button" tabindex="0" aria-pressed="${s.selectedInterventionId === r.id}" data-iv-act="selRow" data-iv-arg="${E(r.id)}">
    <div class="iv-r1"><span class="iv-lv ${lv}">${LV_LABEL[lv]}</span><b class="iv-r-com">${E(r.commodity)}</b><span class="iv-r-loc">${E(r.district)}, ${E(r.negeri)}</span><span class="iv-r-score" title="Komponen skor: harga ${(r.comp.P * 100).toFixed(0)}%, bekalan ${(r.comp.S * 100).toFixed(0)}%, forecast ${(r.comp.F * 100).toFixed(0)}%, pengesahan ${(r.comp.C * 100).toFixed(0)}%">Skor ${r.score}</span></div>
    <div class="iv-r2">${E(r.poName)} · <b>Jenis isu:</b> ${E(issueLabel(r))}</div>
-   <div class="iv-r3">Harga semasa ${rmAny(r.price.actual)} → forecast ${rmAny(r.price.forecast)} · sisihan ${sgn(r.price.devPct, 1)}%</div>
-   <div class="iv-r4"><div class="iv-r-int"><span><b>Intervensi:</b> ${E(intervType(r))}</span>${r.cls.flag ? chip(r.cls.flag, 'warn') : ''}${tel ? chip('Telur: bekalan dalam unit lain, tidak dinilai', 'grey') : ''}${r.price.overlay ? `<span class="iv-chip warn" title="${E(r.price.overlay.note)}">Senario ujian (dummy)</span>` : ''}</div><button type="button" class="button tiny iv-act" data-iv-act="tindakan" data-iv-arg="${E(r.id)}">Tindakan</button></div></div>`;
+   <div class="iv-r3" title="${E(r.price.windowLabel)} · sumber DB Harga (/api/harga), sama dengan Pemantauan">${hargaRingkas(r.price)} · Ramalan: tiada (prototaip)</div>
+   <div class="iv-r4"><div class="iv-r-int"><span><b>Intervensi:</b> ${E(intervType(r))}</span>${r.cls.flag ? chip(r.cls.flag, 'warn') : ''}${statusKongsiChips(r)}${tel ? chip('Telur: bekalan dalam unit lain, tidak dinilai', 'grey') : ''}</div><button type="button" class="button tiny iv-act" data-iv-act="tindakan" data-iv-arg="${E(r.id)}">Tindakan</button></div></div>`;
         })
         .join('');
     const pend = rows.filter((r) => r.cls.flag === 'Menunggu pengesahan bekalan').length;
@@ -2202,13 +2576,21 @@
       foot += `<button type="button" class="button tiny ghost" data-iv-act="showAll">${s.ui.showAll ? 'Papar 12 teratas' : 'Papar semua (' + rows.length + ')'}</button> `;
     if (pend) foot += `${pend} isu harga menunggu pengesahan bekalan. `;
     foot += 'Skor ialah indeks keutamaan prototaip, bukan kebarangkalian.';
+    foot +=
+      ' Harga sebenar (DB Harga), minggu ISO lengkap terkini, sama dengan Pemantauan; bekalan, stok dan logistik ialah data dummy.';
+    foot += ivGantiHTML();
     $i('ivPriFoot').innerHTML = foot;
   }
 
   /* ===== Paparan 4 ===== */
+  // PO terpilih mobilisasi: PO tambahan (dipilih pada peta atau senarai) atau PO utama seperti biasa.
+  function mobPO() {
+    const t = ivState.mob.anchorTbh;
+    return t && IV_TBHBY[t] ? t : effPO();
+  }
   function mobResolve() {
     const s = ivState,
-      po = effPO(),
+      po = mobPO(),
       cm = effCommodity(),
       mode = s.selectedMode;
     const row = po && isKg(cm.id) ? supplyRow(po, cm.id) : null;
@@ -2231,7 +2613,7 @@
   }
   function curEngine() {
     const r = mobResolve();
-    if (!r.po || !isKg(r.cm.id) || r.ref == null) return null;
+    if (!r.po || r.ref == null) return null;
     return mobilisationEngine({
       mode: r.mode,
       anchorPOId: r.po,
@@ -2244,6 +2626,9 @@
       now: nowMs(),
     });
   }
+  // Kawalan mobilisasi yang dipaparkan. Disembunyikan: Keperluan/lebihan (MT) dan wajaran harga/jarak; nilai lalai
+  // (keperluan daripada data dummy, wajaran semasa ivState.mob.wPrice) masih dipakai oleh enjin.
+  const IV_MOB_PAPAR = { keperluan: false, wajaran: false };
   function ivRenderMobCtl() {
     const s = ivState,
       r = mobResolve();
@@ -2257,18 +2642,15 @@
         '<div class="iv-empty">Pilih Pusat Operasi pada peta atau senarai keutamaan</div>';
       return;
     }
-    const p = IV_POBY[r.po];
-    if (!isKg(r.cm.id)) {
-      head.innerHTML = '';
-      box.innerHTML = `<div class="iv-banner">Unit komoditi (${E(IV_COMMBY[r.cm.id].unit)}) tidak disokong untuk pengiraan MT dan RM/kg. Pilih komoditi RM/kg.</div>`;
-      return;
-    }
-    const role =
-      r.mode === 'pengeluar' ? 'PO SUMBER (lebihan stok)' : 'PO DESTINASI (kekurangan stok)';
+    const p = poObj(r.po);
+    const kg = isKg(r.cm.id),
+      unit = IV_COMMBY[r.cm.id].unit;
+    const role = r.mode === 'pengeluar' ? 'PO SUMBER' : 'PO DESTINASI';
     const row = r.row;
-    head.innerHTML = `<div class="iv-card"><div class="iv-chips"><span class="iv-chip info">${role}</span><b>${E(p.name)}</b>${chip(p.negeri)}${chip(IV_COMMBY[r.cm.id].name)}${chip('Peringkat Borong', 'grey')}${r.cm.def ? chip('Komoditi panel: Cili Merah (lalai, penapis ialah Semua)', 'warn') : ''}</div>
- <div class="iv-kv"><span>Harga Borong PO<b>${rmAny(r.anchorPrice && r.anchorPrice.actual)}${r.anchorPrice && r.anchorPrice.overlay ? ' *' : ''}</b></span><span>${r.mode === 'pengeluar' ? 'Lebihan stok' : 'Kekurangan stok'} (dummy)<b>${row ? f2(r.defNeed) + ' MT' : '—'}</b></span><span>Stok tersedia (dummy)<b>${row ? f2(row.net) + ' MT' : '—'}</b></span><span>Keperluan (dummy)<b>${row ? f2(row.requiredMT) + ' MT' : '—'}</b></span></div></div>`;
+    head.innerHTML = `<div class="iv-card"><div class="iv-chips"><span class="iv-chip info">${role}</span><b>${E(p.name)}</b>${chip(p.negeri)}${p.tambahan ? chip('PO tambahan · lokasi anggaran, tiada data logistik', 'warn') : ''}${chip(IV_COMMBY[r.cm.id].name)}${chip('Peringkat Borong', 'grey')}${kg ? '' : chip('Unit ' + unit + ': perbandingan harga sahaja, tiada kuantiti MT', 'info')}${r.cm.def ? chip('Komoditi panel: ' + IV_COMMBY[r.cm.id].name + ' (lalai, penapis ialah Semua)', 'warn') : ''}</div>
+ <div class="iv-kv"><span title="${E(r.anchorPrice ? r.anchorPrice.windowLabel : '')}">Harga Borong PO (dari DB Harga)<b>${rmUnit(r.anchorPrice && r.anchorPrice.actual, r.cm.id)}</b></span><span>Bekalan<b>Tidak dinilai</b></span></div></div>`;
     const sig = [s.selectedMode, r.po, r.cm.id, s.selectedInterventionId].join('|');
+    const pilihPO = `<label>PO terpilih<select class="iv-in" data-iv-sel="mobpo" aria-label="PO terpilih mobilisasi"><optgroup label="PO utama">${IV_PO.map((x) => `<option value="${E(x.id)}"${x.id === r.po ? ' selected' : ''}>${E(x.name)}</option>`).join('')}</optgroup>${IV_TBH.length ? `<optgroup label="PO tambahan">${IV_TBH.map((x) => `<option value="${E(x.id)}"${x.id === r.po ? ' selected' : ''}>${E(x.label)} (${E(x.negeri)})</option>`).join('')}</optgroup>` : ''}</select></label>`;
     const hints = () => {
       const a = $i('ivNeedHint'),
         b = $i('ivRefHint');
@@ -2287,25 +2669,30 @@
     }
     box.dataset.sig = sig;
     box.innerHTML = `<div class="iv-ctl">
-  <label>Keperluan/lebihan (MT)<input class="iv-in" type="number" id="ivNeed" data-iv-in="need" min="0.1" max="500" step="0.1" value="${r.need}"><span class="iv-err" id="ivNeedErr"></span><small id="ivNeedHint"></small></label>
-  <label>Harga rujukan pasaran (RM/kg)<input class="iv-in" type="number" id="ivRef" data-iv-in="ref" min="0.01" max="999" step="0.01" value="${r.ref}"><span class="iv-err" id="ivRefErr"></span><small id="ivRefHint"></small></label>
-  <label>Wajaran harga <b id="ivWPL">${s.mob.wPrice}%</b><input type="range" id="ivWP" data-iv-in="wp" min="0" max="100" step="5" value="${s.mob.wPrice}" aria-label="Wajaran harga"></label>
-  <label>Wajaran jarak (%) <b id="ivWDL">${100 - s.mob.wPrice}%</b><input type="range" id="ivWD" data-iv-in="wd" min="0" max="100" step="5" value="${100 - s.mob.wPrice}" aria-label="Wajaran jarak"></label>
+  ${pilihPO}
+  ${IV_MOB_PAPAR.keperluan && kg ? `<label>Keperluan/lebihan (MT)<input class="iv-in" type="number" id="ivNeed" data-iv-in="need" min="0.1" max="500" step="0.1" value="${r.need}"><span class="iv-err" id="ivNeedErr"></span><small id="ivNeedHint"></small></label>` : ''}
+  <label>Harga rujukan pasaran (${E(unit)})<input class="iv-in" type="number" id="ivRef" data-iv-in="ref" min="0.01" max="999" step="0.01" value="${r.ref}"><span class="iv-err" id="ivRefErr"></span><small id="ivRefHint"></small></label>
+  ${
+    IV_MOB_PAPAR.wajaran
+      ? `<label>Wajaran harga <b id="ivWPL">${s.mob.wPrice}%</b><input type="range" id="ivWP" data-iv-in="wp" min="0" max="100" step="5" value="${s.mob.wPrice}" aria-label="Wajaran harga"></label>
+  <label>Wajaran jarak (%) <b id="ivWDL">${100 - s.mob.wPrice}%</b><input type="range" id="ivWD" data-iv-in="wd" min="0" max="100" step="5" value="${100 - s.mob.wPrice}" aria-label="Wajaran jarak"></label>`
+      : ''
+  }
   <label>Had jarak (km)<input class="iv-in" type="number" id="ivLimit" data-iv-in="limit" min="50" max="2000" step="10" value="${s.mob.distLimitKm}"><span class="iv-err" id="ivLimitErr"></span></label>
- </div><div class="iv-note" id="ivWTotal">Jumlah wajaran: <b>${s.mob.wPrice}% + ${100 - s.mob.wPrice}% = 100%</b></div>`;
+ </div>${IV_MOB_PAPAR.wajaran ? `<div class="iv-note" id="ivWTotal">Jumlah wajaran: <b>${s.mob.wPrice}% + ${100 - s.mob.wPrice}% = 100%</b></div>` : ''}`;
     hints();
   }
   function candCard(c, side, key) {
     const s = ivState;
     const lbl = s.selectedMode === 'pengguna' ? 'Lebihan stok' : 'Keperluan';
     const chips = [];
+    if (c.tambahan) chips.push(chip('PO tambahan · lokasi anggaran', 'warn'));
     if (c.sameGroup) chips.push(chip('Kongsi kapasiti logistik (kumpulan gabungan)', 'info'));
     if (c.flood) chips.push(chip('Cuaca (Open-Meteo/MET)', 'warn'));
     if (c.banjir) chips.push(chip('Banjir (JPS)', 'warn'));
-    if (c.overlay) chips.push(chip('Senario ujian (dummy)', 'warn'));
     return `<button type="button" class="iv-cand" aria-pressed="${s.mob.candidateKey === c.poId}" data-iv-act="cand" data-iv-arg="${E(c.poId)}" data-iv-side="${side}"><div class="iv-cand-h"><span>#${c.rank} ${E(c.name)}</span><span>Skor ${c.score}/100</span></div>
  <div class="iv-row-s">${E(c.negeri)}</div>
- <div class="iv-kv"><span>${lbl}<b>${f2(c.stockMT)} MT</b></span><span>Harga ${s.selectedMode === 'pengguna' ? 'sumber' : 'destinasi'}<b>${rmAny(c.price)}</b></span><span>Anggaran jarak<b>${Math.round(c.km)} km</b></span><span>Boleh dihantar<b>${f2(c.qty)} MT</b></span></div>
+ <div class="iv-kv">${c.stockMT == null ? '' : `<span>${lbl}<b>${f2(c.stockMT)} MT</b></span>`}<span>Harga ${s.selectedMode === 'pengguna' ? 'sumber' : 'destinasi'}<b>${rmUnit(c.price, ivEffCid())}</b></span><span>Anggaran jarak<b>${Math.round(c.km)} km</b></span>${c.qty == null ? '' : `<span>Boleh dihantar<b>${f2(c.qty)} MT</b></span>`}</div>
  <div class="iv-chips" style="margin-top:6px">${chips.join('')}</div></button>`;
   }
   function ivEngineFacts(r, eng) {
@@ -2325,7 +2712,7 @@
     }
     const t = tf.top,
       m = r.mode;
-    const fb = `Berdasarkan pengiraan, ${t.name} (${tf.inState ? 'dalam negeri' : 'luar negeri'}) ialah calon utama ${m === 'pengguna' ? 'sumber' : 'destinasi'} untuk ${commName(r.cm.id)}, dengan kuantiti boleh dihantar ${f2(t.qty)} MT, anggaran jarak ${Math.round(t.km)} km serta harga ${m === 'pengguna' ? 'sumber' : 'destinasi'} ${rmAny(t.price)}. Cadangan ini perlu disahkan oleh pegawai operasi.`;
+    const fb = `Berdasarkan pengiraan, ${t.name} (${tf.inState ? 'dalam negeri' : 'luar negeri'}) ialah calon utama ${m === 'pengguna' ? 'sumber' : 'destinasi'} untuk ${commName(r.cm.id)}, ${t.qty == null ? 'dengan' : `dengan kuantiti boleh dihantar ${f2(t.qty)} MT,`} anggaran jarak ${Math.round(t.km)} km serta harga ${m === 'pengguna' ? 'sumber' : 'destinasi'} ${rmUnit(t.price, r.cm.id)}. Cadangan ini perlu disahkan oleh pegawai operasi.`;
     const key = JSON.stringify([fb]);
     const seq = ++_mobAISeq;
     if (_aiCache[key] && !failFlags.ai) {
@@ -2348,7 +2735,7 @@
     const s = ivState,
       r = mobResolve(),
       host = $i('ivMobRes');
-    if (!r.po || !isKg(r.cm.id)) {
+    if (!r.po) {
       host.innerHTML = '';
       return;
     }
@@ -2381,10 +2768,10 @@
     if (tf) {
       const t = tf.top;
       h += `<div class="iv-calc" id="ivMobSummary"><h4>Ringkasan Cadangan Mobilisasi ${tagD}</h4>
-  <div class="iv-kv"><span>PO ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} dicadangkan<b>${E(t.name)}</b></span><span>Lokasi<b>${tf.inState ? 'Dalam negeri' : 'Luar negeri'} (${E(t.negeri)})</b></span><span>Kuantiti<b>${f2(t.qty)} MT</b></span><span>Anggaran jarak<b>${Math.round(t.km)} km</b></span></div>
-  <div class="iv-note"><b>Mengapa:</b> skor tertinggi ${t.score}/100 dalam senarai ${tf.inState ? 'Dalam Negeri' : 'Luar Negeri'}; harga lebih baik daripada harga rujukan dan jarak ${Math.round(t.km)} km dalam had ${s.mob.distLimitKm} km. <b>Kekangan:</b> ${t.vehicleKnown ? 'kenderaan tersedia dihadkan kepada ' + f2(t.vehicleCapMT) + ' MT' : 'ketersediaan kenderaan semasa tidak diketahui (kapasiti maksimum statik ' + f2(t.maxCapMT) + ' MT)'}${t.sameGroup ? '; kapasiti logistik dikongsi dengan PO terpilih' : ''}${t.flood || t.banjir ? '; waspada banjir' : ''}. Stok: Belum disahkan.</div></div><div id="ivMobAI"></div>`;
+  <div class="iv-kv"><span>PO ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} dicadangkan<b>${E(t.name)}</b></span><span>Lokasi<b>${tf.inState ? 'Dalam negeri' : 'Luar negeri'} (${E(t.negeri)})</b></span>${t.qty == null ? '' : `<span>Kuantiti<b>${f2(t.qty)} MT</b></span>`}<span>Anggaran jarak<b>${Math.round(t.km)} km</b></span></div>
+  <div class="iv-note"><b>Mengapa:</b> skor tertinggi ${t.score}/100 dalam senarai ${tf.inState ? 'Dalam Negeri' : 'Luar Negeri'}; harga lebih baik daripada harga rujukan dan jarak ${Math.round(t.km)} km dalam had ${s.mob.distLimitKm} km. <b>Kekangan:</b> ${t.qty == null ? 'kuantiti tidak dikira untuk unit ' + IV_COMMBY[r.cm.id].unit : t.tambahan ? 'PO tambahan tiada data logistik (kapasiti tidak diketahui; jarak dari titik tengah daerah)' : t.vehicleKnown ? 'kenderaan tersedia dihadkan kepada ' + f2(t.vehicleCapMT) + ' MT' : 'ketersediaan kenderaan semasa tidak diketahui (kapasiti maksimum statik ' + f2(t.maxCapMT) + ' MT)'}${t.sameGroup ? '; kapasiti logistik dikongsi dengan PO terpilih' : ''}${t.flood || t.banjir ? '; waspada banjir' : ''}. Bekalan tidak dinilai (cadangan berdasarkan jarak dan harga sahaja).</div></div><div id="ivMobAI"></div>`;
     }
-    h += `<div class="iv-two" style="margin-top:10px"><div><div class="iv-sec">TOP 5 PO DALAM NEGERI ${E(IV_POBY[r.po].negeri)} ${tagD}</div><div id="ivListDalam">${eng.dalam.length ? eng.dalam.map((c) => candCard(c, 'dalam')).join('') : `<div class="iv-empty">${empD}</div>`}</div></div>
+    h += `<div class="iv-two" style="margin-top:10px"><div><div class="iv-sec">TOP 5 PO DALAM NEGERI ${E(poObj(r.po).negeri)} ${tagD}</div><div id="ivListDalam">${eng.dalam.length ? eng.dalam.map((c) => candCard(c, 'dalam')).join('') : `<div class="iv-empty">${empD}</div>`}</div></div>
  <div><div class="iv-sec">TOP 5 PO LUAR NEGERI ${tagD}</div><div id="ivListLuar">${eng.luar.length ? eng.luar.map((c) => candCard(c, 'luar')).join('') : `<div class="iv-empty">${empL}</div>`}</div></div></div>`;
     const all = [...eng.dalam, ...eng.luar];
     const sel = all.find((c) => c.poId === s.mob.candidateKey);
@@ -2396,15 +2783,19 @@
       if (sel.flood) risks.push('Cuaca tinggi (Open-Meteo/MET) pada ' + sel.name);
       if (sel.banjir) risks.push('Banjir (JPS) pada ' + sel.name);
       if (sel.sameGroup) risks.push('Kapasiti kenderaan dikongsi dengan PO terpilih');
-      if (!sel.vehicleKnown)
+      if (sel.tambahan)
+        risks.push(
+          'PO tambahan: tiada data logistik, cuaca atau banjir; lokasi ialah titik tengah daerah seliaan (anggaran)',
+        );
+      else if (!sel.vehicleKnown && sel.qty != null)
         risks.push(
           'Ketersediaan kenderaan semasa tidak diketahui. Kapasiti maksimum statik: ' +
             f2(sel.maxCapMT) +
             ' MT',
         );
       h += `<div class="iv-card" id="ivCandDetail" style="margin-top:10px"><h4>Butiran calon: ${E(sel.name)}</h4>
-  <div class="iv-kv"><span>PO sumber<b>${E(src)}</b></span><span>PO destinasi<b>${E(dst)}</b></span><span>Komoditi<b>${E(commName(r.cm.id))}</b></span><span>Kuantiti<b>${f2(sel.qty)} MT</b></span><span>Jarak<b>${Math.round(sel.km)} km (anggaran dummy)</b></span><span>Status pengesahan stok<b>Belum disahkan</b></span></div>
-  <ul class="iv-note"><li>Justifikasi: harga ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} ${rmAny(sel.price)} berbanding harga rujukan ${rmAny(r.ref)}, jarak ${Math.round(sel.km)} km.</li><li>Skor harga ${(sel.priceScore * 100).toFixed(0)}%, skor jarak ${(sel.distScore * 100).toFixed(0)}% (wajaran ${s.mob.wPrice}/${100 - s.mob.wPrice}).</li></ul>
+  <div class="iv-kv"><span>PO sumber<b>${E(src)}</b></span><span>PO destinasi<b>${E(dst)}</b></span><span>Komoditi<b>${E(commName(r.cm.id))}</b></span>${sel.qty == null ? '' : `<span>Kuantiti<b>${f2(sel.qty)} MT</b></span>`}<span>Jarak<b>${Math.round(sel.km)} km (anggaran dummy)</b></span><span>Bekalan<b>Tidak dinilai</b></span></div>
+  <ul class="iv-note"><li>Justifikasi: harga ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} ${rmUnit(sel.price, r.cm.id)} berbanding harga rujukan ${rmUnit(r.ref, r.cm.id)}, jarak ${Math.round(sel.km)} km.</li><li>Skor harga ${(sel.priceScore * 100).toFixed(0)}%, skor jarak ${(sel.distScore * 100).toFixed(0)}% (wajaran ${s.mob.wPrice}/${100 - s.mob.wPrice}).</li></ul>
   <div class="iv-sec">RISIKO PENGHANTARAN</div><ul class="iv-note">${risks.length ? risks.map((x) => `<li>${E(x)}</li>`).join('') : '<li>Tiada risiko tambahan dikesan oleh enjin.</li>'}</ul>
   <button type="button" class="button" id="ivDraftBtn" data-iv-act="draft">Sediakan Cadangan Intervensi</button> <span class="iv-note">Hanya draf (status: draf). Tiada kelulusan atau pelaksanaan automatik.</span></div>`;
     }
@@ -2429,7 +2820,7 @@
           d.sourcePOId === src &&
           d.destinationPOId === dst &&
           d.commodityId === r.cm.id &&
-          d.quantityMT === +c.qty.toFixed(2),
+          d.quantityMT === (c.qty == null ? null : +c.qty.toFixed(2)),
       )
     ) {
       toastSafe('Draf yang sama sudah wujud');
@@ -2453,10 +2844,10 @@
       sourcePOId: src,
       destinationPOId: dst,
       commodityId: r.cm.id,
-      quantityMT: +c.qty.toFixed(2),
+      quantityMT: c.qty == null ? null : +c.qty.toFixed(2),
       distanceKm: Math.round(c.km),
       score: c.score,
-      justification: `Harga ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} ${rmAny(c.price)} dan jarak ${Math.round(c.km)} km; skor ${c.score}/100.`,
+      justification: `Harga ${r.mode === 'pengguna' ? 'sumber' : 'destinasi'} ${rmUnit(c.price, r.cm.id)} dan jarak ${Math.round(c.km)} km; skor ${c.score}/100.`,
       deliveryRisk:
         (ad && ad.level === 'Amaran'
           ? 'PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar. '
@@ -2465,7 +2856,7 @@
           ? 'Banjir (JPS) pada PO terpilih. Sahkan akses laluan sebelum menghantar. '
           : '') +
         (c.banjir ? 'Banjir (JPS) pada ' + c.name + '. ' : '') +
-        (c.vehicleKnown ? '' : 'Ketersediaan kenderaan tidak diketahui.'),
+        (c.vehicleKnown || c.qty == null ? '' : 'Ketersediaan kenderaan tidak diketahui.'),
       stockVerification: 'belum disahkan',
       weights: { price: s.mob.wPrice, dist: 100 - s.mob.wPrice },
       createdBy: 'prototaip',
@@ -2482,7 +2873,7 @@
   }
   function ivRenderDrafts() {
     const box = $i('ivDraftBox');
-    box.innerHTML = `<details style="margin-top:12px" ${ivDrafts.length ? 'open' : ''}><summary class="iv-sec" style="cursor:pointer">DRAF CADANGAN INTERVENSI (${ivDrafts.length}) ${tagD}</summary><div id="ivDrafts">${ivDrafts.length ? ivDrafts.map((d) => `<div class="iv-draft"><span><b>${E(d.interventionId)}</b> · ${E(commName(d.commodityId))} · ${E(poName(d.sourcePOId))} → ${E(poName(d.destinationPOId))} · ${f2(d.quantityMT)} MT · ${E(d.distanceKm)} km ${chip('status: draf', 'warn')}</span><button type="button" class="button tiny danger" data-iv-act="delDraft" data-iv-arg="${E(d.interventionId)}">Padam Draf</button></div>`).join('') : '<div class="iv-empty">Belum ada draf. Pilih calon dan tekan “Sediakan Cadangan Intervensi”.</div>'}</div></details>`;
+    box.innerHTML = `<details style="margin-top:12px" ${ivDrafts.length ? 'open' : ''}><summary class="iv-sec" style="cursor:pointer">DRAF CADANGAN INTERVENSI (${ivDrafts.length}) ${tagD}</summary><div id="ivDrafts">${ivDrafts.length ? ivDrafts.map((d) => `<div class="iv-draft"><span><b>${E(d.interventionId)}</b> · ${E(commName(d.commodityId))} · ${E(poName(d.sourcePOId))} → ${E(poName(d.destinationPOId))} · ${d.quantityMT == null ? 'tiada kuantiti MT' : f2(d.quantityMT) + ' MT'} · ${E(d.distanceKm)} km ${chip('status: draf', 'warn')}</span><button type="button" class="button tiny danger" data-iv-act="delDraft" data-iv-arg="${E(d.interventionId)}">Padam Draf</button></div>`).join('') : '<div class="iv-empty">Belum ada draf. Pilih calon dan tekan “Sediakan Cadangan Intervensi”.</div>'}</div></details>`;
   }
 
   /* ===== Paparan 5 ===== */
@@ -2543,6 +2934,145 @@
  <label>Harga Belian Ladang (RM/kg)<input class="iv-in" type="number" step="0.01" data-iv-in="m-ladang" id="ivMLadang" value="${E(m.ladang)}"><span class="iv-err" id="ivMLadangErr"></span></label>
  <label>Kos Operasi (RM/kg)<input class="iv-in" type="number" step="0.01" data-iv-in="m-kos" id="ivMKos" value="${E(m.kos)}"><span class="iv-err" id="ivMKosErr"></span></label>
  <label>Margin Sasaran (%)<input class="iv-in" type="number" step="0.5" data-iv-in="m-target" id="ivMTarget" value="${E(m.target)}"><input type="range" min="0" max="95" step="1" data-iv-in="m-target-range" id="ivMTargetR" value="${E(Math.min(95, Math.max(0, Number(m.target) || 0)))}" aria-label="Margin sasaran"><span class="iv-err" id="ivMTargetErr"></span></label></div>`;
+  }
+  const BLN_PENDEK = [
+    'Jan',
+    'Feb',
+    'Mac',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Ogo',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Dis',
+  ];
+  const blnLabel = (ymd, tambah = 0) => {
+    if (!ymd) return '';
+    const d = new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1 + tambah, 1));
+    return BLN_PENDEK[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+  };
+  // Kad harga semasa (harga + unit, cth. RM 8.50 /kg) dengan bulan data.
+  function hargaKadHTML(label, pr, cid) {
+    const unit = (IV_COMMBY[cid] ? IV_COMMBY[cid].unit : 'RM/kg').replace(/^RM\//, '/');
+    const ada = pr && fin(pr.actual);
+    const tkh = pr && pr.minggu && pr.minggu.akhir;
+    return `<div class="iv-mr-harga"><div class="iv-mr-harga-l">${E(label)}</div><div class="iv-mr-harga-v">${ada ? `RM ${pr.actual.toFixed(2)} <small>${E(unit)}</small>` : '<span class="iv-mr-kosong">Tiada data</span>'}</div>${tkh ? `<span class="iv-mr-tkh" title="${E(pr.windowLabel || '')}">&#8635; ${E(blnLabel(tkh))}</span>` : ''}</div>`;
+  }
+  // Harga Cadangan PSI daripada /api/psi (enjin pelayan api/services/psi-kira.js; formula
+  // Prompt_Dashboard_Harga_Cadangan_PSI.md). Klien hanya memaparkan; tiada kiraan semula.
+  const PSI = { data: new Map(), memuat: new Set(), ralat: new Map() };
+  function psiAmbil(po, variety) {
+    const k = po + '|' + variety;
+    if (PSI.data.has(k) || PSI.memuat.has(k)) return PSI.data.get(k) || null;
+    PSI.memuat.add(k);
+    fetch('/api/psi?po=' + encodeURIComponent(po) + '&variety=' + encodeURIComponent(variety))
+      .then((r) => {
+        // 404 = pelayan lama tanpa laluan /api/psi (perlu dimulakan semula)
+        if (r.status === 404)
+          return Promise.reject(
+            new Error('laluan /api/psi tiada pada pelayan; mulakan semula pelayan (npm start)'),
+          );
+        return r
+          .json()
+          .catch(() => ({ ralat: 'HTTP ' + r.status }))
+          .then((j) => (r.ok ? j : Promise.reject(new Error(j.ralat || 'HTTP ' + r.status))));
+      })
+      .then(
+        (j) => {
+          PSI.data.set(k, j);
+          PSI.ralat.delete(k);
+        },
+        (e) => PSI.ralat.set(k, String((e && e.message) || e)),
+      )
+      .finally(() => {
+        PSI.memuat.delete(k);
+        ivRender(['mar']);
+      });
+    return null;
+  }
+  const rm2 = (x) => (fin(x) ? 'RM ' + x.toFixed(2) : '—');
+  const pct2 = (x) => (fin(x) ? (x * 100).toFixed(2) + '%' : '—');
+  const LENCANA_PSI = {
+    Biasa: 'ok',
+    'Semakan manual': 'warn',
+    'Margin tidak mencukupi': 'bad',
+    'Data tidak lengkap': 'bad',
+  };
+  function cadanganKadHTML(id, tajuk, kelas, unit, t) {
+    const u = E(unit);
+    if (!t)
+      return `<div class="iv-mr-cad ${kelas}" id="${id}"><div class="iv-mr-cad-h"><span>${E(tajuk)}</span></div><div class="iv-mr-cad-n">Memuatkan cadangan…</div></div>`;
+    const lencana = `<span class="iv-mr-lencana ${LENCANA_PSI[t.status] || 'warn'}">${E(t.status)}</span>`;
+    if (!t.ok)
+      return `<div class="iv-mr-cad ${kelas}" id="${id}"><div class="iv-mr-cad-h"><span>${E(tajuk)}</span>${lencana}</div><div class="iv-mr-cad-v iv-mr-tiada">${E(t.sebab)}</div><div class="iv-mr-cad-n">${E(t.butiran || '')}</div></div>`;
+    const sisda = `berat SISDA ${t.beratSisda.toFixed(2)}${t.sebabSisda ? ', ' + t.sebabSisda : ''}`;
+    const amaran = (t.amaran || []).filter(
+      (a) => a === 'Nisbah 2 bulan bukan dari 2 bulan terkini',
+    );
+    return `<div class="iv-mr-cad ${kelas}" id="${id}"><div class="iv-mr-cad-h"><span>${E(tajuk)}</span>${lencana}</div>
+ <div class="iv-mr-cad-v">${rm2(t.hargaBawah)} - ${rm2(t.hargaAtas)} <small>${u}</small></div>
+ <div class="iv-mr-cad-n">Harga cadangan ${rm2(t.hargaCadangan)}${u} · Harga pasaran ${rm2(t.hargaPasaran)} · Harga ramalan ${rm2(t.hargaRamalan)} (${E(sisda)}) · Lebar julat ±${pct2(t.lebarJulat)}</div>
+ <div class="iv-mr-cad-n">Nisbah_2_Bulan: ${E(t.bulan2Label)} · Bulan sah Nisbah_6_Bulan: ${t.bilBulanSah6} · Bulan sah Nisbah_SISDA: ${t.bilBulanSahSisda}</div>
+ ${amaran.map((a) => `<div class="iv-mr-amaran">${E(a)}</div>`).join('')}
+ <details class="iv-mr-diag"><summary>Diagnostik</summary><table><tbody>${[
+   ['Nisbah_2_Bulan', t.nisbah2.toFixed(2)],
+   ['Nisbah_6_Bulan', t.nisbah6.toFixed(2)],
+   ['Beza_Nisbah', pct2(t.bezaNisbah)],
+   ['Nisbah_Terpilih', t.nisbahTerpilih.toFixed(2) + ' (' + t.pilihanNisbah + ')'],
+   ['Nisbah_SISDA', fin(t.nisbahSisda) ? t.nisbahSisda.toFixed(2) : '—'],
+   ['Ralat_Ramalan', pct2(t.ralatRamalan)],
+   ['Berat_SISDA', t.beratSisda.toFixed(2)],
+   ['Turun_Naik', pct2(t.turunNaik)],
+   ['Lebar_Julat', pct2(t.lebarJulat)],
+   ['Harga pasaran ' + labelBulanPsi(t.bulanTerkini), rm2(t.hargaPasaranTerkini)],
+   ['Unjuran SISDA ' + labelBulanPsi(t.bulanCadangan), rm2(t.sisdaCadangan)],
+ ]
+   .map(([k, v]) => `<tr><th>${E(k)}</th><td>${E(v)}</td></tr>`)
+   .join('')}</tbody></table></details></div>`;
+  }
+  const labelBulanPsi = (ym) => (ym ? blnLabel(ym + '-01') : '');
+  function ivRenderMarRingkas() {
+    const { po, cm } = marCtx();
+    const box = $i('ivMarCtl'),
+      res = $i('ivMarRes');
+    $i('ivMarDefs').innerHTML = '';
+    $i('ivMarChips').innerHTML = notApplicable('mar');
+    box.dataset.sig = '';
+    if (!po) {
+      box.innerHTML = '';
+      res.innerHTML =
+        '<div class="iv-empty">Pilih Pusat Operasi pada peta atau senarai keutamaan</div>';
+      return;
+    }
+    box.innerHTML = `<div class="iv-chips"><span>PO:</span><select class="iv-in" style="width:auto" data-iv-sel="marpo" aria-label="PO simulasi margin">${IV_PO.map((p) => `<option value="${E(p.id)}"${p.id === po ? ' selected' : ''}>${E(p.name)}</option>`).join('')}</select>${chip('Komoditi: ' + IV_COMMBY[cm.id].name, 'info')}${cm.def ? chip('lalai (penapis ialah Semua)', 'warn') : ''}</div>`;
+    const ld = ivPrice(po, cm.id, 'Ladang'),
+      br = ivPrice(po, cm.id, 'Borong');
+    const unit = (IV_COMMBY[cm.id] ? IV_COMMBY[cm.id].unit : 'RM/kg').replace(/^RM\//, '/');
+    const variety = IV_COMMBY[cm.id] && IV_COMMBY[cm.id].variety;
+    const k = po + '|' + variety;
+    const d = variety ? psiAmbil(po, variety) : null;
+    const ralat = PSI.ralat.get(k);
+    let isi;
+    if (!variety)
+      isi = '<div class="iv-empty">Pilih varieti komoditi untuk melihat cadangan.</div>';
+    else if (ralat && !d)
+      isi = `<div class="iv-banner">Cadangan tidak dapat dimuatkan: ${E(ralat)}</div>`;
+    else {
+      const m = d && d.margin;
+      const margin = m
+        ? `<div class="iv-mr-margin ${m.tidakMencukupi ? 'bad' : ''}" id="ivMrMargin"><b>Margin kasar:</b> ${rm2(m.rm)}${E(unit)} (${m.pct.toFixed(2)}%) · Margin paling kecil (julat): ${rm2(m.minRm)}${E(unit)}${m.tidakMencukupi ? ` · <b>Margin tidak mencukupi — semak semula</b> (bawah ${m.ambangPct}%)` : ''}</div>`
+        : '';
+      const sumber = d
+        ? `<div class="iv-mr-sumber">Data terakhir: AMI ladang ${E(d.tarikh.belian.ami || '—')}, borong ${E(d.tarikh.jualan.ami || '—')} · FIS ladang ${E(d.tarikh.belian.fis || '—')}, borong ${E(d.tarikh.jualan.fis || '—')} · SISDA dijana ${E(String(d.sumber.sisda.dijana || '—').slice(0, 10))} · dikemas kini ${E(String(d.disegarPada || '').slice(0, 10))}</div>${(d.lapuk || []).map((x) => `<div class="iv-mr-amaran">Data lapuk: ${E(x)}</div>`).join('')}<div class="iv-mr-sumber">${E(d.nota)}</div>`
+        : '';
+      isi = `<div class="iv-note">${d ? `Cadangan bulan ${E(d.labelCadangan)}, berasaskan data AMI, FIS dan SISDA sehingga ${E(d.labelTerkini)}` : 'Memuatkan cadangan…'}</div>
+ <div class="iv-mr-dua">${cadanganKadHTML('ivMrBelian', 'Cadangan Harga Belian PO (Ladang)', 'ladang', unit, d && d.belian)}${cadanganKadHTML('ivMrJualan', 'Cadangan Harga Jualan PO (Borong)', 'borong', unit, d && d.jualan)}</div>${margin}${sumber}`;
+    }
+    res.innerHTML = `<div class="iv-mr-dua">${hargaKadHTML('HARGA LADANG SEMASA', ld, cm.id)}${hargaKadHTML('HARGA BORONG SEMASA', br, cm.id)}</div>
+ <div class="iv-mr-sek"><h4>Cadangan Margin &amp; Harga PO</h4>${isi}</div>`;
   }
   let _lastGoodMargin = null;
   function ivRenderMarRes() {
@@ -2610,7 +3140,7 @@
       sell = `<div class="iv-big">—</div><div class="iv-note">Harga minimum untuk margin sasaran: <b id="ivMinSell">${rmPos(r.minS)}</b></div><div class="iv-banner" id="ivSellInf">${INF}</div>`;
     h += `<div class="iv-two" style="margin-top:10px"><div class="iv-res-g" id="ivCardFarm"><h4>Cadangan Harga Belian Ladang</h4>${farm}</div><div class="iv-res-c" id="ivCardSell"><h4>Cadangan Harga Jualan Borong PO</h4>${sell}</div></div>`;
     const hs = r.hs;
-    h += `<div class="iv-card" style="margin-top:10px" id="ivHistBlock"><h4>Analisis Spread Sejarah ${tagD}</h4>${hs ? `<div class="iv-kv"><span>Purata<b id="ivHMean">${f2(hs.mean)}</b></span><span>Median<b id="ivHMed">${f2(hs.median)}</b></span><span>Sisihan piawai<b id="ivHSd">${f2(hs.sd)}</b></span><span>Trend<b id="ivHTrend">${hs.trend}</b></span><span>Bilangan minggu<b>${hs.n}</b></span></div>` : '<div class="iv-note">Tiada data sejarah.</div>'}<div class="iv-note">Jika sejarah kurang daripada ${IV_CONFIG.minHistory} minggu, julat sokongan pasaran tidak dipaparkan. Sejarah ialah data dummy yang dijana secara deterministik.</div></div>`;
+    h += `<div class="iv-card" style="margin-top:10px" id="ivHistBlock"><h4>Analisis Spread Sejarah ${tagH}</h4>${hs ? `<div class="iv-kv"><span>Purata<b id="ivHMean">${f2(hs.mean)}</b></span><span>Median<b id="ivHMed">${f2(hs.median)}</b></span><span>Sisihan piawai<b id="ivHSd">${f2(hs.sd)}</b></span><span>Trend<b id="ivHTrend">${hs.trend}</b></span><span>Bilangan minggu<b>${hs.n}</b></span></div>` : '<div class="iv-note">Tiada data sejarah.</div>'}<div class="iv-note">Jika sejarah kurang daripada ${IV_CONFIG.minHistory} minggu, julat sokongan pasaran tidak dipaparkan. Sejarah ialah data sebenar DB Harga: setiap minggu ISO lengkap ialah harga Borong PO tolak harga Ladang PO (Harga Borong Beli FAMA tiada dalam DB Harga).</div></div>`;
     const open = ivState.ui.marInsight;
     h += `<div style="margin-top:10px"><button type="button" class="button ghost" id="ivInsightBtn" data-iv-act="marInsight" aria-expanded="${open}">${open ? '▾' : '▸'} Pandangan AI Margin</button><div id="ivInsight" ${open ? '' : 'hidden'}></div></div>`;
     host.innerHTML = h;
@@ -2652,57 +3182,35 @@
     Hijau: { cls: 'ok', rank: 2 },
   };
   const ivDataService = {
-    async loadMuse(minggu) {
+    async loadMuse(minggu, reuse, onPending) {
       if (failFlags.muse) {
         failFlags.muse = false;
         throw new Error('Kegagalan data Muse disuntik (ujian)');
       }
-      if (location.protocol === 'file:') {
-        const e = new Error('Memerlukan pelayan');
-        e.kind = 'file';
-        throw e;
-      }
-      const r = await fetch('/api/muse' + (minggu ? '?minggu=' + encodeURIComponent(minggu) : ''), {
-        headers: { Accept: 'application/json' },
-      });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      if (r.status === 202) {
-        // Pelayan masih membina cache (larian pertama). Tunggu dan cuba semula.
-        const e = new Error('Data AI Muse sedang dikemas kini');
-        e.kind = 'pending';
-        e.retryMs = Math.min(60, Math.max(3, Number(r.headers.get('Retry-After')) || 10)) * 1000;
-        throw e;
-      }
-      const d = await r.json();
-      if (!d || !Array.isArray(d.rekod) || typeof d.minggu !== 'string')
-        throw new Error('Respons AI Muse tidak sah');
-      d.mingguTersedia = Array.isArray(d.mingguTersedia) ? d.mingguTersedia : [];
-      return d;
+      // Pemuat dikongsi (muse-data.js) menunggu sendiri jika pelayan membalas 202 (cache sedang dibina).
+      return FamaMuse.load(minggu, { reuse, onPending });
     },
   };
-  const MUSE_MAX_PENDING = 30; // ~5 minit pada 10 s setiap cubaan
-  async function ivLoadMuse(minggu, cubaan = 0) {
+  async function ivLoadMuse(minggu, reuse) {
+    if (!ivShowMuse) return;
     const seq = ++_museSeq;
-    ivState.muse.status = cubaan ? 'pending' : 'loading';
+    ivState.muse.status = 'loading';
     ivState.muse.page = 0;
     museMdClose(false);
     ivRender(['muse']);
+    const onPending = () => {
+      if (seq !== _museSeq || ivState.muse.status === 'pending') return;
+      ivState.muse.status = 'pending';
+      ivRender(['muse']);
+    };
     try {
-      const d = await ivDataService.loadMuse(minggu);
+      const d = await ivDataService.loadMuse(minggu, reuse, onPending);
       if (seq !== _museSeq) return;
       museData = d;
       ivState.muse.weekStart = d.minggu;
       ivState.muse.status = 'ready';
     } catch (err) {
       if (seq !== _museSeq) return;
-      if (err && err.kind === 'pending' && cubaan < MUSE_MAX_PENDING) {
-        ivState.muse.status = 'pending';
-        ivRender(['muse']);
-        setTimeout(() => {
-          if (seq === _museSeq) ivLoadMuse(minggu, cubaan + 1);
-        }, err.retryMs);
-        return;
-      }
       console.warn('Data AI Muse tidak dapat dimuatkan', err && err.message);
       ivState.muse.status = err && err.kind === 'file' ? 'file' : 'error';
     }
@@ -2718,7 +3226,10 @@
     const f = ivState,
       lk = r.lokasi || [];
     if (f.selectedCommodityId) {
-      const ok = [f.selectedCommodityId, ...(MUSE_COMM_ALIAS[f.selectedCommodityId] || [])];
+      const ok = [
+        f.selectedCommodityId,
+        ...(MUSE_COMM_ALIAS[IV_BEKALAN_DUMMY[f.selectedCommodityId]] || []),
+      ];
       if (!ok.includes(r.komoditiId)) return false;
     }
     if (f.selectedStateId && !lk.some((l) => slug(l.negeri || '') === f.selectedStateId))
@@ -3044,19 +3555,15 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
       ivRenderMobRes();
     },
     draft: ivRenderDrafts,
-    mar: () => {
-      ivRenderMarDefs();
-      ivRenderMarCtl();
-      ivRenderMarRes();
-    },
-    marres: () => {
-      ivRenderMarCtl();
-      ivRenderMarRes();
-    },
+    // Tab Simulasi Margin & Harga AI: susun atur ringkas (harga semasa + kad cadangan). Simulasi margin lama
+    // (ivRenderMarDefs/Ctl/Res) dikekalkan dalam kod tetapi tidak dipaparkan.
+    mar: ivRenderMarRingkas,
+    marres: ivRenderMarRingkas,
     muse: ivRenderMuse,
   };
   const DEP = {};
   function ivRender(keys) {
+    ivMuatHarga();
     const set = new Set(keys || ALL_PANELS);
     const order = [
       'filters',
@@ -3072,6 +3579,7 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
     ];
     order.forEach((k) => {
       if (!set.has(k)) return;
+      if (k === 'muse' && !ivShowMuse) return;
       if (k === 'mobres' && set.has('mob')) return;
       if (k === 'marres' && set.has('mar')) return;
       try {
@@ -3158,7 +3666,9 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
     if (!host) return;
     const po = effPO(),
       cm = effCommodity();
+    const tbh = ivState.mob.anchorTbh && IV_TBHBY[ivState.mob.anchorTbh];
     host.innerHTML =
+      (tbh ? chip('PO terpilih (mobilisasi): ' + tbh.name, 'info') : '') +
       chip(po ? 'PO terpilih: ' + poName(po) : 'PO belum dipilih', po ? 'info' : 'grey') +
       chip('Komoditi: ' + commName(cm.id), 'info') +
       chip('Mod: ' + modeLbl(ivState.selectedMode), 'grey');
@@ -3190,7 +3700,7 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
         sup = `<span class="iv-iss-i"><b>${m === 'pengeluar' ? 'Lebihan' : 'Kekurangan'} bekalan:</b> ${f2(v)} MT (${r.cls.supply.state === 'disahkan' ? 'disahkan' : 'belum disahkan'})</span>`;
     }
     return `<div class="iv-iss-l1"><b class="iv-iss-h">Isu memerlukan intervensi</b><span class="iv-lv ${lv}">${LV_LABEL[lv]}</span><b class="iv-iss-t">${E(issueLabel(r))}</b><span class="iv-iss-loc">${E(r.district)}, ${E(r.negeri)}</span>${tagD}</div>
- <div class="iv-iss-l2"><span class="iv-iss-i"><b>Harga ${MODE_STAGE[m]}:</b> ${rmAny(r.price.actual)} → forecast ${rmAny(r.price.forecast)} (${sgn(r.price.devPct, 1)}%)</span>${sup}<span class="iv-iss-i"><b>Intervensi:</b> ${E(intervType(r))}</span></div>`;
+ <div class="iv-iss-l2"><span class="iv-iss-i"><b>Harga ${MODE_STAGE[m]}:</b> ${rmAny(r.price.actual)} (${pctTxt(r.price.weeklyPct)} minggu ke minggu) · ${E(r.price.sebabKongsi)}${r.price.asas ? ` · asas ${r.price.asas}` : ''}</span>${sup}<span class="iv-iss-i"><b>Intervensi:</b> ${E(intervType(r))}</span></div>`;
   }
   function mdOpen(tab, opener) {
     const back = $i('ivMd');
@@ -3412,6 +3922,9 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
       case 'retryPanel':
         ivRenderAll();
         break;
+      case 'hargaRetry':
+        ivCubaSemulaHarga();
+        break;
     }
   }
   root.addEventListener('click', (ev) => {
@@ -3440,6 +3953,12 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
     if (!k) return;
     if (k === 'marpo') {
       ivDispatch('selectPO', t.value);
+      return;
+    }
+    if (k === 'mobpo') {
+      $i('ivMobCtl').dataset.sig = '';
+      if (IV_TBHBY[t.value]) ivDispatch('setMobAnchor', t.value);
+      else ivDispatch('selectPO', t.value);
       return;
     }
     ivDispatch('setFilter', [k, t.value]);
@@ -3476,11 +3995,10 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
       const v = Number(t.value);
       if (
         t.value !== '' &&
-        mobField('ivRef', 'ivRefErr', v, 0.01, 999, 'Masukkan harga RM/kg antara 0.01 dan 999')
+        mobField('ivRef', 'ivRefErr', v, 0.01, 999, 'Masukkan harga antara RM 0.01 dan 999')
       )
         ivDispatch('setMob', ['ref', v]);
-      else
-        mobField('ivRef', 'ivRefErr', NaN, 0.01, 999, 'Masukkan harga RM/kg antara 0.01 dan 999');
+      else mobField('ivRef', 'ivRefErr', NaN, 0.01, 999, 'Masukkan harga antara RM 0.01 dan 999');
     } else if (k === 'limit') {
       const v = Number(t.value);
       if (
@@ -3590,7 +4108,7 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
     ivState.ui.scenPending = !scenSettled;
     ivRenderMarDefs();
     ivRenderAll();
-    ivLoadMuse();
+    ivLoadMuse(undefined, true);
     const sp = window.famaScenariosReady;
     if (sp && typeof sp.then === 'function') {
       const done = () => {
@@ -3701,5 +4219,9 @@ ${r.harga ? `<div><div class="iv-sec">HARGA</div>${musePrice(r)}</div>` : ''}
     validateMargin,
     historyOf,
     ivPrice,
+    recPrice,
+    recsNow,
+    ivDbPairs,
+    ivHarga: () => ({ sedia: IVH.sedia, memuat: IVH.memuat, ralat: IVH.ralat, ver: IVH.ver }),
   };
 })();

@@ -49,7 +49,7 @@ const JANGKAAN_SUSUN = ['durian', 'kelapa-tua', 'tembikai', 'kubis', 'cili-padi'
   const ok = (nama, cond, info) => {
     if (!cond) gagal.push(nama + (info !== undefined ? ' -> ' + JSON.stringify(info) : ''));
   };
-  async function buka({ muse, url = base + '/', rangkaian = false, lebar = 1440, tema } = {}) {
+  async function buka({ muse, url = base + '/?muse=1', rangkaian = false, lebar = 1440, tema } = {}) {
     const page = await browser.newPage();
     await page.setViewport({ width: lebar, height: 900 });
     const masalah = [],
@@ -232,20 +232,21 @@ const JANGKAAN_SUSUN = ['durian', 'kelapa-tua', 'tembikai', 'kubis', 'cili-padi'
         await page.$eval('#ivMusePager', (e) => e.hidden || getComputedStyle(e).display === 'none'),
       );
       const ada = await page.$eval('#ivFKomoditi', (s) =>
-        [...s.options].some((o) => o.value === 'kubis-bulat'),
+        [...s.options].some((o) => o.value === 'KUBIS'),
       );
       if (ada) {
-        await page.select('#ivFKomoditi', 'kubis-bulat');
+        await page.select('#ivFKomoditi', 'KUBIS');
+        await page.select('#ivFVarieti', 'kubis-bulat-tanah-tinggi');
         await sleep(600);
         const k2 = await kad(page);
         ok(
-          '(i) penapis komoditi kubis-bulat -> kubis',
+          '(i) penapis komoditi KUBIS (Tanah Tinggi) -> kubis',
           k2.length === 1 && k2[0].id === 'kubis',
           k2.map((x) => x.id),
         );
-        await page.select('#ivFKomoditi', '');
+        await page.select('#ivFKomoditi', 'all');
         await sleep(400);
-      } else ok('(i) pilihan kubis-bulat wujud', false);
+      } else ok('(i) pilihan KUBIS wujud', false);
       ok('(i) tiada ralat konsol/CSP', masalah.length === 0, masalah);
       await page.close();
     }
@@ -464,7 +465,7 @@ const JANGKAAN_SUSUN = ['durian', 'kelapa-tua', 'tembikai', 'kubis', 'cili-padi'
     // (vii) file://
     {
       const { page } = await buka({
-        url: 'file:///' + path.resolve(__dirname, '../../index.html').replace(/\\/g, '/'),
+        url: 'file:///' + path.resolve(__dirname, '../../index.html').replace(/\\/g, '/') + '?muse=1',
         rangkaian: true,
       });
       ok(
@@ -801,6 +802,34 @@ const JANGKAAN_SUSUN = ['durian', 'kelapa-tua', 'tembikai', 'kubis', 'cili-padi'
         await klip('#ivMuseMdDlg', 'dialog');
         await page.close();
       }
+    }
+    // (x) lalai: panel disembunyikan (IV_SHOW_MUSE=false), tiada jurang dan tiada permintaan /api/muse oleh Intervensi
+    for (const lebar of [1440, 390]) {
+      const { page, masalah, minta } = await buka({ url: base + '/', lebar });
+      const h = await page.evaluate(() => {
+        const p = document.getElementById('ivMusePanel');
+        const g = document.querySelector('.iv-grid-top').getBoundingClientRect();
+        let nxt = p.nextElementSibling;
+        while (nxt && nxt.hidden) nxt = nxt.nextElementSibling;
+        return {
+          hidden: p.hidden,
+          display: getComputedStyle(p).display,
+          h: p.getBoundingClientRect().height,
+          butang: document.querySelectorAll('#viewIntervensi [data-iv-act^="muse"]:not(#ivMuseMd *)')
+            .length,
+          nextTop: nxt ? nxt.getBoundingClientRect().top - g.bottom : null,
+        };
+      });
+      ok(`(x) panel Muse tersembunyi ${lebar}`, h.hidden && h.display === 'none' && h.h === 0, h);
+      ok(`(x) tiada butang Muse kelihatan ${lebar}`, h.butang === 0, h);
+      // panel EWS (Pemantauan) memuat /api/muse sekali; Intervensi tidak membuat permintaan sendiri
+      const dimuat = await page.evaluate(() => IV_TEST.museData());
+      ok(`(x) Intervensi tidak memuat data Muse ${lebar}`, dimuat === null && minta.length <= 1, {
+        dimuat,
+        minta,
+      });
+      ok(`(x) tiada ralat konsol ${lebar}`, masalah.length === 0, masalah);
+      await page.close();
     }
   } catch (e) {
     gagal.push('pengecualian: ' + (e && e.stack ? e.stack : e));
