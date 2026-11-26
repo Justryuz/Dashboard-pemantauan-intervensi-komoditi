@@ -1,0 +1,275 @@
+/* Panel EWS (AI) padat: di ruang kanan peta (>= 1400px) dengan tinggi sama seperti peta,
+   atau di bawah peta (< 1400px). Dimuat selepas susun-harga.css. */
+
+/* Lajur kanan sentiasa wujud; kandungannya tidak menambah tinggi baris peta. */
+#petaKananKosong {
+  display: block;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 14px;
+}
+@media (min-width: 1400px) {
+  #petaKananKosong {
+    margin-top: 0;
+  }
+  #petaKananKosong > #ewsPanel {
+    position: absolute;
+    inset: 0;
+    max-height: none;
+  }
+}
+
+/* Petak lama di bawah (Cuaca/Banjir/AMS tersembunyi) tidak lagi menunjukkan bingkai kosong. */
+section.bottom-grid:not(:has(> .panel:not([hidden]))) {
+  display: none;
+}
+
+#ewsPanel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  max-height: 420px;
+  margin: 0;
+  overflow: hidden;
+}
+@media (min-width: 1400px) {
+  #ewsPanel {
+    max-height: none;
+  }
+}
+
+/* Pengepala: tajuk + ringkasan satu baris */
+#ewsPanel .ews-head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+#ewsPanel .ews-head .ews-title {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.2;
+}
+#ewsPanel .ews-head .ews-sub {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 11px;
+  text-align: right;
+}
+
+/* Sub-tab: kawalan tersegmen */
+#ewsPanel .ews-tabs {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 0;
+  padding: 6px 10px;
+  overflow: hidden;
+}
+#ewsPanel .ews-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 26px;
+  padding: 3px 4px;
+  margin-left: -1px;
+  border-radius: 0;
+  font-size: 11.5px;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#ewsPanel .ews-tab:first-child {
+  margin-left: 0;
+  border-radius: 8px 0 0 8px;
+}
+#ewsPanel .ews-tab:last-child {
+  border-radius: 0 8px 8px 0;
+}
+#ewsPanel .ews-tab[aria-selected='true'] {
+  position: relative;
+  z-index: 1;
+}
+#ewsPanel .ews-tab:focus-visible {
+  z-index: 2;
+  outline-offset: -2px;
+}
+
+/* Badan skrol dalaman (satu skrol bagi paparan yang kelihatan) */
+#ewsPanel .ews-view:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line2) transparent;
+}
+#ewsPanel .ews-view::-webkit-scrollbar {
+  width: 6px;
+}
+#ewsPanel .ews-view::-webkit-scrollbar-thumb {
+  background: var(--line2);
+  border-radius: 3px;
+}
+#ewsPanel .ews-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Nama paparan sudah ada pada sub-tab */
+#ewsPanel .ews-view-title {
+  display: none;
+}
+#ewsPanel #metAlertBody,
+#ewsPanel .bj-list,
+#ewsPanel .ews-sent-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 0 10px;
+}
+#ewsPanel .bj-list {
+  gap: 6px;
+}
+#ewsPanel .ews-sent-list {
+  gap: 6px;
+}
+#ewsPanel .ews-flood-note,
+#ewsPanel .ews-sent-chips,
+#ewsPanel .ews-sent-body,
+#ewsPanel .bj-summary,
+#ewsPanel .bj-ponote {
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 11px;
+}
+#ewsPanel .ews-sent-body {
+  padding-left: 0;
+  padding-right: 0;
+}
+#ewsPanel .weather-banner {
+  margin: 0 10px 6px;
+}
+#ewsPanel #metAlertBody > .alert-status,
+#ewsPanel #metAlertBody > :only-child,
+#ewsPanel .bj-list > .bj-kosong {
+  grid-column: 1 / -1;
+}
+
+/* Kad amaran padat */
+#ewsPanel .alert-item {
+  display: block;
+  padding: 6px 0;
+}
+#ewsPanel .alert-top {
+  gap: 4px;
+}
+#ewsPanel .alert-top b {
+  flex: 1 1 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.3;
+}
+#ewsPanel .alert-lok {
+  margin-top: 2px;
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#ewsPanel .alert-item p.alert-teks {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+#ewsPanel .alert-more {
+  margin-top: 2px;
+}
+#ewsPanel .alert-item p.alert-meta {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+#ewsPanel .alert-status {
+  margin: 6px 0 0;
+}
+
+/* Kaki kecil */
+#ewsPanel .right-note,
+#ewsPanel .weather-attrib {
+  margin: 0;
+  padding: 6px 10px 4px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+/* Amaran Rasmi: pin ke peta, tanda tidak dipetakan, sorotan dari peta (src/js/lapisan-amaran.js) */
+#metAlertBody .alert-item .amaran-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--b1b3658);
+  border-radius: 999px;
+  background: var(--panel2);
+  color: var(--cyan);
+  cursor: pointer;
+}
+#metAlertBody .alert-item .amaran-pin:hover,
+#metAlertBody .alert-item .amaran-pin:focus-visible {
+  border-color: var(--cyan);
+}
+#metAlertBody .alert-item .amaran-takpeta {
+  font-size: 9.5px;
+  color: var(--muted);
+  font-style: italic;
+  white-space: nowrap;
+}
+#metAlertBody .alert-item[data-amaran] {
+  scroll-margin: 6px;
+}
+#metAlertBody .alert-item.sorot {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.legend-amaran {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.legend-amaran .amaran-leg-tahap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.legend-amaran .amaran-leg-tamat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.legend-amaran .amaran-leg-takpeta {
+  color: var(--muted);
+  font-style: italic;
+}

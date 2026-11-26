@@ -2,6 +2,7 @@ initControls();
 renderAll();
 initCuaca();
 initBanjir();
+initEws();
 initIPU();
 initFloodLayer();
 initPetaKawalan();
@@ -13,6 +14,9 @@ window.DASHBOARD_TEST = {
   selectPO,
   selectDistrict,
   renderAll,
+  setEwsTab,
+  renderEws,
+  ewsState: () => ({ tab: state.ewsTab, muse: museEwsState.status }),
   filteredRecords,
   poStatus,
   scenarioStats,
@@ -56,11 +60,12 @@ window.DASHBOARD_TEST = {
             : null,
       },
       fiturBanjir: banjirFitur().length,
-      fiturAmaran: amaranFitur().map((f) => f.properties),
-      markerPO: mapMarkers.length,
+      fiturAmaran: window.FamaAmaranPeta ? FamaAmaranPeta.ujian().fitur : [],
+      markerPO: mapMarkers.filter((m) => m.getElement().classList.contains('po-marker')).length,
+      markerPOTambahan: mapMarkers.filter((m) => m.getElement().classList.contains('po-tbh'))
+        .length,
     };
   },
-  bukaPopupAmaran,
   gmapsUrl,
   amaranDGMuat: initAmaranDG,
   cuaca: window.FamaCuaca ? FamaCuaca.ujian : null,

@@ -39,6 +39,8 @@ const cuaca = require('./services/cuaca.js');
 const banjir = require('./services/banjir.js');
 const kualitiUdara = require('./services/kualiti-udara.js');
 const muse = require('./services/muse.js');
+const hargaDb = require('./services/harga-db.js');
+const psi = require('./services/psi.js');
 const amaranDG = require('./services/amaran-datagov.js');
 const gridCuaca = require('./services/grid-cuaca.js');
 const radar = require('./services/radar.js');
@@ -144,6 +146,50 @@ const server = http.createServer((req, res) => {
       req.method === 'HEAD' ? '' : JSON.stringify(muse.kumpulMinggu(cache, minggu)),
       JSON_HDR,
     );
+  }
+
+  if (
+    pathname === '/api/harga' ||
+    pathname === '/api/harga/ambang' ||
+    pathname === '/api/harga/meta'
+  ) {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const kandungan = (status, obj) =>
+      send(res, status, req.method === 'HEAD' ? '' : JSON.stringify(obj), JSON_HDR);
+    const sah = hargaDb.kira.sahkanParam(new URL(req.url, 'http://localhost').searchParams);
+    if (sah.ralat) return kandungan(400, { ralat: sah.ralat });
+    const cache = hargaDb.bacaCache();
+    if (!cache)
+      return kandungan(503, {
+        ralat: 'Data harga belum tersedia',
+        sedangDikemaskini: hargaDb.sedangAmbil(),
+      });
+    if (pathname === '/api/harga/meta') return kandungan(200, hargaDb.jawabMeta(cache));
+    if (pathname === '/api/harga/ambang') {
+      const a = hargaDb.jawabAmbang(cache);
+      return a
+        ? kandungan(200, a)
+        : kandungan(503, {
+            ralat: 'Data ambang belum tersedia',
+            sedangDikemaskini: hargaDb.sedangAmbil(),
+          });
+    }
+    return kandungan(200, hargaDb.jawabHarga(cache, sah.nilai));
+  }
+
+  // Harga Cadangan PSI (BELIAN ladang, JUALAN borong) daripada cache npm run psi:ambil
+  if (pathname === '/api/psi') {
+    const JSON_HDR = { 'Content-Type': 'application/json; charset=utf-8' };
+    const kandungan = (status, obj) =>
+      send(res, status, req.method === 'HEAD' ? '' : JSON.stringify(obj), JSON_HDR);
+    const sah = psi.sahkanParam(new URL(req.url, 'http://localhost').searchParams);
+    if (sah.ralat) return kandungan(400, { ralat: sah.ralat });
+    const cache = psi.bacaCache();
+    if (!cache)
+      return kandungan(503, {
+        ralat: 'Data cadangan PSI belum tersedia (jalankan npm run psi:ambil)',
+      });
+    return kandungan(200, psi.jawab(cache, sah.nilai));
   }
 
   if (pathname === '/api/met-malaysia') {
@@ -303,6 +349,7 @@ if (require.main === module) {
     banjir.mulaPenjadual();
     kualitiUdara.mulaPenjadual();
     muse.mulaPenjadual();
+    hargaDb.mulaPenjadual();
     amaranDG.mulaPenjadual();
     gridCuaca.mulaPenjadual();
     siklon.mulaPenjadual();

@@ -12,7 +12,7 @@ const puppeteer = require(
 const EDGE =
   process.env.BROWSER_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const IDS = ['ivFKomoditi', 'ivFNegeri', 'ivFPO', 'ivFDaerah', 'ivFTempoh', 'ivFRisiko'];
+const IDS = ['ivFKomoditi', 'ivFVarieti', 'ivFNegeri', 'ivFPO', 'ivFDaerah', 'ivFRisiko'];
 
 (async () => {
   pasangSemuaCache();
@@ -100,15 +100,11 @@ const IDS = ['ivFKomoditi', 'ivFNegeri', 'ivFPO', 'ivFDaerah', 'ivFTempoh', 'ivF
         });
         ok(tag + 'tiada limpahan halaman', lim.doc, lim);
         ok(tag + 'bar tidak melimpah', lim.bar, lim);
-        const info = await page.$eval('.iv-info', (e) => ({
-          title: e.getAttribute('title'),
-          d: e.getAttribute('aria-describedby'),
+        const tempoh = await page.evaluate(() => ({
+          sel: !!document.getElementById('ivFTempoh'),
+          teks: /Tempoh Analisis/.test(document.getElementById('ivFilters').textContent),
         }));
-        ok(
-          tag + 'ikon info tempoh',
-          /Tempoh purata harga asas/.test(info.title) && info.d === 'ivTempohHelp',
-          info,
-        );
+        ok(tag + 'penapis Tarikh / Tempoh Analisis dibuang', !tempoh.sel && !tempoh.teks, tempoh);
         ok(tag + 'tiada <small> bantuan', !(await page.$('#ivFilters small')));
         const lbl = await page.$eval('#ivFilters label', (e) => {
           const s = getComputedStyle(e);

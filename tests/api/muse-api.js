@@ -339,14 +339,14 @@ const opsSegar = (dir, dunia, lebih = {}) => ({
   /* --- (g) lokasi --- */
   ok('gazetteer: daerah PO dimuat dengan poId', () => {
     const d = muatDaerahPO();
-    assert.equal(d.length, 50);
+    assert.equal(d.length, 71); // daerah 15 PO utama mengikut pemetaan FIS 2.1
     assert.equal(d.find((x) => x.nama === 'Kluang').poId, 'simpangrenggam');
     assert.equal(d.find((x) => x.nama === 'Pasir Mas').negeri, 'Kelantan');
   });
   ok('ekstrakLokasi: kes daerah dan negeri', () => {
     const s = (t) => ekstrakLokasi(t).map((l) => `${l.negeri}/${l.daerah}/${l.poId}`);
-    assert.deepEqual(s('pekebun kelapa Matag Dungun terjejas'), ['Terengganu/Dungun/null']);
-    assert.deepEqual(s('Lelong di Setiu 22 Okt'), ['Terengganu/Setiu/terengganu']);
+    assert.deepEqual(s('pekebun kelapa Matag Dungun terjejas'), ['Terengganu/Dungun/terengganu']);
+    assert.deepEqual(s('Lelong di Setiu 22 Okt'), ['Terengganu/Setiu/null']);
     assert.deepEqual(s('sayur Cameron Highlands naik'), ['Pahang/Cameron Highlands/null']);
     assert.deepEqual(s('harga di Kluang'), ['Johor/Kluang/simpangrenggam']);
     assert.deepEqual(s('pasar Pasir Mas'), ['Kelantan/Pasir Mas/kelantan']);
@@ -358,7 +358,7 @@ const opsSegar = (dir, dunia, lebih = {}) => ({
     ]);
     assert.deepEqual(s('di Kuala Terengganu'), ['Terengganu/Kuala Terengganu/terengganu']);
     assert.deepEqual(s('Johor Bahru'), ['Johor/Johor Bahru/johor']);
-    assert.deepEqual(s('Ahli Parlimen Kuching'), ['Sarawak/Kuching/sarawak']);
+    assert.deepEqual(s('Ahli Parlimen Kuching'), ['Sarawak/Kuching/null']);
     assert.deepEqual(s('di Pulau Pinang dan Penang'), ['Pulau Pinang/null/null']);
   });
   ok('ekstrakLokasi: perkataan biasa, negara lain, huruf kecil, had', () => {

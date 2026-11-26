@@ -1,0 +1,273 @@
+/* Lapisan Sentimen pada peta Pemantauan (src/js/lapisan-sentimen.js).
+   Penanda ialah elemen DOM. z-index: sentimen (1) di bawah PO tambahan (2) dan penanda PO/daerah (3). */
+.po-marker,
+.district-marker {
+  z-index: 3;
+}
+.sent-marker {
+  --sent-c: var(--muted);
+  --sent-glif: #fff;
+  position: absolute;
+  z-index: 1;
+  display: block;
+  width: 28px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sent-c);
+  cursor: pointer;
+  outline: none;
+}
+.sent-marker[hidden] {
+  display: none;
+}
+.sent-marker.band-hijau {
+  --sent-c: var(--green);
+}
+.sent-marker.band-kuning {
+  --sent-c: var(--yellow);
+  --sent-glif: #1d1400;
+}
+.sent-marker.band-merah {
+  --sent-c: var(--red);
+}
+.sent-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--sent-c);
+  color: var(--sent-glif);
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 0 1px #0b2540aa,
+    0 2px 5px #0006;
+}
+.sent-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  background: var(--sent-c);
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  box-sizing: border-box;
+  transform: rotate(45deg) skew(8deg, 8deg);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.sent-marker:hover .sent-bubble,
+.sent-marker:focus-visible .sent-bubble {
+  transform: scale(1.08);
+}
+.sent-marker:focus-visible .sent-bubble {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #0b2540;
+}
+.sent-marker.band-merah::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--sent-c);
+  opacity: 0;
+  animation: sent-denyut 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes sent-denyut {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sent-marker.band-merah::before {
+    animation: none;
+  }
+  .sent-marker.band-merah .sent-bubble {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--red) 45%, transparent),
+      0 2px 5px #0006;
+  }
+}
+.sent-n {
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #0b2540;
+  color: #fff;
+  border: 1.5px solid #fff;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 13px;
+  text-align: center;
+}
+.sent-leg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66%);
+  color: #fff;
+  --sent-glif: #fff;
+  flex: none;
+}
+.legend-item[hidden] {
+  display: none;
+}
+
+/* Pop-up (latar putih MapLibre, warna tetap seperti .banjir-popup) */
+.sent-popup {
+  max-width: 300px;
+  min-width: 240px;
+}
+.sent-popup .sent-k {
+  color: #405f77;
+  font-weight: 400;
+}
+.sent-lok {
+  margin-bottom: 4px;
+}
+.sent-nota {
+  font-size: 10.5px;
+  color: #405f77;
+  margin-bottom: 4px;
+}
+.sent-senarai {
+  max-height: 150px;
+  overflow-y: auto;
+  border-top: 1px solid #d3dde6;
+}
+.sent-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #d3dde6;
+}
+.sent-item:last-child {
+  border-bottom: 0;
+}
+.sent-item-atas {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sent-kom {
+  font-size: 13px;
+}
+.sent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #405f77;
+}
+.sent-chip.band-hijau {
+  color: #146c46;
+}
+.sent-chip.band-kuning {
+  color: #80560a;
+}
+.sent-chip.band-merah {
+  color: #aa0d20;
+}
+.sent-chip-risiko {
+  font-weight: 600;
+}
+.sent-kv {
+  margin: 3px 0;
+}
+.sent-baris {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sent-ringkas {
+  margin: 3px 0;
+  color: #11273d;
+}
+.sent-lagi {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1b4f8a;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sent-lagi:focus-visible {
+  outline: 2px solid #1b4f8a;
+  outline-offset: 2px;
+}
+
+/* Senarai EWS: pin dan sorotan */
+.ews-sent-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--line2);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cyan);
+  cursor: pointer;
+}
+.ews-sent-pin:hover,
+.ews-sent-pin:focus-visible {
+  border-color: var(--cyan);
+  background: var(--line);
+}
+.ews-sent-row.ews-sent-sorot {
+  outline: 2px solid var(--cyan);
+  outline-offset: -1px;
+  background: var(--line);
+}
+
+/* Tiga suis lapisan tambahan: baris dibalut supaya menu tidak melebar (papan cuaca di bawah peta) */
+.peta-seg[aria-label='Lapisan tambahan'] {
+  flex-wrap: wrap;
+  max-width: 215px;
+  justify-content: flex-end;
+}
+.peta-seg[aria-label='Lapisan tambahan'] button {
+  flex: 1 1 auto;
+  border-top: 1px solid var(--line2);
+  margin-top: -1px;
+}
+.peta-seg[aria-label='Lapisan tambahan'] button:first-child {
+  border-top: 0;
+}

@@ -25,6 +25,12 @@ const BROWSER =
   let clicked = 0;
   try {
     const page = await browser.newPage();
+    // Butang eksport CSV memicu muat turun; tanpa ini Edge tanpa kepala menyimpan
+    // fail ke folder Downloads pengguna setiap kali ujian dijalankan.
+    const cdp = await page.createCDPSession();
+    await cdp.send('Browser.setDownloadBehavior', { behavior: 'deny' }).catch(() =>
+      cdp.send('Page.setDownloadBehavior', { behavior: 'deny' }),
+    );
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
     page.on('console', (m) => {
       if (m.type() === 'error') errors.push('console: ' + m.text());

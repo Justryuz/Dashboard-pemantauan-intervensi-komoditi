@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href="data:," />
     <script src="src/js/theme-init.js"></script>
-    <title>FAMA | Dashboard Pemantauan & Intervensi Komoditi (Data Dummy)</title>
+    <title>FAMA | Dashboard Pemantauan & Intervensi Komoditi (Harga Sebenar)</title>
     <link
       rel="stylesheet"
       href="src/vendor/maplibre-gl/maplibre-gl.css"
@@ -22,6 +22,10 @@
     <script src="src/vendor/maplibre-gl/maplibre-gl.js"></script>
     <script src="config/app.config.js"></script>
     <link rel="stylesheet" href="src/css/base.css" />
+    <link rel="stylesheet" href="src/css/susun-harga.css" />
+    <link rel="stylesheet" href="src/css/ews-kompak.css" />
+    <link rel="stylesheet" href="src/css/sentimen-peta.css" />
+    <link rel="stylesheet" href="src/css/po-tambahan.css" />
     <link rel="stylesheet" href="src/css/lapisan-cuaca.css" />
     <link rel="stylesheet" href="src/css/scenarios.css" />
     <link rel="stylesheet" href="src/css/intervensi.css" />
@@ -70,9 +74,10 @@
               >Cerah
             </button>
           </div>
-          <span class="tag demo-badge">● DATA DUMMY (kecuali cuaca, banjir, IPU & senario)</span
+          <span class="tag demo-badge"
+            >● HARGA SEBENAR (DB Harga) · bekalan, stok & logistik masih data dummy</span
           ><button class="button ghost" id="downloadLogistik">↓ CSV Logistik PO</button
-          ><button class="button ghost" id="downloadCsv">↓ CSV Harga Dummy</button
+          ><button class="button ghost" id="downloadCsv">↓ CSV Harga</button
           ><button class="button ghost" id="showLogs">
             ☷ Rekod Tindakan <span id="actionCount">0</span>
           </button>
@@ -87,7 +92,7 @@
           aria-selected="true"
           aria-controls="viewMonitor"
         >
-          Pemantauan Komoditi</button
+          Pemantauan</button
         ><button
           type="button"
           class="iv-tab"
@@ -97,14 +102,15 @@
           aria-controls="viewIntervensi"
           tabindex="-1"
         >
-          Dashboard Intervensi Komoditi
+          Intervensi
         </button>
       </nav>
       <div id="viewMonitor" class="iv-view" role="tabpanel" aria-labelledby="ivTabMonitor">
         <div class="source-strip">
           <span class="source">◫ Lokasi PO: infografik</span
-          ><span class="source">◈ Harga Pasaran</span><span class="source">⌁ Harga Forecast</span
-          ><span class="source">◎ Threshold Harga</span
+          ><span class="source">◈ Harga Pasaran <b class="cyan">(sebenar)</b></span
+          ><span class="source">⌁ Trend Harian</span
+          ><span class="source">◎ Threshold Harga <b class="cyan">(sebenar)</b></span
           ><span class="source">⌂ Outlet Intervensi</span
           ><span class="source">▰ Kapasiti Infrastruktur</span
           ><span class="source">≋ JPS Malaysia · JPS Selangor <b class="cyan">(sebenar)</b></span
@@ -112,45 +118,65 @@
         </div>
         <section class="filterbar" aria-label="Penapis dashboard">
           <div class="ctrl">
+            <span>Negeri</span
+            ><select id="filterNegeri" aria-label="Negeri">
+              <option value="all">Semua negeri</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <span>Pusat Operasi</span
+            ><select id="filterState" aria-label="Pusat Operasi">
+              <option value="all">Semua PO</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <span>Bulan</span
+            ><select id="filterBulan" aria-label="Bulan">
+              <option value="all">Semua bulan</option>
+            </select>
+          </div>
+          <div class="ctrl">
+            <span>Minggu</span
+            ><select id="filterMinggu" aria-label="Minggu">
+              <option value="all">Terkini</option>
+            </select>
+          </div>
+          <div class="ctrl">
             <span>Komoditi</span
-            ><select id="filterCommodity">
+            ><select id="filterCommodity" aria-label="Komoditi">
               <option value="all">Semua komoditi</option>
             </select>
           </div>
           <div class="ctrl">
-            <span>Pusat Operasi FAMA</span
-            ><select id="filterState">
-              <option value="all">Semua pusat operasi</option>
+            <span>Varieti</span
+            ><select id="filterVarieti" aria-label="Varieti">
+              <option value="all">Semua varieti</option>
             </select>
           </div>
           <div class="ctrl short">
             <span>Indikator</span
-            ><select id="filterSeverity">
+            ><select id="filterSeverity" aria-label="Indikator">
               <option value="all">Semua tahap</option>
-              <option value="merah">🔴 Kritikal</option>
-              <option value="kuning">🟡 Berwaspada</option>
-              <option value="hijau">🟢 Stabil</option>
+              <option value="merah">🔴 Merah · Amaran harga</option>
+              <option value="kuning">🟡 Kuning · Berwaspada</option>
+              <option value="hijau">🟢 Hijau · Stabil</option>
+              <option value="kelabu">⚪ Kelabu · Tiada ambang</option>
             </select>
           </div>
           <div class="ctrl short">
             <span>Mod senarai</span
-            ><select id="filterIssue">
+            ><select id="filterIssue" aria-label="Mod senarai">
               <option value="true">Bermasalah sahaja</option>
               <option value="false">Semua komoditi</option>
             </select>
           </div>
-          <div class="ctrl short">
-            <span>Julat tren</span
-            ><select id="filterDays">
-              <option value="30">30 hari</option>
-              <option value="14">14 hari</option>
-              <option value="7">7 hari</option>
-            </select>
-          </div>
           <div class="filter-actions">
-            <button class="button ghost" id="resetFilters">↺ Reset</button>
+            <button class="button ghost" id="resetFilters">↺ Set Semula</button>
           </div>
-          <span class="filter-tip">Klik titik PO pada peta untuk zoom ke daerah seliaan.</span>
+          <div class="filter-foot">
+            <span class="filter-nota" id="filterNota" role="note"></span>
+            <span class="filter-tip">Klik titik PO pada peta untuk zoom ke daerah seliaan.</span>
+          </div>
         </section>
         <section aria-label="Ringkasan logistik berdasarkan infografik">
           <div class="logistik-head" hidden style="display: none">
@@ -209,11 +235,13 @@
               <div class="map-legend">
                 <span class="legend-item"><i class="dot green"></i>Hijau: Stabil</span
                 ><span class="legend-item"><i class="dot yellow"></i>Kuning: Waspada</span
-                ><span class="legend-item"><i class="dot red"></i>Merah berkelip: Kritikal</span
-                ><span class="legend-item"><i class="dot bj-normal"></i>Stesen JPS: Normal</span
-                ><span class="legend-item"><i class="dot bj-waspada"></i>Waspada</span
-                ><span class="legend-item"><i class="dot bj-amaran"></i>Amaran</span
-                ><span class="legend-item"><i class="dot bj-bahaya"></i>Bahaya</span
+                ><span class="legend-item"><i class="dot red"></i>Merah: Amaran harga</span
+                ><span class="legend-item"><i class="dot grey"></i>Kelabu: Tiada ambang</span
+                ><span class="legend-item" id="legendDaerah"
+                  >Warna kawasan daerah = status harga</span
+                ><span class="legend-item"><svg class="bj-ikon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#22c55e" stroke="#0b1f3f" stroke-width="3"/><path d="M16 22c5-5 10-5 16 0s11 5 16 0M16 32c5-5 10-5 16 0s11 5 16 0M16 42c5-5 10-5 16 0s11 5 16 0" fill="none" stroke="#0b1f3f" stroke-width="4.5" stroke-linecap="round"/></svg>Stesen JPS: Normal</span
+                ><span class="legend-item"><svg class="bj-ikon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#f5b400" stroke="#0b1f3f" stroke-width="3"/><path d="M16 22c5-5 10-5 16 0s11 5 16 0M16 32c5-5 10-5 16 0s11 5 16 0M16 42c5-5 10-5 16 0s11 5 16 0" fill="none" stroke="#0b1f3f" stroke-width="4.5" stroke-linecap="round"/></svg>Waspada</span
+                ><span class="legend-item"><svg class="bj-ikon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#ef4444" stroke="#0b1f3f" stroke-width="3"/><path d="M16 22c5-5 10-5 16 0s11 5 16 0M16 32c5-5 10-5 16 0s11 5 16 0M16 42c5-5 10-5 16 0s11 5 16 0" fill="none" stroke="#0b1f3f" stroke-width="4.5" stroke-linecap="round"/></svg>Amaran / Bahaya</span
                 ><span class="legend-item" style="margin-left: auto">🔄 Peta ↔ Panel harga</span>
               </div>
               <div class="map-detail" id="mapDetail" hidden style="display: none"></div>
@@ -225,67 +253,119 @@
                 style="display: none"
               ></div>
             </section>
-            <div class="triple-row">
-              <div class="panel compare-panel">
-                <div class="list-head">
-                  <strong>▤ Perbandingan Negeri / Daerah</strong
-                  ><span class="note">+ Harga Forecast</span>
-                </div>
-                <div class="table-scroll">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>NEGERI / DAERAH<br />KOMODITI</th>
-                        <th>MINGGU<br />SEBELUM</th>
-                        <th>MINGGU<br />TERKINI</th>
-                        <th>HARGA<br />FORECAST</th>
-                        <th>TREN<br />(%)</th>
-                        <th>STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody id="compareBody"></tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="panel chart-panel">
-                <div class="titlebar">
-                  <div>
-                    <div class="panel-title">⌁ Trend Harga Purata Harian</div>
-                    <div class="note" id="chartSubject">
-                      Pergerakan harga 30 hari, julat sigma, harga lantai dan harga siling
-                    </div>
-                  </div>
-                  <span class="tag" style="font-size: 10px; padding: 5px 8px" id="chartStatus"
-                    >Forecast</span
-                  >
-                </div>
-                <svg
-                  id="priceChart"
-                  class="chart-svg"
-                  viewBox="0 0 600 420"
-                  role="img"
-                  aria-label="Graf trend harga purata harian"
-                ></svg>
-                <div class="chart-legend">
-                  <span style="color: var(--blue)">━ Harga harian</span
-                  ><span style="color: var(--green)">┄ Purata</span
-                  ><span style="color: var(--yellow)">┄ Amaran 1 · ±1σ</span
-                  ><span style="color: var(--red)">┄ Amaran 2 · ±2σ</span
-                  ><span>⚑ Lantai / siling</span>
-                </div>
+          </div>
+          <!-- Ruang di kanan peta (>= 1400px) menempatkan panel EWS (AI); di bawah 1400px panel turun ke bawah peta. -->
+          <aside id="petaKananKosong" class="peta-kanan-kosong" aria-label="EWS (AI)">
+          <section class="panel ews-panel" id="ewsPanel" aria-labelledby="ewsTitle">
+            <div class="alert-head ews-head">
+              <span class="ews-head-ikon" aria-hidden="true">⚠</span>
+              <h2 class="ews-title" id="ewsTitle">EWS (AI)</h2>
+              <span class="ews-sub" id="ewsSubtitle" aria-live="polite"></span>
+            </div>
+            <div class="ews-tabs" id="ewsTabs" role="tablist" aria-label="Kandungan EWS (AI)">
+              <button
+                type="button"
+                class="ews-tab"
+                role="tab"
+                id="ewsTabAmaran"
+                data-ews-tab="amaran"
+                aria-controls="ewsViewAmaran"
+                aria-selected="true"
+                aria-label="Amaran Rasmi (MET Malaysia & JPS)"
+                title="Amaran Rasmi (MET Malaysia & JPS)"
+              >
+                <span class="ews-tab-full">Rasmi</span>
+              </button>
+              <button
+                type="button"
+                class="ews-tab"
+                role="tab"
+                id="ewsTabBanjir"
+                data-ews-tab="banjir"
+                aria-controls="ewsViewBanjir"
+                aria-selected="false"
+                tabindex="-1"
+                aria-label="Risiko Banjir (JPS)"
+                title="Risiko Banjir (JPS)"
+              >
+                <span class="ews-tab-full">Banjir</span>
+              </button>
+              <button
+                type="button"
+                class="ews-tab"
+                role="tab"
+                id="ewsTabSentimen"
+                data-ews-tab="sentimen"
+                aria-controls="ewsViewSentimen"
+                aria-selected="false"
+                tabindex="-1"
+                aria-label="Risiko Sentimen (Muse AI)"
+                title="Risiko Sentimen (Muse AI)"
+              >
+                <span class="ews-tab-full">Sentimen</span>
+              </button>
+            </div>
+            <div class="ews-view" id="ewsViewAmaran" role="tabpanel" aria-labelledby="ewsTabAmaran">
+              <h3 class="ews-view-title">
+                Amaran Rasmi (MET Malaysia & JPS) <span id="metAlertTag">MET · JPS · Sebenar</span>
+              </h3>
+              <div class="alert-body" id="metAlertBody">Memuatkan amaran…</div>
+              <div class="right-note" id="metAlertNote">Sumber: MET Malaysia · JPS Malaysia</div>
+            </div>
+            <div
+              class="ews-view"
+              id="ewsViewBanjir"
+              role="tabpanel"
+              aria-labelledby="ewsTabBanjir"
+              hidden
+            >
+              <h3 class="ews-view-title">Risiko Banjir (JPS)</h3>
+              <div class="ews-flood-note" id="ewsFloodNote">Memuatkan data banjir JPS…</div>
+              <div class="weather-banner" id="ewsFloodStatus" role="status" hidden></div>
+              <div
+                class="bj-summary"
+                id="ewsFloodSummary"
+                aria-label="Bilangan stesen mengikut tahap"
+              ></div>
+              <div class="bj-ponote" id="ewsFloodPoNote" hidden></div>
+              <div
+                class="bj-list"
+                id="ewsFloodList"
+                aria-label="Stesen paras air terkini mengikut tahap amaran"
+              ></div>
+              <div class="weather-attrib" id="ewsFloodAttrib">
+                Sumber: JPS Malaysia (Public Info Banjir) · JPS Selangor. Rekod lapuk (&gt; 3 jam)
+                dan status palsu ditapis.<span id="ewsFloodSrcGagal"></span>
               </div>
             </div>
-          </div>
-          <aside class="analytics-col">
+            <div
+              class="ews-view"
+              id="ewsViewSentimen"
+              role="tabpanel"
+              aria-labelledby="ewsTabSentimen"
+              hidden
+            >
+              <h3 class="ews-view-title">Risiko Sentimen (Muse AI)</h3>
+              <div class="ews-sent-chips" id="ewsMuseChips"></div>
+              <div class="ews-sent-body" id="ewsMuseBody" aria-live="polite">
+                Memuatkan data sentimen…
+              </div>
+            </div>
+          </section>
+          </aside>
+        </main>
+        <section class="susun-harga" aria-label="Analisis harga dan perbandingan">
             <div class="analytics-header">
               <div>
                 <h2>Analisis Harga &amp; Perbandingan</h2>
                 <div class="note" id="analyticsScope">
                   Paparan lalai: komoditi bermasalah seluruh negara
                 </div>
+                <div class="harga-lencana-baris" id="hargaLencana" role="status"></div>
               </div>
               <span class="tag" id="scopeChip">◉ Seluruh Malaysia</span>
             </div>
+            <div class="harga-keadaan" id="hargaKeadaan" role="status" hidden></div>
             <section class="panel" id="outletPanel" hidden style="display: none">
               <div class="titlebar">
                 <div>
@@ -295,7 +375,8 @@
               </div>
               <div id="outletContent" style="padding: 0 15px 12px"></div>
             </section>
-            <section class="grid-analytics">
+          <!-- Turutan panel (kiri ke kanan) = turutan di bawah. Turutan juga dikawal oleh --sh-urut-* dalam src/css/susun-harga.css (nombor sahaja). -->
+          <div class="susun-harga-row" id="susunHarga">
               <div class="panel risk-panel" hidden style="display: none">
                 <div class="risk-head">
                   <div>
@@ -328,11 +409,56 @@
                 </div>
                 <div class="listbody" id="highestPrices"></div>
               </div>
-            </section>
-          </aside>
-        </main>
+              <div class="panel compare-panel">
+                <div class="list-head">
+                  <strong>▤ Perbandingan Negeri / Daerah</strong
+                  ><span class="note" id="compareNota">Harga mingguan sebenar</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>NEGERI / DAERAH<br />KOMODITI</th>
+                        <th>MINGGU<br />SEBELUM</th>
+                        <th>MINGGU<br />TERKINI</th>
+                        <th>TREND<br />(%)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="compareBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="panel chart-panel">
+                <div class="titlebar">
+                  <div>
+                    <div class="panel-title">⌁ Trend Harga Purata Harian</div>
+                    <div class="note" id="chartSubject">
+                      Pergerakan harga harian sebenar, jalur sigma, harga lantai dan harga siling
+                    </div>
+                  </div>
+                  <span class="tag" style="font-size: 10px; padding: 5px 8px" id="chartStatus"
+                    ></span
+                  >
+                </div>
+                <svg
+                  id="priceChart"
+                  class="chart-svg"
+                  viewBox="0 0 600 420"
+                  role="img"
+                  aria-label="Graf trend harga purata harian"
+                ></svg>
+                <div class="chart-legend">
+                  <span style="color: var(--blue)">━ Harga harian</span
+                  ><span style="color: var(--green)">┄ Purata</span
+                  ><span style="color: var(--yellow)">┄ Amaran 1 · ±1σ</span
+                  ><span style="color: var(--red)">┄ Amaran 2 · ±2σ</span
+                  ><span>⚑ Lantai / siling</span>
+                </div>
+              </div>
+          </div>
+        </section>
         <section class="bottom-grid">
-          <section class="panel">
+          <section class="panel" hidden style="display: none">
             <div class="titlebar">
               <div class="panel-title">☁ Ramalan Cuaca Mengikut Negeri</div>
               <div class="note" id="weatherNote">Memuatkan data cuaca…</div>
@@ -344,15 +470,13 @@
               bukan amaran rasmi.
             </div>
           </section>
-          <section class="panel">
-            <div class="alert-head">
-              ⚠ Amaran Rasmi (MET Malaysia & JPS)
-              <span id="metAlertTag">MET · JPS · Sebenar</span>
-            </div>
-            <div class="alert-body" id="metAlertBody">Memuatkan amaran…</div>
-            <div class="right-note" id="metAlertNote">Sumber: MET Malaysia · JPS Malaysia</div>
-          </section>
-          <section class="panel flood-panel" id="floodPanel" aria-labelledby="floodTitle">
+          <section
+            class="panel flood-panel"
+            id="floodPanel"
+            aria-labelledby="floodTitle"
+            hidden
+            style="display: none"
+          >
             <div class="titlebar">
               <div class="panel-title" id="floodTitle">🌊 Stesen Banjir JPS</div>
               <div class="note" id="floodNote">Memuatkan data banjir JPS…</div>
@@ -374,7 +498,13 @@
               status palsu ditapis.<span id="floodSrcGagal"></span>
             </div>
           </section>
-          <section class="panel ams-panel" id="amsPanel" aria-labelledby="amsTitle">
+          <section
+            class="panel ams-panel"
+            id="amsPanel"
+            aria-labelledby="amsTitle"
+            hidden
+            style="display: none"
+          >
             <div class="ams-head">
               <div class="ams-title-wrap">
                 <span class="ams-brain" aria-hidden="true"
@@ -422,13 +552,17 @@
           <div class="iv-badge-row">
             <span class="iv-tag real">Data sedia ada</span
             ><span>nama PO, lokasi anggaran bandar dan angka logistik maksimum (infografik)</span
+            ><span class="iv-tag real">DB Harga</span
+            ><span>harga ladang, borong dan runcit (status 3 warna daripada ambang sebenar)</span
             ><span class="iv-tag dummy">DATA DUMMY</span
             ><span
-              >harga, bekalan, outlet, pemetaan daerah, simulasi AI dan isu mingguan ialah data
+              >bekalan, stok, outlet, pemetaan daerah, simulasi AI dan isu mingguan ialah data
               prototaip</span
             >
           </div>
+          <div class="iv-harga-lencana" id="ivHargaLencana"></div>
         </section>
+        <div class="harga-keadaan" id="ivHargaKeadaan" hidden></div>
         <section
           class="iv-filters iv-collapsed"
           id="ivFilters"
@@ -448,6 +582,10 @@
             ><select id="ivFKomoditi" data-iv-sel="komoditi" aria-label="Komoditi"></select>
           </div>
           <div class="ctrl">
+            <label for="ivFVarieti">Varieti</label
+            ><select id="ivFVarieti" data-iv-sel="varieti" aria-label="Varieti"></select>
+          </div>
+          <div class="ctrl">
             <label for="ivFNegeri">Negeri</label
             ><select id="ivFNegeri" data-iv-sel="negeri" aria-label="Negeri"></select>
           </div>
@@ -458,26 +596,6 @@
           <div class="ctrl">
             <label for="ivFDaerah">Daerah</label
             ><select id="ivFDaerah" data-iv-sel="daerah" aria-label="Daerah"></select>
-          </div>
-          <div class="ctrl">
-            <span class="iv-lblrow"
-              ><label for="ivFTempoh">Tarikh / Tempoh Analisis</label
-              ><button
-                type="button"
-                class="iv-info"
-                aria-describedby="ivTempohHelp"
-                aria-label="Maklumat tempoh analisis"
-                title="Tempoh purata harga asas. Siri harga tiada tarikh."
-              >
-                i</button
-              ><span id="ivTempohHelp" class="iv-sr"
-                >Tempoh purata harga asas. Siri harga tiada tarikh.</span
-              ></span
-            ><select id="ivFTempoh" data-iv-sel="tempoh" aria-label="Tarikh / Tempoh Analisis">
-              <option value="7">7 hari</option>
-              <option value="14">14 hari</option>
-              <option value="30" selected>30 hari</option>
-            </select>
           </div>
           <div class="ctrl">
             <label for="ivFRisiko">Tahap Risiko</label
@@ -494,7 +612,7 @@
             </button>
           </div>
         </section>
-        <details class="iv-thr" id="ivThr">
+        <details class="iv-thr" id="ivThr" hidden>
           <summary>Tetapan Ambang (prototaip, boleh ditetapkan)</summary>
           <div class="iv-thr-grid">
             <label
@@ -558,8 +676,9 @@
                   data-iv-act="mode"
                   data-iv-arg="pengeluar"
                   aria-selected="true"
+                  title="Mod Bekalan: pantau harga ladang turun"
                 >
-                  PENGELUAR</button
+                  BEKALAN</button
                 ><button
                   type="button"
                   class="iv-mtab"
@@ -569,8 +688,9 @@
                   data-iv-act="mode"
                   data-iv-arg="pengguna"
                   aria-selected="false"
+                  title="Mod Pasaran: pantau harga runcit naik"
                 >
-                  PENGGUNA
+                  PASARAN
                 </button>
               </div>
               <div class="iv-mhint" id="ivMapHint"></div>
@@ -590,6 +710,7 @@
               >
                 ← Malaysia
               </button>
+              <div class="peta-seg iv-po-tbh-ctl" role="group" aria-label="Lapisan tambahan" id="ivPoTbhCtl"></div>
               <div class="iv-map-skel" id="ivMapSkel">Memuatkan peta…</div>
               <div class="iv-map-fallback" id="ivMapFallback" hidden></div>
             </div>
@@ -603,7 +724,7 @@
                 aria-label="Daerah di bawah seliaan PO"
               ></div>
               <div class="iv-note">
-                Lokasi PO ialah anggaran bandar, bukan koordinat bangunan PO. Kawasan daerah ialah
+                Lokasi PO ialah anggaran bandar, bukan koordinat bangunan PO. PO tambahan (petak, pemetaan FIS 2.1) tiada data logistik dan bukan calon mobilisasi; lokasinya titik tengah daerah seliaan. Kawasan daerah ialah
                 bulatan anggaran (bukan sempadan rasmi); tiada data sempadan tersedia. Outlet di
                 sini ialah data dummy yang berasingan daripada outlet contoh dalam tab Pemantauan
                 Komoditi.
@@ -763,7 +884,7 @@
                 <h3 class="iv-sr" id="ivMarT">Simulasi Margin &amp; Harga AI</h3>
                 <div class="iv-md-sub">
                   <div class="note">
-                    Simulasi Margin dan Cadangan Harga PO. Julat dicadangkan, bukan nilai optimum.
+                    Harga semasa PO (DB Harga) dan cadangan harga belian ladang serta jualan borong PO.
                   </div>
                   <div class="iv-chips" id="ivMarChips"></div>
                 </div>
@@ -781,7 +902,7 @@
             Kedudukan titik di peta ialah anggaran bandar, bukannya koordinat bangunan PO. Dua
             kumpulan logistik ialah angka gabungan: Dengkil/Selayang dan Johor Baharu/Simpang
             Renggam.
-            <b>Daerah seliaan, rekod harga, forecast, status amaran dan outlet ialah simulasi</b>.
+            <b>Harga dan status harga ialah data sebenar (DB Harga); bekalan, stok, outlet dan logistik semasa ialah simulasi</b>.
             Data cuaca, banjir dan senario ialah data sebenar (MET Malaysia, Open-Meteo, JPS
             Malaysia, JPS Selangor). Peta asas: CARTO Voyager © penyumbang OpenStreetMap.
             <b>Ketakselarasan sumber:</b> 64 bilik sejuk dalam ringkasan berbanding 65 daripada
@@ -794,6 +915,11 @@
       <div id="toast" class="toast" role="status"></div>
     </div>
     <script src="src/data/dashboard-data.js"></script>
+    <script src="src/data/pemetaan-po-fis.js"></script>
+    <script src="src/data/pemetaan-po-terap.js"></script>
+    <script src="src/js/harga.js"></script>
+    <script src="src/js/harga-db.js"></script>
+    <script src="src/js/po-tambahan.js"></script>
     <script src="src/js/lapisan-cuaca/interp.js"></script>
     <script src="src/js/lapisan-cuaca/skala.js"></script>
     <script src="src/js/lapisan-cuaca/gl.js"></script>
@@ -801,9 +927,14 @@
     <script src="src/js/lapisan-cuaca/data.js"></script>
     <script src="src/js/lapisan-cuaca/daftar.js"></script>
     <script src="src/js/lapisan-cuaca/kawalan.js"></script>
+    <script src="src/js/muse-data.js"></script>
     <script src="src/js/app.js"></script>
     <script src="src/js/scenarios.js"></script>
+    <script src="src/js/ews.js"></script>
     <script src="src/js/main.js"></script>
+    <script src="src/js/lapisan-daerah.js"></script>
+    <script src="src/js/lapisan-amaran.js"></script>
+    <script src="src/js/lapisan-sentimen.js"></script>
     <script src="src/js/intervensi.js"></script>
     <script src="src/js/theme-toggle.js"></script>
   </body>

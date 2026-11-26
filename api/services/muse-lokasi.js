@@ -7,14 +7,25 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const MAKS_LOKASI = 5;
 
 // Daerah dalam dashboard-data.js (DATA.po[].districts) beserta poId.
-function muatDaerahPO() {
+// semua=true menambah daerah PO tambahan (poId null: bukan 15 PO utama) supaya lokasi seperti Setiu atau Kuching kekal dikenali.
+function muatDaerahPO(semua = false) {
   const teks = fs.readFileSync(path.join(ROOT, 'src', 'data', 'dashboard-data.js'), 'utf8');
   const g = {};
   new Function('g', teks.replace(/^\s*const DATA\s*=/m, 'g.DATA ='))(g);
+  require('../../src/data/pemetaan-po-terap.js').terap(
+    g.DATA,
+    require('./pemetaan-po.js').muat().konfig,
+  );
   const hasil = [];
   g.DATA.po.forEach((p) =>
     (p.districts || []).forEach((d) => hasil.push({ nama: d[0], negeri: p.negeri, poId: p.id })),
   );
+  if (semua)
+    (g.DATA.poTambahan || []).forEach((p) =>
+      p.districts
+        .filter((d) => !['KUALA LUMPUR', 'PUTRAJAYA', 'LABUAN'].includes(d[3]))
+        .forEach((d) => hasil.push({ nama: d[0], negeri: p.negeri, poId: null })),
+    );
   return hasil;
 }
 
@@ -96,7 +107,7 @@ function entri() {
     if (!peta.has(k)) peta.set(k, e);
     else if (e.poId && !peta.get(k).poId) peta.get(k).poId = e.poId;
   };
-  muatDaerahPO().forEach((d) => tambah({ ...d, jenis: 'daerah' }));
+  muatDaerahPO(true).forEach((d) => tambah({ ...d, jenis: 'daerah' }));
   Object.entries(TAMBAHAN).forEach(([negeri, senarai]) =>
     senarai.forEach((nama) => tambah({ nama, negeri, poId: null, jenis: 'daerah' })),
   );

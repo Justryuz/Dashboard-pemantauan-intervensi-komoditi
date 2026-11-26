@@ -1,0 +1,102 @@
+/* PO tambahan (FIS 2.1): penanda petak bulat-sudut, lebih kecil daripada penanda bulat PO utama.
+   Susunan: sentimen (1) < PO tambahan (2) < PO utama / daerah (3, sentimen-peta.css) < pop-up klik (10). */
+.po-tbh {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  outline: none;
+}
+.po-tbh .core {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: currentColor;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px #0b2540aa,
+    0 1px 3px #0006;
+  box-sizing: content-box;
+}
+.po-tbh.compact .core {
+  width: 6px;
+  height: 6px;
+}
+.po-tbh:hover .core,
+.po-tbh:focus-visible .core,
+.po-tbh.tbh-sel .core {
+  border-width: 3px;
+}
+.po-tbh:focus-visible {
+  outline: 2px solid #0b2540;
+  border-radius: 4px;
+}
+.po-tbh.tbh-sel .core {
+  box-shadow:
+    0 0 0 3px var(--cyan),
+    0 1px 4px #0006;
+}
+.po-tbh.status-merah {
+  color: var(--red);
+}
+.po-tbh.status-kuning {
+  color: var(--yellow);
+}
+.po-tbh.status-hijau {
+  color: var(--green);
+}
+.po-tbh.status-kelabu {
+  color: var(--grey);
+}
+/* Label nama penuh: gaya sama dengan label PO utama, hanya dari zum dekat; hover (title) sentiasa menunjukkan nama */
+.po-tbh .po-label {
+  --lx: 0px;
+  --ly: 0px;
+  display: none;
+  z-index: 4;
+  padding: 1px 5px;
+  font-size: 10.5px;
+  line-height: 13px;
+  color: var(--white);
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  text-shadow: none;
+  box-shadow: 0 1px 3px #0005;
+  left: calc(50% + 9px);
+  top: 50%;
+  transform: translate(0, -50%);
+}
+.tbh-label-on .po-tbh .po-label,
+.po-tbh.tbh-sel .po-label {
+  display: block;
+}
+.tbh-leg {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--grey);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #0b2540aa;
+  box-sizing: content-box;
+  vertical-align: -2px;
+}
+.kpi-foot .kpi-tambahan {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+.iv-po-tbh-ctl {
+  position: absolute;
+  left: 10px;
+  bottom: 28px;
+  z-index: 3;
+}

@@ -1,0 +1,87 @@
+1
+00:00:00,000 --> 00:00:08,000
+Dashboard ini membantu FAMA memantau harga komoditi di 15 Pusat Operasi.
+
+2
+00:00:08,000 --> 00:00:15,000
+Ia mempercepat keputusan intervensi. Ia alat sokongan keputusan, bukan sistem amaran rasmi.
+
+3
+00:00:15,000 --> 00:00:25,000
+Dashboard menggabungkan harga pasaran AMI, harga transaksi FIS dan ramalan harga SISDA.
+
+4
+00:00:25,000 --> 00:00:35,000
+Ia turut memaparkan cuaca MET, paras air sungai JPS, kualiti udara JAS dan berita AI Muse. Data bekalan dan logistik masih data contoh.
+
+5
+00:00:35,000 --> 00:00:43,000
+Di tab Pemantauan, pegawai menapis ikut negeri, PO, bulan, minggu dan komoditi.
+
+6
+00:00:43,000 --> 00:00:50,000
+Kad di atas meringkaskan bilangan PO beramaran harga, berwaspada dan stabil.
+
+7
+00:00:50,000 --> 00:00:58,000
+Pada peta, titik PO merah yang berkelip menandakan amaran harga.
+
+8
+00:00:58,000 --> 00:01:05,000
+Kawasan daerah diwarnakan mengikut status harga: merah, kuning, hijau atau kelabu.
+
+9
+00:01:05,000 --> 00:01:13,000
+Setiap minggu, harga setiap daerah dibandingkan dengan purata tahun asas dan had dasar.
+
+10
+00:01:13,000 --> 00:01:21,000
+Contohnya, harga runcit timun hijau di Rompin naik dari RM 5 ke RM 10.
+
+11
+00:01:21,000 --> 00:01:28,000
+Itu lima sisihan piawai di atas paras biasa, jadi statusnya merah.
+
+12
+00:01:28,000 --> 00:01:35,000
+Satu PO menjadi merah apabila sekurang-kurangnya satu daerah di bawahnya merah.
+
+13
+00:01:35,000 --> 00:01:45,000
+Lapisan tambahan menunjukkan risiko bekalan: stesen banjir JPS mengikut warna merah, kuning dan hijau.
+
+14
+00:01:45,000 --> 00:01:55,000
+Amaran cuaca rasmi MET, radar hujan dan sentimen berita turut dipaparkan. Pop-up menunjukkan lima isu utama.
+
+15
+00:01:55,000 --> 00:02:03,000
+Tab Intervensi menyusun isu mengikut keutamaan.
+
+16
+00:02:03,000 --> 00:02:10,000
+Mod Bekalan menilai harga ladang. Mod Pasaran menilai harga runcit.
+
+17
+00:02:10,000 --> 00:02:18,000
+Modul Mobilisasi Stok mencadangkan lima PO terbaik dalam dan luar negeri, termasuk PO tambahan.
+
+18
+00:02:18,000 --> 00:02:25,000
+Calon dinilai berdasarkan jarak dan harga, dan draf cadangan intervensi boleh disediakan.
+
+19
+00:02:25,000 --> 00:02:35,000
+Modul Harga Cadangan PSI mengira julat harga belian ladang dan jualan borong bulan hadapan bagi setiap PO.
+
+20
+00:02:35,000 --> 00:02:45,000
+Pengiraan memakai data AMI, FIS dan ramalan SISDA, serta margin kasar antara keduanya.
+
+21
+00:02:45,000 --> 00:02:52,000
+Dashboard sedia digunakan untuk pemantauan mingguan.
+
+22
+00:02:52,000 --> 00:03:00,000
+Langkah seterusnya: data harga terkini, pengesahan padanan varieti FIS dan data bekalan sebenar.

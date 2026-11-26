@@ -139,9 +139,27 @@ function pasangCacheAmaranDG(obj) {
   process.env.AMARAN_DG_CACHE_FILE = f;
   return f;
 }
-// Cuaca + banjir (lalai normal) + IPU + AI Muse.
+// DB Harga: arahkan fail cache ke tests/fixtures/harga-db (baca sahaja), matikan sync automatik dan tetapkan
+// "masa kini" pelayan (HARGA_SEKARANG) 2 hari selepas data terkini (2026-11-04) supaya data tidak lapuk.
+// opsyen.sekarang menimpa masa itu (cth. '2026-11-21T00:00:00Z' = lapuk); opsyen.tiada = tiada cache (503).
+function pasangCacheHarga(opsyen = {}) {
+  const dir = path.join(DIR, 'harga-db');
+  const fail = (n) => (opsyen.tiada ? path.join(os.tmpdir(), 'harga-tiada', n) : path.join(dir, n));
+  process.env.DB_HARGA_AUTO = '0';
+  process.env.HARGA_RINGKAS_FILE = fail('harga-ringkas.json');
+  process.env.HARGA_AMBANG_FILE = fail('harga-ambang.json');
+  process.env.HARGA_META_FILE = fail('harga-meta.json');
+  process.env.HARGA_SEKARANG = opsyen.sekarang || '2026-11-06T00:00:00.000Z';
+  return {
+    ringkas: process.env.HARGA_RINGKAS_FILE,
+    ambang: process.env.HARGA_AMBANG_FILE,
+    meta: process.env.HARGA_META_FILE,
+  };
+}
+// Cuaca + banjir (lalai normal) + IPU + AI Muse + harga.
 function pasangSemuaCache(opsyen = {}) {
   return {
+    harga: pasangCacheHarga(opsyen.harga),
     cuaca: pasangCache(opsyen.cuaca || buatFixture()),
     banjir: pasangCacheBanjir(opsyen.banjir || buatFixtureBanjir()),
     ipu: pasangCacheIPU(opsyen.ipu || buatFixtureIPU()),
@@ -156,6 +174,7 @@ module.exports = {
   pasangCacheBanjir,
   pasangCacheIPU,
   pasangCacheAmaranDG,
+  pasangCacheHarga,
   pasangSemuaCache,
   anjakMasa,
 };

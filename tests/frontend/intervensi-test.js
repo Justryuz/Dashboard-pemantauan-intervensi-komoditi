@@ -21,7 +21,7 @@ async function panelShots(pg,n){
 }
 (async()=>{
  // lint
-  await new Promise(r=>server.listen(0,'127.0.0.1',r));NEW='http://127.0.0.1:'+server.address().port+'/';
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));NEW='http://127.0.0.1:'+server.address().port+'/?muse=1';
   let lint=true;try{cp.execSync('node --check "'+path.join(ROOT,'src','js','intervensi.js')+'"',{stdio:'pipe'})}catch(e){lint=false}
   ok('node --check src/js/intervensi.js',lint);
 
@@ -49,13 +49,15 @@ async function panelShots(pg,n){
    const h=await p.$('#ivPriList '+CASE1);if(!h)return null;
    const arg=await h.evaluate(e=>e.dataset.ivArg);
    await h.evaluate(e=>e.scrollIntoView({block:'center'}));await sleep(200);
-   await h.click();await sleep(1000);return arg;
+   await h.click();await sleep(1000);
+   // Harga Borong fixture seragam: harga rujukan ditetapkan supaya kelebihan harga wujud (enjin mobilisasi)
+   await p.evaluate(()=>IV_TEST.dispatch('setMob',['ref',7]));await sleep(300);return arg;
   }
  // 2
  ok('2 tab lama kelihatan, 15 penanda',await ev(()=>!document.getElementById('viewMonitor').hidden&&document.getElementById('viewIntervensi').hidden&&document.querySelectorAll('#map .po-marker').length===15));
  // 3c isolation
  const added=(await ev(()=>Object.keys(window))).filter(k=>!baseKeys.includes(k)).sort();
- ok('3c kunci window tambahan',JSON.stringify(added)===JSON.stringify(['APP_CONFIG','FAMA_MAP_CONFIG','IV_TEST','famaMonitorMapResize','famaScenariosReady']),added);
+ ok('3c kunci window tambahan',JSON.stringify(added)===JSON.stringify(['APP_CONFIG','FAMA_MAP_CONFIG','HARGA','IV_TEST','famaMonitorMapResize','famaScenariosReady']),added);
  // 3 open tab
  await pg.click('#ivTabIv');await sleep(2500);
  ok('3 tab baharu dibuka',await ev(()=>!document.getElementById('viewIntervensi').hidden&&document.getElementById('viewMonitor').hidden&&!!document.querySelector('#ivMap canvas')&&document.querySelectorAll('#ivMap .po-marker').length===15&&document.getElementById('ivModePengeluar').getAttribute('aria-selected')==='true'));
@@ -96,19 +98,19 @@ async function panelShots(pg,n){
  ok('4 mod ubah warna penanda dan senarai',JSON.stringify(c1)!==JSON.stringify(c2)&&pri1[0].id!==pri2[0].id,{c1,c2});
  const sorted=a=>a.every((x,i)=>i===0||a[i-1].score>=x.score);
  ok('4 baris disusun mengikut skor',sorted(pri1)&&sorted(pri2));
- ok('4 T4 Kangar tiada merah',(()=>{const r=pri1.find(x=>x.po==='perlis'&&x.commodity==='cili-merah');return r&&r.level==='waspada'&&r.flag==='Menunggu pengesahan bekalan'})(),pri1.find(x=>x.po==='perlis'));
- ok('4 T5 Serian lapuk',(()=>{const r=pri1.find(x=>x.po==='sarawak'&&x.commodity==='kubis-bulat');return r&&r.level==='waspada'&&r.flag==='Data stok lapuk'})());
- ok('4 T7 harga sahaja waspada',(()=>{const r=pri2.find(x=>x.po==='pahang'&&x.commodity==='tomato-bulat');return r&&r.level==='waspada'})());
+ ok('4 Kangar (Pengguna): merah harga tanpa pengesahan = Amaran harga, bukan Kritikal',(()=>{const r=pri2.find(x=>x.po==='perlis'&&x.commodity==='cili-merah');return r&&r.level==='waspada'&&r.flag==='Menunggu pengesahan bekalan'&&r.label==='Amaran harga'})(),pri2.find(x=>x.po==='perlis'));
+ ok('4 kelabu (Pulau Pinang tiada ambang) tidak dalam senarai isu dan bukan hijau',!pri1.concat(pri2).some(x=>x.po==='penang')&&await ev(()=>IV_TEST.poLevel('penang')==='tiada'));
+ ok('4 kuning sahaja (Alor Setar, siling/lantai sahaja) = waspada tanpa bendera',(()=>{const r=pri1.find(x=>x.po==='kedah'&&x.commodity==='cili-merah');return r&&r.level==='waspada'&&!r.flag&&r.label==='Harga ladang berwaspada'})(),pri1.find(x=>x.po==='kedah'));
  ok('6b label T1 Kluang',(()=>{const r=pri1.find(x=>x.po==='simpangrenggam'&&x.district==='Kluang'&&x.commodity==='cili-merah');return r&&r.level==='kritikal'&&r.label==='Harga ladang jatuh + lebihan bekalan dikesan (data dummy)'})());
- ok('6b label T4 tanpa akhiran',(()=>{const r=pri1.find(x=>x.po==='perlis');return r&&r.label==='Harga ladang jatuh'})());
- ok('6b semua label sah',pri1.concat(pri2).every(r=>/^(Harga ladang jatuh|Kenaikan harga runcit|Ramalan di bawah ambang|Ramalan di atas ambang)( \+ (lebihan|kekurangan) bekalan dikesan \(data dummy\))?$/.test(r.label)));
+ ok('6b label Amaran harga tanpa akhiran',(()=>{const r=pri1.find(x=>x.po==='selangor');return r&&r.label==='Amaran harga'})());
+ ok('6b semua label sah',pri1.concat(pri2).every(r=>/^(Harga ladang jatuh|Kenaikan harga runcit|Harga ladang berwaspada|Harga runcit berwaspada|Amaran harga)( \+ (lebihan|kekurangan) bekalan dikesan \(data dummy\))?$/.test(r.label)));
  // unit
  ok('unit: pure fixtures',await ev(()=>{const T=IV_TEST;const sup={availableStockMT:10,reservedMT:0,requiredMT:0,net:10,surplusMT:10,shortageMT:0,coverage:null,lastUpdated:'2026-11-15T06:00:00+08:00'};
-  const a=T.ivClassify('pengeluar',{devPct:0,forecastDevPct:0,actual:10,floor:1,ceiling:99},sup);
-  const b=T.ivClassify('pengeluar',{devPct:-20,forecastDevPct:-20,actual:10,floor:1,ceiling:99},null);
-  const c=T.ivClassify('pengeluar',{devPct:20,forecastDevPct:20,actual:10,floor:1,ceiling:99},sup);
-  return a.level==='normal'&&a.earlySignal&&b.level==='waspada'&&c.level==='normal'}));
- ok('unit: margin fixture',await ev(()=>{const T=IV_TEST;const h=T.historyOf('simpangrenggam','cili-merah');const s=T.historyStats(h);return Math.abs(T.marginPct(12.5,9.8,.45)-18)<1e-9&&Math.abs(T.maxFarmPrice(12.5,.45,15)-10.175)<1e-9&&Math.abs(T.minSell(9.8,.45,15)-12.0588)<1e-3&&Math.abs(s.sd-0.0707)<1e-3&&Math.abs(s.mean-1.2)<1e-9&&s.trend==='stabil'}));
+  const a=T.ivClassify('pengeluar',{statusKongsi:'hijau',z:0.1,actual:10},sup);
+  const b=T.ivClassify('pengeluar',{statusKongsi:'merah',z:-2.5,actual:10},null);
+  const c=T.ivClassify('pengeluar',{statusKongsi:'hijau',z:2.5,actual:10},sup);const d=T.ivClassify('pengeluar',{statusKongsi:'kelabu',z:null,actual:10},sup);const e=T.ivClassify('pengeluar',{statusKongsi:'merah',z:-2.5,actual:10},sup);const f=T.ivClassify('pengguna',{statusKongsi:'kuning',z:1.2,actual:10},null);
+  return a.level==='normal'&&a.earlySignal&&b.level==='waspada'&&b.amaranHarga&&c.level==='normal'&&d.level==='normal'&&d.noThreshold&&!d.earlySignal&&e.level==='kritikal'&&!e.amaranHarga&&f.level==='waspada'&&!f.flag}));
+ ok('unit: margin fixture',await ev(()=>{const T=IV_TEST;const h=[1.1,1.2,1.3,1.2,1.1,1.2,1.3,1.2,1.1,1.2,1.3,1.2].map((x,i)=>({week:'w'+i,jual:10+x,beli:10}));const s=T.historyStats(h);return Math.abs(T.marginPct(12.5,9.8,.45)-18)<1e-9&&Math.abs(T.maxFarmPrice(12.5,.45,15)-10.175)<1e-9&&Math.abs(T.minSell(9.8,.45,15)-12.0588)<1e-3&&Math.abs(s.sd-0.0707)<1e-3&&Math.abs(s.mean-1.2)<1e-9&&s.trend==='stabil'}));
  ok('unit: minggu',await ev(()=>{const T=IV_TEST;return T.weekStart('2026-11-15')==='2026-11-09'&&T.weekRange('2026-11-09')[1]==='2026-11-15'}));
  // 5 click all POs
  await pg.click('#ivModePengeluar');await sleep(300);
@@ -178,9 +180,9 @@ async function panelShots(pg,n){
  const fchg=async(sel,val,key)=>{await pg.select(sel,val);await sleep(300);return ev(k=>IV_TEST.state()[k],key)};
  ok('3 penapis komoditi',(await fchg('#ivFKomoditi','cili-merah','selectedCommodityId'))==='cili-merah');
  ok('3 penapis negeri cascade PO',(await fchg('#ivFNegeri','johor','selectedStateId'))==='johor'&&await ev(()=>document.querySelectorAll('#ivFPO option').length===3));
- ok('3 penapis PO',(await fchg('#ivFPO','simpangrenggam','selectedPOId'))==='simpangrenggam'&&await ev(()=>[...document.querySelectorAll('#ivFDaerah option')].map(o=>o.textContent).join()==='Semua daerah,Kluang,Batu Pahat,Pontian'));
+ ok('3 penapis PO',(await fchg('#ivFPO','simpangrenggam','selectedPOId'))==='simpangrenggam'&&await ev(()=>[...document.querySelectorAll('#ivFDaerah option')].map(o=>o.textContent).join()==='Semua daerah,Kluang,Pontian'));
  ok('3 penapis daerah',(await fchg('#ivFDaerah','johor/kluang','selectedDistrictId'))==='johor/kluang');
- ok('3 penapis tempoh',(await fchg('#ivFTempoh','7','selectedDateRange')).days===7);
+ ok('3 penapis tempoh dibuang',await ev(()=>!document.getElementById('ivFTempoh')));
  ok('3 penapis risiko',(await fchg('#ivFRisiko','kritikal','selectedRisk'))==='kritikal'&&(await ev(()=>IV_TEST.priRows().every(r=>r.level==='kritikal'))));
  await pg.click('#ivReset');await sleep(400);
  // thresholds
@@ -214,10 +216,10 @@ async function panelShots(pg,n){
    ok('P2 tab Mobilisasi aktif secara lalai dengan Top 5 (1 dalam, 2 luar) kelihatan',S.tabMob==='true'&&S.mobVis&&S.marHidden&&S.dal===1&&S.luar===2&&S.listVis,S);
    ok('P2 konteks pada pengepala (PO, komoditi, mod)',/Simpang Renggam/.test(S.ctx)&&/Cili Merah/.test(S.ctx)&&/Pengeluar/.test(S.ctx),S.ctx);
    {const I=await ev(()=>{const el=document.getElementById('ivMdIssue'),r=el.getBoundingClientRect(),h=document.querySelector('#ivMdDlg .iv-md-head').getBoundingClientRect(),row=document.querySelector('#ivPriList .iv-row[aria-pressed=true]');return {t:el.innerText,vis:el.offsetParent!==null&&r.height>20,inHead:r.bottom<=h.bottom+1&&r.left>=h.left-1,l1:el.querySelector('.iv-iss-l1')&&el.querySelector('.iv-iss-l1').innerText,l2:el.querySelector('.iv-iss-l2')&&el.querySelector('.iv-iss-l2').innerText,lv:el.querySelector('.iv-lv')&&el.querySelector('.iv-lv').className,rowT:row?row.innerText:''}});
-    const priceTxt=(I.rowT.match(/Harga semasa (RM [\d.]+) → forecast (RM [\d.]+) · sisihan ([+-][\d.]+)%/)||[]);
+    const priceTxt=(I.rowT.match(/Harga semasa (RM [\d.]+) \(minggu sebelum (RM [\d.]+), ([+-][\d.]+)%\)/)||[]);
     ok('P2b jalur isu kelihatan dalam pengepala pop-up',I.vis&&I.inHead&&/isu memerlukan intervensi/i.test(I.t),I);
     ok('P2b isu: Harga ladang jatuh, Kluang, Johor, tahap risiko dan DATA DUMMY',/Harga ladang jatuh/.test(I.l1)&&/Kluang, Johor/.test(I.l1)&&/(Kritikal|Waspada)/.test(I.l1)&&/DATA DUMMY/.test(I.l1)&&/iv-lv (kritikal|waspada)/.test(I.lv),I);
-    ok('P2b harga ladang semasa → forecast dan % sama dengan baris keutamaan (sumber tunggal)',priceTxt.length===4&&I.l2.includes('Harga Ladang:')&&I.l2.includes(priceTxt[1]+' → forecast '+priceTxt[2])&&I.l2.includes('('+priceTxt[3]+'%)'),[I.l2,priceTxt]);
+    ok('P2b harga ladang semasa dan % mingguan sama dengan baris keutamaan (sumber tunggal DB Harga)',priceTxt.length===4&&I.l2.includes('Harga Ladang:')&&I.l2.includes(priceTxt[1]+' ('+priceTxt[3]+'% minggu ke minggu)'),[I.l2,priceTxt]);
     ok('P2b jenis intervensi disyorkan dipaparkan',/Intervensi: (Pengumpulan dan pengedaran semula bekalan|Pantau dan sedia pembelian lebihan)/.test(I.l2)&&/Lebihan bekalan: [\d.]+ MT/.test(I.l2),I.l2);}
    ok('P2 latar belakang kabur: backdrop-filter blur dan lapisan malap',/blur\((6|7|8)px\)/.test(S.bf)&&S.bg==='rgba(5, 12, 28, 0.55)',[S.bf,S.bg]);
    ok('P2 latar menutup seluruh viewport dan berada di atas peta/pengepala',S.pos==='fixed'&&S.br.x===0&&S.br.y===0&&Math.abs(S.br.w-S.iw)<=1&&Math.abs(S.br.h-S.ih)<=1&&S.cover&&+S.z>=1000,S);
@@ -229,6 +231,7 @@ async function panelShots(pg,n){
    ok('P2 perangkap fokus (Tab / Shift+Tab kekal dalam dialog)',trap,tbad);
    // tab Margin
    await pg.click('#ivMdTabMar');await sleep(500);
+   await ev(()=>{const e=document.getElementById('ivMBeli');e.value='6.88';e.dispatchEvent(new Event('input',{bubbles:true}))});await sleep(300);
    const M=await ev(()=>{const v=id=>{const e=document.getElementById(id);return !!e&&e.offsetParent!==null};return {sel:document.getElementById('ivMdTabMar').getAttribute('aria-selected'),selMob:document.getElementById('ivMdTabMob').getAttribute('aria-selected'),ctl:v('ivMJual')&&v('ivMBeli')&&v('ivMLadang')&&v('ivMKos')&&v('ivMTarget'),res:v('ivMarSummary')&&v('ivCardFarm')&&v('ivCardSell'),mobHidden:document.getElementById('ivMobPanel').hidden,txt:document.getElementById('ivMarRes').innerText,pr:document.getElementById('ivMdTabMar').getAttribute('role')}});
    ok('P3 tab Margin: kawalan dan hasil kelihatan, Mobilisasi tersembunyi',M.sel==='true'&&M.selMob==='false'&&M.ctl&&M.res&&M.mobHidden&&/Margin Operasi/.test(M.txt)&&M.pr==='tab',M);
    ok('P3 tab dalam tablist/tabpanel dengan aria-controls',await ev(()=>{const t=document.querySelector('#ivMd [role=tablist]');return !!t&&t.querySelectorAll('[role=tab]').length===2&&document.getElementById('ivMdTabMar').getAttribute('aria-controls')==='ivMarPanel'&&document.getElementById('ivMarPanel').getAttribute('role')==='tabpanel'&&document.getElementById('ivMarPanel').getAttribute('aria-labelledby')==='ivMdTabMar'}));
@@ -251,14 +254,14 @@ async function panelShots(pg,n){
    ok('P5 tiada rujukan "Paparan N" dalam tab Intervensi',await ev(()=>{const c=document.getElementById('viewIntervensi').cloneNode(true);const f=c.querySelector('footer');if(f)f.remove();return !/Paparan \d/.test(c.textContent)}));
    // Kes Ujian 2: pengguna, Johor Bahru, Cili Merah
    {await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setMode','pengguna')});await sleep(400);
-    await ev(()=>{if(!document.querySelector('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:johor:"][data-iv-arg$=":cili-merah"]')){const b=document.querySelector('[data-iv-act=showAll]');if(b)b.click()}});await sleep(300);
-    const h2=await pg.$('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:johor:"][data-iv-arg$=":cili-merah"]');
-    ok('P2c baris Tindakan Johor Bahru / Cili Merah / pengguna wujud',!!h2);
+    await ev(()=>{if(!document.querySelector('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:selangor:"][data-iv-arg$=":cili-merah"]')){const b=document.querySelector('[data-iv-act=showAll]');if(b)b.click()}});await sleep(300);
+    const h2=await pg.$('#ivPriList [data-iv-act=tindakan][data-iv-arg^="pengguna:selangor:"][data-iv-arg$=":cili-merah"]');
+    ok('P2c baris Tindakan Selangor / Cili Merah / pengguna wujud',!!h2);
     if(h2){await h2.evaluate(e=>{e.scrollIntoView({block:'center'});e.click()});await sleep(900);
      const I2=await ev(()=>{const el=document.getElementById('ivMdIssue');const row=document.querySelector('#ivPriList .iv-row[aria-pressed=true]');return {l1:el.querySelector('.iv-iss-l1')&&el.querySelector('.iv-iss-l1').innerText,l2:el.querySelector('.iv-iss-l2')&&el.querySelector('.iv-iss-l2').innerText,rowT:row?row.innerText:'',ctx:document.getElementById('ivMdCtx').innerText}});
-     const pt=(I2.rowT.match(/Harga semasa (RM [\d.]+) → forecast (RM [\d.]+) · sisihan ([+-][\d.]+)%/)||[]);
-     ok('P2c pengguna: isu pengguna (Kenaikan harga runcit / Ramalan di atas ambang), daerah, negeri, tahap, DATA DUMMY',/(Kenaikan harga runcit|Ramalan di atas ambang)/.test(I2.l1)&&/Johor/.test(I2.l1)&&/(Kritikal|Waspada)/.test(I2.l1)&&/DATA DUMMY/.test(I2.l1)&&!/Harga ladang jatuh/.test(I2.l1),I2);
-     ok('P2c pengguna: Harga Runcit, harga semasa → forecast sama dengan baris, intervensi pengguna',pt.length===4&&I2.l2.includes('Harga Runcit:')&&I2.l2.includes(pt[1]+' → forecast '+pt[2])&&I2.l2.includes('('+pt[3]+'%)')&&/Intervensi: (Mobilisasi stok tambahan|Pantau bekalan dan sedia stok sokongan)/.test(I2.l2),[I2.l2,pt]);
+     const pt=(I2.rowT.match(/Harga semasa (RM [\d.]+) \(minggu sebelum (RM [\d.]+), ([+-][\d.]+)%\)/)||[]);
+     ok('P2c pengguna: isu pengguna (Kenaikan harga runcit / Harga runcit berwaspada / Amaran harga), daerah, negeri, tahap, DATA DUMMY',/(Kenaikan harga runcit|Harga runcit berwaspada|Amaran harga)/.test(I2.l1)&&/Selangor/.test(I2.l1)&&/(Kritikal|Waspada)/.test(I2.l1)&&/DATA DUMMY/.test(I2.l1)&&!/Harga ladang jatuh/.test(I2.l1),I2);
+     ok('P2c pengguna: Harga Runcit, harga semasa dan % sama dengan baris, intervensi pengguna',pt.length===4&&I2.l2.includes('Harga Runcit:')&&I2.l2.includes(pt[1]+' ('+pt[3]+'% minggu ke minggu)')&&/Intervensi: (Mobilisasi stok tambahan|Pantau bekalan dan sedia stok sokongan)/.test(I2.l2),[I2.l2,pt]);
      // konteks berubah semasa pop-up dibuka: jalur disemak semula
      await ev(()=>IV_TEST.dispatch('setMode','pengeluar'));await sleep(500);
      const I3=await ev(()=>({t:document.getElementById('ivMdIssue').innerText,ctx:document.getElementById('ivMdCtx').innerText}));
@@ -287,9 +290,9 @@ async function panelShots(pg,n){
   }
   await ev(()=>IV_TEST.dispatch('resetFilters'));await sleep(300);
  // 7 T1 mobilisation
- const eng=async(mode,po,c)=>ev((mode,po,c)=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setMode',mode);IV_TEST.dispatch('setFilter',['komoditi',c]);IV_TEST.dispatch('selectPO',po);const e=IV_TEST.engine();return {ok:e.trigger.ok,dalam:e.dalam.map(x=>x.poId),luar:e.luar.map(x=>x.poId),ex:e.excluded}},mode,po,c);
+ const eng=async(mode,po,c)=>ev((mode,po,c)=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setMode',mode);IV_TEST.dispatch('setFilter',['komoditi',c]);IV_TEST.dispatch('selectPO',po);IV_TEST.dispatch('setMob',['ref',mode==='pengeluar'?7:10]);const e=IV_TEST.engine();return {ok:e.trigger.ok,dalam:e.dalam.map(x=>x.poId),luar:e.luar.map(x=>x.poId),ex:e.excluded}},mode,po,c);
  let e=await eng('pengeluar','simpangrenggam','cili-merah');await sleep(500);
- ok('7 T1 senarai',JSON.stringify(e.dalam)==='["johor"]'&&JSON.stringify(e.luar)==='["perak","selangor"]',e);
+ ok('7 T1 senarai',JSON.stringify(e.dalam)==='["johor"]'&&JSON.stringify([...e.luar].sort())==='["perak","selangor"]',e);
  ok('7 tiada sabah/sarawak untuk jangkar Semenanjung',![...e.dalam,...e.luar].some(x=>x==='sabah'||x==='sarawak'));
  await sleep(900);
 const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran kos|net price/i;return ['ivMobPanel','ivPriPanel','ivDraftBox'].filter(id=>re.test(document.getElementById(id).innerText))});
@@ -346,9 +349,9 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  ok('7 sabah pengguna kosong',await ev(()=>{const t=document.getElementById('ivMobRes').innerText;return t.includes('Tiada PO dalam negeri yang layak')&&t.includes('Tiada PO luar negeri yang layak')}));
  // 7c anchor under flood
  await ev(()=>IV_TEST.dispatch('resetFilters'));await ev(()=>IV_TEST.dispatch('setMode','pengguna'));
- await ev(()=>{const r=document.querySelector('#ivPriList [data-iv-act=tindakan][data-iv-arg="pengguna:kelantan:kelantan/pasir-mas:bawang-merah-kecil"]');if(r)r.click();else IV_TEST.dispatch('selectIntervention','pengguna:kelantan:kelantan/pasir-mas:bawang-merah-kecil')});await sleep(1200);
-  ok('7c Tindakan Pasir Mas membuka pop-up',await ev(()=>!document.getElementById('ivMd').hidden&&/Bawang Merah Kecil/.test(document.getElementById('ivMdCtx').innerText)&&/Pengguna/.test(document.getElementById('ivMdCtx').innerText)));
-  await closeMd();
+ // Fixture harga tiada rekod Pasir Mas (bawang, runcit): PO Kota Baharu + Bawang Merah Kecil dipilih terus (bekalan dummy T3 + cuaca fixture)
+ await ev(()=>{IV_TEST.dispatch('selectPO','kelantan');IV_TEST.dispatch('setFilter',['komoditi','bawang-merah-kecil'])});await sleep(1200);
+  ok('7c PO Kota Baharu + Bawang Merah Kecil (pengguna) dipilih',await ev(()=>{const s=IV_TEST.state();return s.selectedPOId==='kelantan'&&s.selectedCommodityId==='bawang-merah-kecil'&&s.selectedMode==='pengguna'}));
  const c7=await ev(()=>{const t=document.getElementById('ivMobRes').innerText;const e=IV_TEST.engine();return {banner:t.includes('PO terpilih berada dalam kawasan risiko cuaca tinggi. Sahkan akses laluan sebelum menghantar.'),noK:![...e.dalam,...e.luar].some(x=>x.poId==='kelantan'),n:e.dalam.length+e.luar.length,trig:e.trigger.ok}});
  ok('7c T3 banner dan struktur',c7.banner&&c7.noK&&c7.trig,c7);
  const c7b=await ev(()=>{const c=document.querySelector('#ivMobRes .iv-cand');if(!c)return 'tiada';c.click();return document.getElementById('ivCandDetail')&&document.getElementById('ivCandDetail').innerText.includes('Cuaca tinggi (Open-Meteo/MET)')});
@@ -358,16 +361,22 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  // 8 margin
  await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setFilter',['komoditi','cili-merah']);IV_TEST.dispatch('selectPO','simpangrenggam')});await sleep(500);
   await openCase1();await pg.click('#ivMdTabMar');await sleep(500);
+  await ev(()=>{const e=document.getElementById('ivMBeli');e.value='6.88';e.dispatchEvent(new Event('input',{bubbles:true}))});await sleep(300);
   ok('8 tab Margin dalam pop-up: kawalan dan hasil kelihatan',await ev(()=>{const v=id=>{const e=document.getElementById(id);return !!e&&e.offsetParent!==null};return v('ivMJual')&&v('ivMBeli')&&v('ivMLadang')&&v('ivMKos')&&v('ivMTarget')&&v('ivMarSummary')&&v('ivCardFarm')&&v('ivCardSell')}));
  const txt=id=>ev(i=>document.getElementById(i)?document.getElementById(i).innerText:null,id);
- const mr=await ev(()=>{const T=IV_TEST;const d=T.marginDefaults('simpangrenggam','cili-merah');const v=T.validateMargin({jual:d.jual,beli:d.beli,ladang:d.ladang,kos:d.kos,target:15});const r=T.simulateMargin(v.val,T.historyOf('simpangrenggam','cili-merah'),{farmFloor:7});return {d,cur:r.cur,maxF:r.maxF,minS:r.minS,imp:r.impact,sd:r.hs.sd,mean:r.hs.mean,med:r.hs.median,tr:r.hs.trend,lo:r.recLow,hi:r.recHigh,fo:r.farmOk,so:r.sellOk}});
- ok('8 nilai lalai tetap',mr.d.beli===12.5&&mr.d.jual===13.7&&mr.d.ladang===9.8&&mr.d.kos===0.45,mr.d);
- ok('8 hasil tetap',Math.abs(mr.cur-18)<.005&&Math.abs(mr.maxF-10.175)<.005&&Math.abs(mr.minS-12.06)<.005&&Math.abs(mr.imp+3)<.005&&Math.abs(mr.mean-1.2)<.005&&Math.abs(mr.med-1.2)<.005&&Math.abs(mr.sd-.07)<.005&&mr.tr==='stabil'&&Math.abs(mr.lo-12.43)<.005&&Math.abs(mr.hi-12.57)<.005&&mr.fo&&mr.so,mr);
- ok('8 UI nilai',await ev(()=>{const t=document.getElementById('ivMarRes').innerText;return t.includes('18.00 %')&&t.includes('10.18')&&t.includes('12.06')&&t.includes('-3.00')&&t.includes('12.43')&&t.includes('12.57')&&t.includes('stabil')}));
+ const mr=await ev(()=>{const T=IV_TEST;const d=T.marginDefaults('simpangrenggam','cili-merah');d.beli=+(d.jual-1.2).toFixed(2);const hist=[1.1,1.2,1.3,1.2,1.1,1.2,1.3,1.2,1.1,1.2,1.3,1.2].map((x,i)=>({week:'w'+i,jual:d.jual,beli:+(d.jual-x).toFixed(2)}));const v=T.validateMargin({jual:d.jual,beli:d.beli,ladang:d.ladang,kos:d.kos,target:15});const r=T.simulateMargin(v.val,hist,{farmFloor:4.7});return {d,cur:r.cur,maxF:r.maxF,minS:r.minS,imp:r.impact,sd:r.hs.sd,mean:r.hs.mean,med:r.hs.median,tr:r.hs.trend,lo:r.recLow,hi:r.recHigh,fo:r.farmOk,so:r.sellOk}});
+ // Nilai lalai margin = baris DB Harga kongsi (Borong PO minggu terkini sebagai Harga Borong Jual, ladang PO); Harga Borong Beli ialah input pengguna (tiada nilai lalai).
+ const sh=await ev(()=>{const T=IV_TEST;const b=T.ivPrice('simpangrenggam','cili-merah','Borong'),l=T.ivPrice('simpangrenggam','cili-merah','Ladang');return {jual:+b.actual.toFixed(2),ladang:+l.actual.toFixed(2),src:b.source}});
+ ok('8 nilai lalai daripada DB Harga (beli ialah input pengguna)',mr.d.jual===sh.jual&&mr.d.ladang===sh.ladang&&sh.src==='db-harga'&&mr.d.kos===0.45&&mr.d.override===false,[mr.d,sh]);
+ ok('8 sebelum beli diisi: hasil meminta nilai sah (tiada ralat)',await ev(()=>document.getElementById('ivMarRes').innerText.includes('Masukkan nilai yang sah')||document.getElementById('ivMarRes').innerText.includes('Margin Operasi')));
+ await ev(b=>{const e=document.getElementById('ivMBeli');e.value=String(b);e.dispatchEvent(new Event('input',{bubbles:true}))},mr.d.beli);await sleep(200);
+ const {beli:S0,ladang:F0,kos:C0}=mr.d;const cur0=(S0-F0-C0)/S0*100;
+ ok('8 hasil mengikut nilai kongsi',Math.abs(mr.cur-cur0)<.005&&Math.abs(mr.maxF-(S0*.85-C0))<.005&&Math.abs(mr.minS-(F0+C0)/.85)<.005&&Math.abs(mr.imp-(15-cur0))<.005&&Math.abs(mr.mean-1.2)<.005&&Math.abs(mr.med-1.2)<.005&&Math.abs(mr.sd-.07)<.005&&mr.tr==='stabil'&&Math.abs(mr.lo-(S0-.0707))<.005&&Math.abs(mr.hi-(S0+.0707))<.005&&mr.fo&&mr.so,mr);
+ ok('8 UI nilai',await ev((x)=>{const t=document.getElementById('ivMarRes').innerText;return x.every(s=>t.includes(s))},[mr.cur.toFixed(2)+' %',mr.maxF.toFixed(2),mr.minS.toFixed(2),mr.imp.toFixed(2)]));
  ok('8 definisi verbatim',await ev(()=>{const t=document.getElementById('ivMarDefs').innerText;return t.includes('Harga Borong Beli: harga yang FAMA PO jual kepada pemborong luar.')&&t.includes('Harga Borong Jual: harga jualan borong yang diperhatikan dan dikutip oleh FAMA di pasaran terbuka.')&&t.includes('Spread = Harga Borong Jual − Harga Borong Beli. Spread bukan margin operasi PO.')}));
  const setIn=(id,v)=>ev((id,v)=>{const e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},id,v);
  await setIn('ivMLadang','9');await sleep(100);
- ok('8 kira semula serta-merta',await ev(()=>document.getElementById('ivMarSummary').innerText.includes('Margin Operasi')&&document.getElementById('ivMarSummary').innerText.includes('24.40')));
+ ok('8 kira semula serta-merta',await ev((m)=>document.getElementById('ivMarSummary').innerText.includes('Margin Operasi')&&document.getElementById('ivMarSummary').innerText.includes(m),((S0-9-C0)/S0*100).toFixed(2)));
  const tm=async v=>{await setIn('ivMTarget',v);return ev(()=>document.getElementById('ivMTargetErr').textContent)};
  ok('8 sasaran 99',(await tm('99'))==='Margin sasaran maksimum 95%');
  ok('8 hasil terakhir dikekalkan',await ev(()=>document.getElementById('ivMarRes').innerText.includes('Hasil terakhir yang sah dikekalkan')));
@@ -379,12 +388,13 @@ const noCost=()=>ev(()=>{const re=/kos pengangkutan|jurang harga bersih|anggaran
  ok('8 tiada NaN/Infinity',await ev(()=>!/NaN|Infinity/.test(document.getElementById('ivMarRes').innerText)));
  await setIn('ivMBeli','0');await sleep(100);
  ok('8 S=0 tiada NaN',await ev(()=>!/NaN|Infinity/.test(document.getElementById('ivMarRes').innerText)&&document.getElementById('ivMBeliErr').textContent.length>0));
- await setIn('ivMBeli','14');await tm('15');await setIn('ivMLadang','9.8');
+ await setIn('ivMBeli',String(mr.d.jual+1));await tm('15');await setIn('ivMLadang','9.8');
  ok('8 amaran beli > jual',await ev(()=>document.getElementById('ivMarRes').innerText.includes('Harga Borong Beli melebihi Harga Borong Jual')));
  await pg.click('[data-iv-act=marReset]');await sleep(200);
  await pg.click('#ivInsightBtn');await sleep(900);
  ok('8 pandangan AI margin',await ev(()=>document.getElementById('ivInsight').innerText.includes('Nasihat sahaja dan tertakluk kepada pengesahan operasi.')));
  await ev(()=>{IV_TEST.dispatch('resetFilters');IV_TEST.dispatch('setFilter',['komoditi','kubis-bulat']);IV_TEST.dispatch('selectPO','penang')});await sleep(400);
+ await ev(()=>{['ivMBeli','ivMLadang','ivMJual'].forEach((id,i)=>{const e=document.getElementById(id);e.value=['2','1.5','2.5'][i];e.dispatchEvent(new Event('input',{bubbles:true}))})});await sleep(200);
  ok('8 sejarah tidak mencukupi',await ev(()=>document.getElementById('ivMarRes').innerText.includes('Data sejarah tidak mencukupi')));
   await closeMd();
  // 9 muse (data sebenar /api/muse daripada cache fixture; ujian terperinci: tests/frontend/muse.js)

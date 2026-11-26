@@ -1,0 +1,427 @@
+{
+  "versi": 1,
+  "_nota": "Senarai putih komoditi (jenis) dan varieti yang diliputi dashboard Pemantauan dan Intervensi. jenis = Jenis Komoditi pengguna (dipaparkan). commodity = nilai DB commodity (untuk padanan; berbeza daripada jenis jika DB menamakannya lain). variety = nama varieti DB. tiadaData = tiada baris langsung dalam jadual harga atau jadual rujukan ambang.",
+  "jenis": [
+    {
+      "kod": "AYAM",
+      "label": "Ayam"
+    },
+    {
+      "kod": "BAWANG",
+      "label": "Bawang"
+    },
+    {
+      "kod": "BAYAM",
+      "label": "Bayam"
+    },
+    {
+      "kod": "CILI",
+      "label": "Cili"
+    },
+    {
+      "kod": "KACANG PANJANG",
+      "label": "Kacang Panjang"
+    },
+    {
+      "kod": "KAMBING",
+      "label": "Kambing"
+    },
+    {
+      "kod": "KANGKUNG",
+      "label": "Kangkung"
+    },
+    {
+      "kod": "KUBIS",
+      "label": "Kubis"
+    },
+    {
+      "kod": "LEMBU",
+      "label": "Lembu"
+    },
+    {
+      "kod": "PISANG",
+      "label": "Pisang"
+    },
+    {
+      "kod": "SAWI",
+      "label": "Sawi"
+    },
+    {
+      "kod": "TELUR AYAM",
+      "label": "Telur Ayam"
+    },
+    {
+      "kod": "TEMBIKAI",
+      "label": "Tembikai"
+    },
+    {
+      "kod": "TERUNG",
+      "label": "Terung"
+    },
+    {
+      "kod": "TIMUN",
+      "label": "Timun"
+    },
+    {
+      "kod": "TOMATO",
+      "label": "Tomato"
+    },
+    {
+      "kod": "UBI KENTANG",
+      "label": "Ubi Kentang"
+    }
+  ],
+  "pasangan": [
+    {
+      "jenis": "AYAM",
+      "commodity": "AYAM",
+      "variety": "AYAM HIDUP",
+      "label": "Ayam Hidup"
+    },
+    {
+      "jenis": "AYAM",
+      "commodity": "AYAM",
+      "variety": "AYAM PROSES STANDARD",
+      "label": "Ayam Proses Standard"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG BESAR MERAH (CHINA)",
+      "label": "Bawang Besar Merah (China)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG BESAR MERAH (IMPORT)",
+      "label": "Bawang Besar Merah (Import)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG BESAR MERAH (INDIA)",
+      "label": "Bawang Besar Merah (India)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG BESAR MERAH (PAKISTAN)",
+      "label": "Bawang Besar Merah (Pakistan)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG MERAH / KECIL (IMPORT)",
+      "label": "Bawang Merah / Kecil (Import)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG MERAH / KECIL (INDIA)",
+      "label": "Bawang Merah / Kecil (India)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG MERAH / KECIL (PAKISTAN)",
+      "label": "Bawang Merah / Kecil (Pakistan)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG MERAH / KECIL (THAI)",
+      "label": "Bawang Merah / Kecil (Thai)"
+    },
+    {
+      "jenis": "BAWANG",
+      "commodity": "BAWANG",
+      "variety": "BAWANG MERAH ROSE",
+      "label": "Bawang Merah Rose"
+    },
+    {
+      "jenis": "BAYAM",
+      "commodity": "BAYAM",
+      "variety": "BAYAM",
+      "label": "Bayam"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI HIJAU",
+      "label": "Cili Hijau"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI HIJAU (IMPORT)",
+      "label": "Cili Hijau (Import)"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH (CHINA)",
+      "label": "Cili Merah (China)"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH (IMPORT)",
+      "label": "Cili Merah (Import)"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH (THAILAND)",
+      "label": "Cili Merah (Thailand)"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH (VIETNAM)",
+      "label": "Cili Merah (Vietnam)"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH KULAI / KULAI HIBRID",
+      "label": "Cili Merah Kulai / Kulai Hibrid"
+    },
+    {
+      "jenis": "CILI",
+      "commodity": "CILI",
+      "variety": "CILI MERAH MINYAK",
+      "label": "Cili Merah Minyak"
+    },
+    {
+      "jenis": "KACANG PANJANG",
+      "commodity": "KACANG PANJANG",
+      "variety": "KACANG PANJANG HIJAU",
+      "label": "Kacang Panjang Hijau"
+    },
+    {
+      "jenis": "KACANG PANJANG",
+      "commodity": "KACANG PANJANG",
+      "variety": "KACANG PANJANG HIJAU (IMPORT)",
+      "label": "Kacang Panjang Hijau (Import)"
+    },
+    {
+      "jenis": "KANGKUNG",
+      "commodity": "KANGKUNG",
+      "variety": "KANGKUNG",
+      "label": "Kangkung"
+    },
+    {
+      "jenis": "KANGKUNG",
+      "commodity": "KANGKUNG",
+      "variety": "KANGKUNG (IMPORT)",
+      "label": "Kangkung (Import)"
+    },
+    {
+      "jenis": "UBI KENTANG",
+      "commodity": "UBI KENTANG",
+      "variety": "UBI KENTANG (IMPORT)",
+      "label": "Ubi Kentang (Import)"
+    },
+    {
+      "jenis": "UBI KENTANG",
+      "commodity": "UBI KENTANG",
+      "variety": "UBI KENTANG HOLLAND",
+      "label": "Ubi Kentang Holland"
+    },
+    {
+      "jenis": "KUBIS",
+      "commodity": "KUBIS",
+      "variety": "KUBIS BULAT (CHINA)",
+      "label": "Kubis Bulat (China)"
+    },
+    {
+      "jenis": "KUBIS",
+      "commodity": "KUBIS",
+      "variety": "KUBIS BULAT (INDONESIA)",
+      "label": "Kubis Bulat (Indonesia)"
+    },
+    {
+      "jenis": "KUBIS",
+      "commodity": "KUBIS",
+      "variety": "KUBIS BULAT (TANAH TINGGI)",
+      "label": "Kubis Bulat (Tanah Tinggi)"
+    },
+    {
+      "jenis": "KUBIS",
+      "commodity": "KUBIS",
+      "variety": "KUBIS BULAT BEIJING (IMPORT)",
+      "label": "Kubis Bulat Beijing (Import)"
+    },
+    {
+      "jenis": "SAWI",
+      "commodity": "SAWI",
+      "variety": "SAWI BUNGA",
+      "label": "Sawi Bunga"
+    },
+    {
+      "jenis": "SAWI",
+      "commodity": "SAWI",
+      "variety": "SAWI HIJAU (TANAH RENDAH)",
+      "label": "Sawi Hijau (Tanah Rendah)"
+    },
+    {
+      "jenis": "SAWI",
+      "commodity": "SAWI",
+      "variety": "SAWI JEPUN",
+      "label": "Sawi Jepun"
+    },
+    {
+      "jenis": "SAWI",
+      "commodity": "SAWI",
+      "variety": "SAWI PAHIT",
+      "label": "Sawi Pahit"
+    },
+    {
+      "jenis": "SAWI",
+      "commodity": "SAWI",
+      "variety": "SAWI PUTIH PAK CHOY",
+      "label": "Sawi Putih Pak Choy"
+    },
+    {
+      "jenis": "TELUR AYAM",
+      "commodity": "TELUR AYAM",
+      "variety": "TELUR AYAM A",
+      "label": "Telur Ayam A"
+    },
+    {
+      "jenis": "TELUR AYAM",
+      "commodity": "TELUR AYAM",
+      "variety": "TELUR AYAM B",
+      "label": "Telur Ayam B"
+    },
+    {
+      "jenis": "TELUR AYAM",
+      "commodity": "TELUR AYAM",
+      "variety": "TELUR AYAM C",
+      "label": "Telur Ayam C"
+    },
+    {
+      "jenis": "TEMBIKAI",
+      "commodity": "TEMBIKAI",
+      "variety": "TEMBIKAI KUNING",
+      "label": "Tembikai Kuning"
+    },
+    {
+      "jenis": "TEMBIKAI",
+      "commodity": "TEMBIKAI",
+      "variety": "TEMBIKAI KUNING TANPA BIJI",
+      "label": "Tembikai Kuning Tanpa Biji",
+      "tiadaData": true
+    },
+    {
+      "jenis": "TEMBIKAI",
+      "commodity": "TEMBIKAI",
+      "variety": "TEMBIKAI MERAH",
+      "label": "Tembikai Merah"
+    },
+    {
+      "jenis": "TEMBIKAI",
+      "commodity": "TEMBIKAI",
+      "variety": "TEMBIKAI MERAH TANPA BIJI",
+      "label": "Tembikai Merah Tanpa Biji"
+    },
+    {
+      "jenis": "TERUNG",
+      "commodity": "TERUNG",
+      "variety": "TERUNG BULAT",
+      "label": "Terung Bulat"
+    },
+    {
+      "jenis": "TERUNG",
+      "commodity": "TERUNG",
+      "variety": "TERUNG PANJANG / PEPARU (TANAH RENDAH)",
+      "label": "Terung Panjang / Peparu (Tanah Rendah)"
+    },
+    {
+      "jenis": "TIMUN",
+      "commodity": "TIMUN",
+      "variety": "TIMUN HIJAU",
+      "label": "Timun Hijau"
+    },
+    {
+      "jenis": "TIMUN",
+      "commodity": "TIMUN",
+      "variety": "TIMUN HIJAU (IMPORT)",
+      "label": "Timun Hijau (Import)"
+    },
+    {
+      "jenis": "TIMUN",
+      "commodity": "TIMUN",
+      "variety": "TIMUN JEPUN",
+      "label": "Timun Jepun"
+    },
+    {
+      "jenis": "TIMUN",
+      "commodity": "TIMUN",
+      "variety": "TIMUN SUSU",
+      "label": "Timun Susu",
+      "tiadaData": true
+    },
+    {
+      "jenis": "TOMATO",
+      "commodity": "TOMATO",
+      "variety": "TOMATO (TANAH TINGGI)",
+      "label": "Tomato (Tanah Tinggi)"
+    },
+    {
+      "jenis": "TOMATO",
+      "commodity": "TOMATO",
+      "variety": "TOMATO IMPORT",
+      "label": "Tomato Import"
+    },
+    {
+      "jenis": "TOMATO",
+      "commodity": "TOMATO",
+      "variety": "TOMATO PLUM (TANAH TINGGI)",
+      "label": "Tomato Plum (Tanah Tinggi)"
+    },
+    {
+      "jenis": "KAMBING",
+      "commodity": "KAMBING",
+      "variety": "DAGING KAMBING",
+      "label": "Daging Kambing"
+    },
+    {
+      "jenis": "LEMBU",
+      "commodity": "LEMBU",
+      "variety": "DAGING LEMBU CINCANG",
+      "label": "Daging Lembu Cincang"
+    },
+    {
+      "jenis": "LEMBU",
+      "commodity": "LEMBU",
+      "variety": "DAGING LEMBU PEJAL",
+      "label": "Daging Lembu Pejal"
+    },
+    {
+      "jenis": "PISANG",
+      "commodity": "PISANG",
+      "variety": "PISANG BERANGAN",
+      "label": "Pisang Berangan"
+    },
+    {
+      "jenis": "PISANG",
+      "commodity": "PISANG",
+      "variety": "PISANG CAVENDISH (MP14)",
+      "label": "Pisang Cavendish (MP14)"
+    },
+    {
+      "jenis": "PISANG",
+      "commodity": "PISANG",
+      "variety": "PISANG MAS",
+      "label": "Pisang Mas"
+    },
+    {
+      "jenis": "PISANG",
+      "commodity": "PISANG",
+      "variety": "PISANG RAJA",
+      "label": "Pisang Raja",
+      "tiadaData": true
+    }
+  ]
+}

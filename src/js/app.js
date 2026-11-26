@@ -2,7 +2,11 @@ const $ = (id) => document.getElementById(id);
 const state = {
   po: null,
   daerah: null,
+  negeri: 'all',
+  bulan: 'all',
+  minggu: 'all', // Isnin minggu ISO (YYYY-MM-DD) atau 'all' = minggu lengkap terkini (dalam bulan dipilih)
   komoditi: 'all',
+  varieti: 'all',
   indikator: 'all',
   issues: true,
   days: 30,
@@ -10,9 +14,16 @@ const state = {
   chartRecord: null,
   lowStage: 'Ladang',
   highStage: 'Borong',
+  ewsTab: 'amaran',
 };
-const labels = { merah: 'Kritikal', kuning: 'Berwaspada', hijau: 'Stabil' };
-const weight = { hijau: 0, kuning: 1, merah: 2 };
+// Status harga sebenar (DB Harga): merah harga sahaja = "Amaran harga" (tidak berkelip); kelabu = tiada ambang.
+const labels = {
+  merah: 'Amaran harga',
+  kuning: 'Berwaspada',
+  hijau: 'Stabil',
+  kelabu: 'Tiada ambang',
+};
+const weight = HARGADB.BOBOT;
 let actions = [];
 try {
   actions = JSON.parse(localStorage.getItem('fama-demo-intervensi-v1') || '[]');
@@ -20,42 +31,390 @@ try {
 } catch (_) {
   actions = [];
 }
-const poById = Object.fromEntries(DATA.po.map((p) => [p.id, p]));
+// PO tambahan (pemetaan FIS 2.1, penanda petak) ada dalam poById supaya pilihan PO memacu panel seperti PO utama.
+const TBH = DATA.poTambahan || [];
+const poById = Object.fromEntries([...DATA.po, ...TBH].map((p) => [p.id, p]));
+/* ===== Harga sebenar (DB Harga) =====
+   Semua nombor harga datang daripada /api/harga* melalui HARGADB (pelayan menjadi satu-satunya pengira status,
+   sebab dan ambang). Senarai Bulan, Komoditi dan Varieti datang daripada /api/harga/meta. Rekod harga ialah
+   baris ringkasan {peringkat, po, daerah, commodity, variety, harga, status, sebab, ...}. */
+const BULAN_NAMA = [
+  'Januari',
+  'Februari',
+  'Mac',
+  'April',
+  'Mei',
+  'Jun',
+  'Julai',
+  'Ogos',
+  'September',
+  'Oktober',
+  'November',
+  'Disember',
+];
+const bulanLabel = (k) => BULAN_NAMA[+k.slice(5) - 1] + ' ' + k.slice(0, 4);
+let SENARAI_BULAN = [];
+/* Minggu ISO (Isnin–Ahad) untuk penapis Minggu: minggu lengkap dalam tetingkap cache (12 minggu) berakhir pada
+   minggu lengkap terkini (Ahad <= tarikh data terkini). Bulan sesuatu minggu = bulan hari Ahadnya (sama dengan pelayan). */
+const tkhUTC = (s) => new Date(s + 'T00:00:00Z');
+const tkhStr = (d) => d.toISOString().slice(0, 10);
+const tambahHariS = (s, n) => tkhStr(new Date(tkhUTC(s).getTime() + n * 864e5));
+const isninS = (s) => tambahHariS(s, -((tkhUTC(s).getUTCDay() + 6) % 7));
+function noMingguIso(isnin) {
+  const k = tkhUTC(tambahHariS(isnin, 3)); // Khamis minggu itu menentukan tahun ISO
+  const awal = Date.UTC(k.getUTCFullYear(), 0, 1);
+  return Math.floor((k - awal) / 864e5 / 7) + 1;
+}
+const BLN_PENDEK = [
+  'Jan',
+  'Feb',
+  'Mac',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Ogo',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Dis',
+];
+const tkhPendek = (s) => +s.slice(8, 10) + ' ' + BLN_PENDEK[+s.slice(5, 7) - 1];
+const mingguLabel = (isnin) =>
+  'Minggu ' +
+  noMingguIso(isnin) +
+  ' (' +
+  tkhPendek(isnin) +
+  '–' +
+  tkhPendek(tambahHariS(isnin, 6)) +
+  ')';
+function senaraiMinggu() {
+  const T = HARGA_META && HARGA_META.tarikhTerkini;
+  if (!T) return [];
+  let m = isninS(T);
+  if (tambahHariS(m, 6) > T) m = tambahHariS(m, -7);
+  const out = [];
+  for (let i = 0; i < 12; i++, m = tambahHariS(m, -7))
+    if (state.bulan === 'all' || tambahHariS(m, 6).slice(0, 7) === state.bulan) out.push(m);
+  return out;
+}
+let HARGA_META = null;
+// "Semua bulan" = minggu lengkap terkini; bulan dipilih = minggu lengkap terkini dalam bulan itu.
+const BULAN_LALAI = 'all';
+const SENARAI_NEGERI = [...new Set(DATA.po.map((p) => p.negeri))].sort((a, b) =>
+  a.localeCompare(b, 'ms'),
+);
+const PERINGKAT_API = { Ladang: 'LADANG', Borong: 'BORONG', Runcit: 'RUNCIT' };
+const PERINGKAT_NAMA = { LADANG: 'Ladang', BORONG: 'Borong', RUNCIT: 'Runcit' };
+const normD = HARGADB.normDaerah;
+// (NEGERI DB | nama daerah DB ternormal) -> id PO tambahan (satu daerah boleh dalam beberapa PO tambahan)
+const TBH_KUNCI = new Map();
+TBH.forEach((p) =>
+  p.districts.forEach((d) => {
+    const k = d[3] + '|' + normD(d[4]);
+    if (!TBH_KUNCI.has(k)) TBH_KUNCI.set(k, []);
+    TBH_KUNCI.get(k).push(p.id);
+  }),
+);
+const tbhRekod = (r) =>
+  TBH_KUNCI.get(String(r.negeri || '').toUpperCase() + '|' + normD(r.daerah)) || [];
+const namaKom = HARGADB.tajuk;
+// Padankan nama komoditi data dummy (cth. "Cili Merah") kepada komoditi DB Harga (cth. "CILI"); null jika tiada.
+function komoditiHarga(nama) {
+  const senarai = HARGA_META ? HARGA_META.penapis.komoditi : [];
+  const n = String(nama || '').toUpperCase();
+  return (
+    senarai.find((c) => c === n) ||
+    senarai.find((c) => n.startsWith(c + ' ') || c.startsWith(n + ' ')) ||
+    null
+  );
+}
+// Varieti senarai putih bagi satu jenis (daripada /api/harga/meta); sudah A-Z daripada pelayan.
+const varietiUntuk = (kom) =>
+  HARGA_META && HARGA_META.penapis.varieti[kom]
+    ? [...HARGA_META.penapis.varieti[kom]].sort((a, b) => a.localeCompare(b, 'ms'))
+    : [];
+// Data harga bagi penapis semasa (Komoditi + Varieti + Bulan). Dipasang oleh muatHarga().
+const HD = {
+  sedia: false,
+  ralat: null,
+  ralatKunci: '',
+  kunci: '',
+  po: {},
+  daerah: {},
+  idxPO: {},
+  idxDaerah: {},
+};
+// Komoditi + varieti: syarat rekod bersama (bulan sudah dikenakan oleh pelayan).
+function padanRekod(r) {
+  return (
+    (state.komoditi === 'all' || r.commodity === state.komoditi) &&
+    (state.varieti === 'all' || r.variety === state.varieti)
+  );
+}
+/* Harga minggu ISO lengkap yang dipilih (bulan = minggu lengkap terkini dalam bulan itu). Nilai sudah dikira
+   pelayan; tiada pengiraan semula di klien. */
+function hargaMinggu(r) {
+  return { terkini: r.harga, sebelum: r.hargaSebelum, pct: r.pctMinggu };
+}
+// Negeri rekod dalam bentuk DATA.po (cth. KL di bawah PO Selayang = Selangor).
+const negeriRekod = (r) =>
+  r.po && poById[r.po]
+    ? poById[r.po].negeri
+    : r.tpo && r.tpo.length
+      ? poById[r.tpo[0]].negeri
+      : namaKom(r.negeri);
+const kunciRekod = (r) =>
+  [r.peringkat, r.po || '', r.daerah || '', r.commodity, r.variety].join('|');
 function esc(s) {
   return String(s ?? '').replace(
     /[&<>"']/g,
     (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch],
   );
 }
-const money = (x) => 'RM ' + Number(x).toFixed(2);
+const money = HARGA.rm;
 const fmt = (x) => Number(x).toLocaleString('ms-MY');
 function statusHTML(s) {
   return `<span class="status-text status-${s}">● ${labels[s]}</span>`;
 }
+// Rekod aras daerah mengikut penapis. "Bermasalah sahaja" = merah/kuning; BORONG ialah pembanding (tiada
+// status) maka tidak ditapis oleh mod itu.
 function filteredRecords({ issues = state.issues, stage = null, ignoreStatus = false } = {}) {
-  return DATA.rekod.filter(
-    (r) =>
-      (!state.po || r.poId === state.po) &&
-      (!state.daerah || r.daerah === state.daerah) &&
-      (state.komoditi === 'all' || r.komoditi === state.komoditi) &&
-      (ignoreStatus || state.indikator === 'all' || r.status === state.indikator) &&
-      (!stage || r.peringkat === stage) &&
-      (!issues || r.status !== 'hijau'),
-  );
+  const peringkat = stage ? [PERINGKAT_API[stage]] : ['LADANG', 'RUNCIT', 'BORONG'];
+  return peringkat
+    .flatMap((p) => HD.daerah[p] || [])
+    .filter(
+      (r) =>
+        (!state.po || r.po === state.po || (r.tpo || []).includes(state.po)) &&
+        (!state.daerah || normD(r.daerah) === normD(state.daerah)) &&
+        (state.negeri === 'all' || negeriRekod(r) === state.negeri) &&
+        padanRekod(r) &&
+        (ignoreStatus || state.indikator === 'all' || r.status === state.indikator) &&
+        (!issues || r.peringkat === 'BORONG' || r.status === 'merah' || r.status === 'kuning'),
+    );
 }
+// Status PO (atau satu daerahnya) = yang terburuk antara kunci LADANG (Pengeluar) dan RUNCIT (Pengguna).
+// Kelabu hanya jika semua kunci kelabu atau tiada data. BORONG ialah pembanding dan tidak dikira.
 function poStatus(p, district = null) {
-  const rr = DATA.rekod.filter(
-    (r) =>
-      r.poId === p.id &&
-      (!district || r.daerah === district) &&
-      (state.komoditi === 'all' || r.komoditi === state.komoditi),
+  if (!HD.sedia) return 'kelabu';
+  const dn = district ? normD(district) : null;
+  const st = [];
+  ['LADANG', 'RUNCIT'].forEach((pr) => {
+    const rr = (district ? HD.idxDaerah : HD.idxPO)[pr].get(p.id) || [];
+    rr.forEach((r) => {
+      // Aras PO utama: amaranPo (dikira pelayan daripada status daerah); selainnya status rekod sendiri.
+      if ((!dn || normD(r.daerah) === dn) && padanRekod(r)) st.push(statusRekodPo(r));
+    });
+  });
+  return HARGADB.statusTerburuk(st);
+}
+const statusRekodPo = (r) => (r.amaranPo ? r.amaranPo.status : r.status);
+// Rekod PO utama dengan amaranPo terburuk (ikut penapis komoditi/varieti), untuk sebab dalam pop-up dan panel.
+function amaranPoInfo(p) {
+  if (!HD.sedia || p.tambahan) return null;
+  let t = null;
+  ['LADANG', 'RUNCIT'].forEach((pr) =>
+    ((HD.idxPO[pr] && HD.idxPO[pr].get(p.id)) || []).forEach((r) => {
+      if (
+        r.amaranPo &&
+        padanRekod(r) &&
+        (!t || weight[statusRekodPo(r)] > weight[statusRekodPo(t)])
+      )
+        t = r;
+    }),
   );
-  return rr.length
-    ? rr.reduce((a, r) => (weight[r.status] > weight[a] ? r.status : a), 'hijau')
-    : 'hijau';
+  return t;
+}
+function amaranPoTeks(p) {
+  const r = amaranPoInfo(p);
+  return r ? `${namaRekod(r)} · ${PERINGKAT_NAMA[r.peringkat]}: ${r.amaranPo.sebab}` : '';
+}
+// Rekod harga terburuk bagi satu daerah PO (untuk sebab dan harga dalam pop-up daerah).
+function ringkasDaerah(p, district) {
+  if (!HD.sedia) return null;
+  const dn = normD(district);
+  let t = null;
+  ['LADANG', 'RUNCIT'].forEach((pr) =>
+    (HD.idxDaerah[pr].get(p.id) || []).forEach((r) => {
+      if (normD(r.daerah) === dn && padanRekod(r) && (!t || weight[r.status] > weight[t.status]))
+        t = r;
+    }),
+  );
+  return t;
+}
+// Senarai PO tambahan untuk dropdown: ikut Negeri sahaja (cascade), tidak ikut Indikator.
+function statePOTambahanSenarai() {
+  return TBH.filter((p) => state.negeri === 'all' || p.negeri === state.negeri);
+}
+// PO tambahan dalam tapisan (hanya bila suis PO Tambahan ON). Tidak dikira dalam KPI 15 PO utama.
+function statePOTambahan() {
+  if (!window.FamaPOT || !FamaPOT.tunjuk()) return [];
+  return statePOTambahanSenarai().filter(
+    (p) => state.indikator === 'all' || poStatus(p) === state.indikator,
+  );
 }
 function statePOs() {
-  return DATA.po.filter((p) => state.indikator === 'all' || poStatus(p) === state.indikator);
+  return DATA.po.filter(
+    (p) =>
+      (state.negeri === 'all' || p.negeri === state.negeri) &&
+      (state.indikator === 'all' || poStatus(p) === state.indikator),
+  );
+}
+/* Muat data harga bagi penapis semasa. Tiga peringkat x dua aras (PO dan daerah). LADANG dengan mod pengeluar
+   (kunci tanpa ladang diganti harga borong berlabel), RUNCIT dengan mod pengguna, BORONG pembanding. */
+function pertanyaanHarga() {
+  const asas = {};
+  if (state.komoditi !== 'all') asas.commodity = state.komoditi;
+  if (state.varieti !== 'all') asas.variety = state.varieti;
+  if (state.minggu !== 'all') asas.minggu = state.minggu;
+  else if (state.bulan !== 'all') asas.bulan = state.bulan;
+  const q = [];
+  ['LADANG', 'RUNCIT', 'BORONG'].forEach((pr) => {
+    const jenis = pr === 'LADANG' ? { mod: 'pengeluar' } : { peringkat: pr };
+    q.push(['po', pr, { ...asas, ...jenis, aras: 'po' }]);
+    q.push(['daerah', pr, { ...asas, ...jenis, aras: 'daerah' }]);
+    if (TBH.length) q.push(['po_tambahan', pr, { ...asas, ...jenis, aras: 'po_tambahan' }]);
+  });
+  return q;
+}
+const kunciPertanyaan = () =>
+  pertanyaanHarga()
+    .map((x) => HARGADB.url('ringkasan', x[2]))
+    .join(' ');
+function terapHarga(qs) {
+  HD.po = {};
+  HD.daerah = {};
+  HD.idxPO = {};
+  HD.idxDaerah = {};
+  qs.forEach(([aras, pr, params]) => {
+    const rows = (HARGADB.segerak('ringkasan', params) || {}).baris || [];
+    const idx = new Map();
+    if (aras === 'daerah') rows.forEach((r) => (r.tpo = tbhRekod(r)));
+    rows.forEach((r) => {
+      const k = r.po || '';
+      if (!idx.has(k)) idx.set(k, []);
+      idx.get(k).push(r);
+    });
+    // Rekod daerah juga diindeks di bawah setiap PO tambahan yang meliputi daerah itu
+    if (aras === 'daerah')
+      rows.forEach((r) =>
+        r.tpo.forEach((id) => {
+          if (!idx.has(id)) idx.set(id, []);
+          idx.get(id).push(r);
+        }),
+      );
+    if (aras === 'po') {
+      HD.po[pr] = rows;
+      HD.idxPO[pr] = idx;
+    } else if (aras === 'po_tambahan') {
+      if (!HD.idxPO[pr]) HD.idxPO[pr] = new Map();
+      idx.forEach((v, k) => HD.idxPO[pr].set(k, v));
+    } else {
+      HD.daerah[pr] = rows;
+      HD.idxDaerah[pr] = idx;
+    }
+  });
+  HD.sedia = true;
+  HD.ralat = null;
+  HD.kunci = kunciPertanyaan();
+}
+let hargaToken = 0;
+// Dipanggil oleh renderAll(): jika data penapis semasa sudah ada, pasang serta-merta; jika belum, muat
+// (keadaan memuat) dan lukis semula selepas selesai. Ralat dipaparkan dengan butang "Cuba semula".
+function muatHarga() {
+  const kunci = kunciPertanyaan();
+  if (HD.sedia && HD.kunci === kunci) return;
+  const qs = pertanyaanHarga();
+  if (qs.every((x) => HARGADB.segerak('ringkasan', x[2]))) {
+    terapHarga(qs);
+    return;
+  }
+  HD.sedia = false;
+  if (HD.ralat && HD.ralatKunci === kunci) return;
+  HD.ralat = null;
+  const token = ++hargaToken;
+  Promise.all(qs.map((x) => HARGADB.ringkasan(x[2]))).then(
+    () => {
+      if (token !== hargaToken) return;
+      terapHarga(pertanyaanHarga());
+      renderAll();
+    },
+    (e) => {
+      if (token !== hargaToken) return;
+      HD.ralat = e && e.kind === 'file' ? 'file' : (e && e.message) || 'ralat';
+      HD.ralatKunci = kunciPertanyaan();
+      renderAll();
+    },
+  );
+}
+// Teks pengganti panel harga bila data belum sedia; null bila sedia.
+function hargaBelumSedia() {
+  if (HD.sedia) return null;
+  if (HD.ralat === 'file' || HARGADB.keadaan === 'file')
+    return 'Data harga sebenar memerlukan npm start (tidak tersedia pada file://).';
+  if (HD.ralat) return 'Data harga tidak dapat dimuatkan.';
+  return 'Memuat harga…';
+}
+function cubaSemulaHarga() {
+  HARGADB.cubaSemula();
+  HD.ralat = null;
+  HD.ralatKunci = '';
+  HD.sedia = false;
+  HARGA_META = null;
+  muatMetaHarga();
+  renderAll();
+}
+function muatMetaHarga() {
+  HARGADB.meta().then(
+    (m) => {
+      HARGA_META = m;
+      SENARAI_BULAN = [...m.penapis.bulan].sort().reverse();
+      if (state.bulan !== 'all' && !SENARAI_BULAN.includes(state.bulan)) state.bulan = 'all';
+      if (state.minggu !== 'all' && !senaraiMinggu().includes(state.minggu)) state.minggu = 'all';
+      if (state.komoditi !== 'all' && !m.penapis.komoditi.includes(state.komoditi)) {
+        state.komoditi = 'all';
+        state.varieti = 'all';
+      }
+      renderAll();
+    },
+    (e) => {
+      if (!HD.ralat) HD.ralat = e && e.kind === 'file' ? 'file' : (e && e.message) || 'ralat';
+      renderAll();
+    },
+  );
+}
+// Lencana tarikh data, lapuk dan minggu separa + blok keadaan (memuat / ralat + Cuba semula / file://).
+function renderHargaKeadaan() {
+  const lc = $('hargaLencana');
+  if (lc) {
+    const b = [];
+    const t = HARGADB.terkini;
+    if (t) {
+      b.push(
+        HARGADB.lapuk
+          ? `<span class="harga-lencana lapuk" title="Data terkini lebih lapan hari lalu">⚠ Data lapuk · terkini ${esc(t)}</span>`
+          : `<span class="harga-lencana">Data harga terkini: ${esc(t)}</span>`,
+      );
+    }
+    if (HARGADB.mingguSeparaIso)
+      b.push(
+        `<span class="harga-lencana separa" title="Minggu ISO semasa belum lengkap dan tidak dinilai">Minggu semasa: separa (${esc(HARGADB.mingguSeparaIso)})</span>`,
+      );
+    lc.innerHTML = b.join('');
+  }
+  const k = $('hargaKeadaan');
+  if (!k) return;
+  const msg = hargaBelumSedia();
+  const ralat = !HD.sedia && (HD.ralat || HARGADB.keadaan === 'file');
+  k.hidden = !msg;
+  k.className = 'harga-keadaan' + (ralat ? ' ralat' : '');
+  if (!msg) {
+    k.textContent = '';
+    return;
+  }
+  k.innerHTML = `<span>${esc(msg)}</span>${ralat && HD.ralat !== 'file' && HARGADB.keadaan !== 'file' ? '<button type="button" class="button tiny ghost" id="hargaCubaSemula">Cuba semula</button>' : ''}`;
+  const b = $('hargaCubaSemula');
+  if (b) b.onclick = cubaSemulaHarga;
 }
 function toast(message) {
   const e = $('toast');
@@ -65,22 +424,14 @@ function toast(message) {
   window._toastTimer = setTimeout(() => e.classList.remove('show'), 3200);
 }
 function initControls() {
-  DATA.komoditi.forEach((c) =>
-    $('filterCommodity').insertAdjacentHTML(
-      'beforeend',
-      `<option value="${esc(c.name)}">${esc(c.name)}</option>`,
-    ),
-  );
-  DATA.po.forEach((p) =>
-    $('filterState').insertAdjacentHTML(
-      'beforeend',
-      `<option value="${esc(p.id)}">${esc(p.name)} · ${esc(p.negeri)}</option>`,
-    ),
-  );
+  kemasPenapis();
+  muatMetaHarga();
   const config = [
     ['filterCommodity', 'komoditi'],
+    ['filterBulan', 'bulan'],
+    ['filterMinggu', 'minggu'],
+    ['filterVarieti', 'varieti'],
     ['filterSeverity', 'indikator'],
-    ['filterDays', 'days'],
     ['filterIssue', 'issues'],
     ['lowStage', 'lowStage'],
     ['highStage', 'highStage'],
@@ -93,6 +444,9 @@ function initControls() {
           : key === 'issues'
             ? ev.target.value === 'true'
             : ev.target.value;
+      // Tukar bulan: minggu dipilih yang di luar bulan baharu diset semula
+      if (key === 'bulan' && state.minggu !== 'all' && !senaraiMinggu().includes(state.minggu))
+        state.minggu = 'all';
       state.chartRecord = null;
       renderAll();
     }),
@@ -103,15 +457,28 @@ function initControls() {
       state.po = null;
       state.daerah = null;
       state.chartRecord = null;
-      zoomTo(null);
+      zoomPenapis();
       renderAll();
     } else selectPO(id);
+  });
+  $('filterNegeri').addEventListener('change', (ev) => {
+    state.negeri = ev.target.value;
+    if (state.po && state.negeri !== 'all' && poById[state.po].negeri !== state.negeri)
+      state.po = null;
+    if (!state.po) state.daerah = null;
+    state.chartRecord = null;
+    zoomPenapis();
+    renderAll();
   });
   $('resetFilters').onclick = () => {
     Object.assign(state, {
       po: null,
       daerah: null,
+      negeri: 'all',
+      bulan: BULAN_LALAI,
+      minggu: 'all',
       komoditi: 'all',
+      varieti: 'all',
       indikator: 'all',
       issues: true,
       days: 30,
@@ -121,10 +488,13 @@ function initControls() {
       highStage: 'Borong',
     });
     [
+      ['filterNegeri', 'all'],
+      ['filterBulan', BULAN_LALAI],
+      ['filterMinggu', 'all'],
+      ['filterVarieti', 'all'],
       ['filterCommodity', 'all'],
       ['filterState', 'all'],
       ['filterSeverity', 'all'],
-      ['filterDays', '30'],
       ['filterIssue', 'true'],
       ['lowStage', 'Ladang'],
       ['highStage', 'Borong'],
@@ -133,7 +503,9 @@ function initControls() {
     renderAll();
   };
   $('backMap').onclick = () => {
+    tutupPopupTbh();
     state.po = null;
+    state.negeri = 'all';
     state.daerah = null;
     state.chartRecord = null;
     zoomTo(null);
@@ -142,6 +514,114 @@ function initControls() {
   $('downloadCsv').onclick = exportCSV;
   $('downloadLogistik').onclick = exportLogistikCSV;
   $('showLogs').onclick = openLogModal;
+}
+// Susun semula pilihan penapis mengikut keadaan semasa: Negeri -> PO, Komoditi -> Varieti, senarai Bulan.
+function kemasPenapis() {
+  if (state.po) state.negeri = poById[state.po].negeri;
+  const isi = (id, pilihan, nilai, mati, tajuk) => {
+    const s = $(id);
+    const opsyen = ([v, t, mati]) =>
+      `<option value="${esc(v)}"${mati ? ' disabled' : ''}>${esc(t)}</option>`;
+    const html = pilihan
+      .map((x) =>
+        x.grup
+          ? `<optgroup label="${esc(x.grup)}">${x.pilihan.map(opsyen).join('')}</optgroup>`
+          : opsyen(x),
+      )
+      .join('');
+    if (s.dataset.sig !== html) {
+      s.innerHTML = html;
+      s.dataset.sig = html;
+    }
+    s.value = nilai;
+    s.disabled = !!mati;
+    s.title = tajuk || '';
+  };
+  isi(
+    'filterNegeri',
+    [['all', 'Semua negeri'], ...SENARAI_NEGERI.map((n) => [n, n])],
+    state.negeri,
+  );
+  isi(
+    'filterState',
+    [
+      ['all', 'Semua PO'],
+      ...DATA.po
+        .filter((p) => state.negeri === 'all' || p.negeri === state.negeri)
+        .map((p) => [p.id, p.name]),
+      ...(window.FamaPOT && FamaPOT.tunjuk() && statePOTambahanSenarai().length
+        ? [
+            {
+              grup: 'PO tambahan',
+              pilihan: statePOTambahanSenarai().map((p) => [p.id, p.name]),
+            },
+          ]
+        : []),
+    ],
+    state.po || 'all',
+  );
+  isi(
+    'filterBulan',
+    [['all', 'Semua bulan'], ...SENARAI_BULAN.map((k) => [k, bulanLabel(k)])],
+    state.bulan,
+    false,
+    'Harga ialah purata minggu ISO lengkap terkini dalam bulan dipilih; "Semua bulan" = minggu lengkap terkini.',
+  );
+  isi(
+    'filterMinggu',
+    [['all', 'Terkini'], ...senaraiMinggu().map((m) => [m, mingguLabel(m)])],
+    state.minggu,
+    false,
+    'Minggu ISO (Isnin–Ahad). Harga dan status ialah purata minggu dipilih; minggu disenaraikan ikut bulan dipilih.',
+  );
+  isi(
+    'filterCommodity',
+    [
+      ['all', 'Semua komoditi'],
+      ...(HARGA_META ? HARGA_META.penapis.komoditi : []).map((c) => [c, namaKom(c)]),
+    ],
+    state.komoditi,
+  );
+  const vars = state.komoditi === 'all' ? [] : varietiUntuk(state.komoditi);
+  if (!vars.includes(state.varieti)) state.varieti = 'all';
+  isi(
+    'filterVarieti',
+    vars.length
+      ? [
+          ['all', 'Semua varieti'],
+          ...vars.map((v) => {
+            const mati = HARGADB.tiadaData(v);
+            return [v, namaKom(v) + (mati ? ' (tiada data)' : ''), mati];
+          }),
+        ]
+      : [['all', state.komoditi === 'all' ? 'Pilih komoditi' : 'Tiada data varieti']],
+    state.varieti,
+    !vars.length,
+    vars.length ? '' : 'Pilih komoditi untuk menapis varieti.',
+  );
+  const nota = [];
+  if (HARGA_META && HARGA_META.tidakDitugaskan && HARGA_META.tidakDitugaskan.length)
+    nota.push(
+      `${HARGA_META.tidakDitugaskan.length} daerah (cth. ${HARGA_META.tidakDitugaskan
+        .slice(0, 2)
+        .map((d) => namaKom(d.daerah))
+        .join(', ')}) tiada PO dan hanya dalam perbandingan negeri/daerah.`,
+    );
+  $('filterNota').textContent = nota.join(' ');
+}
+// Paparan peta mengikut penapis: PO > negeri (semua PO negeri itu) > seluruh Malaysia.
+function zoomPenapis() {
+  if (state.po) return zoomTo(poById[state.po]);
+  if (state.negeri === 'all') return zoomTo(null);
+  const ps = DATA.po.filter((p) => p.negeri === state.negeri);
+  zoomTo({
+    id: null,
+    name: state.negeri,
+    negeri: state.negeri,
+    lon: ps[0].lon,
+    lat: ps[0].lat,
+    districts: ps.flatMap((p) => p.districts),
+  });
 }
 function renderLogistik() {
   const L = DATA.logistikRingkasan;
@@ -171,45 +651,98 @@ function renderPODirectory() {
       )
       .map(
         (p) =>
-          `<button type="button" class="po-option ${state.po === p.id ? 'active' : ''}" data-po="${esc(p.id)}" title="${esc(p.name)} · ${esc(p.negeri)} · ${esc(labels[poStatus(p)])}"><i class="dot ${poStatus(p) === 'merah' ? 'red' : poStatus(p) === 'kuning' ? 'yellow' : 'green'}"></i><span>${esc(p.name.replace('PO ', '').replace('Simpang Renggam', 'S. Renggam'))}</span></button>`,
+          `<button type="button" class="po-option ${state.po === p.id ? 'active' : ''}" data-po="${esc(p.id)}" title="${esc(p.name)} · ${esc(p.negeri)} · ${esc(labels[poStatus(p)])}"><i class="dot ${{ merah: 'red', kuning: 'yellow', hijau: 'green', kelabu: 'grey' }[poStatus(p)]}"></i><span>${esc(p.name.replace('PO ', '').replace('Simpang Renggam', 'S. Renggam'))}</span></button>`,
       )
       .join('');
   $('poDirectory').innerHTML =
-    `<div class="po-areas"><div><div class="directory-title">Semenanjung Malaysia · 13 PO</div><div class="po-directory-grid">${mk('barat')}</div></div><div><div class="directory-title">Malaysia Timur · 2 PO</div><div class="po-directory-grid east">${mk('timur')}</div></div></div><div class="outlet-note" style="margin-top:9px">Pilih nama PO untuk zum lokasi dan lihat maklumat logistik. Tanda amaran dan daerah adalah data simulasi.</div>`;
+    `<div class="po-areas"><div><div class="directory-title">Semenanjung Malaysia · 13 PO</div><div class="po-directory-grid">${mk('barat')}</div></div><div><div class="directory-title">Malaysia Timur · 2 PO</div><div class="po-directory-grid east">${mk('timur')}</div></div></div><div class="outlet-note" style="margin-top:9px">Pilih nama PO untuk zum lokasi dan lihat maklumat logistik. Warna status PO ialah harga sebenar (DB Harga).</div>`;
   $('poDirectory')
     .querySelectorAll('[data-po]')
     .forEach((b) => (b.onclick = () => selectPO(b.dataset.po)));
 }
 function renderKpis() {
   const pos = statePOs();
-  const red = pos.filter((p) => poStatus(p) === 'merah').length;
-  const yellow = pos.filter((p) => poStatus(p) === 'kuning').length;
-  const green = pos.filter((p) => poStatus(p) === 'hijau').length;
-  const count = filteredRecords({ issues: true, stage: 'Borong', ignoreStatus: true }).length;
+  const bil = (s) => pos.filter((p) => poStatus(p) === s).length;
+  // Isu komoditi = kunci harga (peringkat x PO x komoditi x varieti) berstatus merah atau kuning dalam PO tertapis.
+  const idPO = new Set(pos.map((p) => p.id));
+  const isu = HD.sedia
+    ? ['LADANG', 'RUNCIT'].reduce(
+        (n, pr) =>
+          n +
+          (HD.po[pr] || []).filter(
+            (r) =>
+              idPO.has(r.po) && padanRekod(r) && (r.status === 'merah' || r.status === 'kuning'),
+          ).length,
+        0,
+      )
+    : null;
   const items = [
-    ['PO Dalam Tapisan', pos.length, 'Daripada 15 PO yang dipetakan', 'cyan'],
-    ['PO Kritikal', red, 'Simulasi · intervensi', 'red'],
-    ['PO Berwaspada', yellow, 'Simulasi · tren harga', 'yellow'],
-    ['PO Stabil', green, 'Simulasi · rutin', 'green'],
-    ['Isu Komoditi', count, 'Rekod borong dummy', 'red'],
+    [
+      'PO Dalam Tapisan',
+      pos.length,
+      'Daripada 15 PO yang dipetakan' +
+        (statePOTambahan().length
+          ? `<span class="kpi-tambahan">+${statePOTambahan().length} PO tambahan</span>`
+          : ''),
+      'cyan',
+    ],
+    ['PO Amaran Harga', HD.sedia ? bil('merah') : null, 'Merah · 1 daerah merah atau lebih', 'red'],
+    [
+      'PO Berwaspada',
+      HD.sedia ? bil('kuning') : null,
+      'Kuning · 30% daerah kuning atau purata PO kuning',
+      'yellow',
+    ],
+    [
+      'PO Stabil',
+      HD.sedia ? bil('hijau') : null,
+      'Hijau · tiada daerah merah, data cukup',
+      'green',
+    ],
+    [
+      'PO Tiada Ambang',
+      HD.sedia ? bil('kelabu') : null,
+      'Kelabu · data daerah tidak cukup',
+      'grey',
+    ],
+    ['Isu Komoditi', isu, 'Kunci harga merah atau kuning', 'red'],
   ];
   $('kpis').innerHTML = items
     .map(
       ([label, value, foot, cl]) =>
-        `<article class="kpi ${cl}"><div class="kpi-label">${label}</div><div class="kpi-value">${fmt(value)}</div><div class="kpi-foot">${foot}</div></article>`,
+        `<article class="kpi ${cl}"><div class="kpi-label">${label}</div><div class="kpi-value">${value == null ? '…' : fmt(value)}</div><div class="kpi-foot">${foot}</div></article>`,
     )
     .join('');
   $('actionCount').textContent = actions.length;
 }
 
+function tutupPopupTbh() {
+  if (window.FamaPOT) FamaPOT.tutup();
+}
+// Status harga dan sebab PO tambahan (rekod terburuk antara LADANG dan RUNCIT, ikut penapis komoditi/varieti).
+function infoTbh(p) {
+  let t = null;
+  if (HD.sedia)
+    ['LADANG', 'RUNCIT'].forEach((pr) =>
+      ((HD.idxPO[pr] && HD.idxPO[pr].get(p.id)) || []).forEach((r) => {
+        if (padanRekod(r) && (!t || weight[r.status] > weight[t.status])) t = r;
+      }),
+    );
+  return { statusTeks: labels[poStatus(p)], sebab: t ? t.sebab : null };
+}
 function selectPO(id) {
   hidePOHover();
+  tutupPopupTbh();
   state.po = id;
   state.daerah = null;
   state.chartRecord = null;
+  state.negeri = poById[id].negeri;
   $('filterState').value = id;
   zoomTo(poById[id]);
   renderAll();
+  // Peranti sentuh tiada hover: ketikan membuka pop-up (ditutup dengan mengetik di tempat lain)
+  if (poById[id].tambahan && map && window.FamaPOT && FamaPOT.sentuh())
+    FamaPOT.bukaPopup(map, poById[id], infoTbh(poById[id]));
   document.querySelector('.map-panel').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function selectDistrict(name) {
@@ -220,6 +753,8 @@ function selectDistrict(name) {
 let map = null,
   mapView = null,
   mapMarkers = [];
+/* ruang kanan untuk panel kawalan/lapisan cuaca supaya PO Sabah tidak tertutup */
+const MAP_PADDING = { top: 20, bottom: 20, left: 80, right: 190 };
 const MAP_BOUNDS = [
   [99.5, 0.8],
   [119.5, 7.5],
@@ -309,6 +844,24 @@ function gmapsPautan(lat, lng) {
   a.textContent = 'Buka di Google Maps';
   return a;
 }
+// Gerakkan peta supaya pop-up klik kekal dalam kotak peta (selepas dibuka / kandungan berubah)
+function popupDalamPaparan(peta, popup) {
+  const el = popup && popup.getElement();
+  if (!el || !peta) return;
+  if (peta.isMoving()) {
+    // jangan batalkan flyTo/fitBounds yang sedang berjalan; semak selepas selesai
+    peta.once('moveend', () => popup.isOpen() && popupDalamPaparan(peta, popup));
+    return;
+  }
+  const m = peta.getContainer().getBoundingClientRect();
+  const p = el.getBoundingClientRect();
+  const S = 8;
+  const dx =
+    p.left < m.left + S ? p.left - m.left - S : p.right > m.right - S ? p.right - m.right + S : 0;
+  const dy =
+    p.top < m.top + S ? p.top - m.top - S : p.bottom > m.bottom - S ? p.bottom - m.bottom + S : 0;
+  if (dx || dy) peta.panBy([dx, dy], { duration: 0 });
+}
 function initMap() {
   if (typeof maplibregl === 'undefined') {
     console.warn('MapLibre GL tidak dapat dimuatkan');
@@ -319,7 +872,7 @@ function initMap() {
       container: 'map',
       style: petaGaya(petaAsas),
       bounds: MAP_BOUNDS,
-      fitBoundsOptions: { padding: 20 },
+      fitBoundsOptions: { padding: MAP_PADDING },
       attributionControl: true,
       cooperativeGestures: true,
       dragRotate: false,
@@ -334,10 +887,8 @@ function initMap() {
     map.on('style.load', () => {
       gayaDimuat = true;
       banjirLapisan.sedia = false;
-      amaranLapisan.sedia = false;
       if (window.FamaCuaca && FamaCuaca.pasangSemula) FamaCuaca.pasangSemula();
       kemasLapisanBanjir();
-      kemasLapisanAmaran();
     });
     if (window.FamaCuaca && FamaCuaca.sedia) FamaCuaca.sedia(map);
   } catch (err) {
@@ -370,23 +921,45 @@ function renderMap() {
     hidePOHover();
     mapMarkers.forEach((m) => m.remove());
     mapMarkers = [];
+    /* sauh label PO: l/r/t/b + sesaran [x,y] px pilihan; elak bertindih pada paparan kebangsaan */
     const labelShift = {
-      perlis: [-8, -16],
-      kedah: [-5, 21],
-      penang: [12, -10],
-      perak: [-9, 20],
-      selangor: [12, 22],
-      selayang: [-10, -14],
-      negerisembilan: [-12, 20],
-      melaka: [18, 13],
-      kelantan: [-8, -15],
-      terengganu: [16, -6],
-      pahang: [15, -10],
-      johor: [16, 16],
-      simpangrenggam: [-8, -16],
-      sabah: [18, -13],
-      sarawak: [14, -12],
+      perlis: ['l'],
+      kedah: ['l', 0, 6],
+      penang: ['l'],
+      perak: ['r'],
+      selayang: ['l', 0, -8],
+      selangor: ['l', 0, -2],
+      negerisembilan: ['r', 0, -6],
+      melaka: ['l', 0, 6],
+      kelantan: ['r'],
+      terengganu: ['r'],
+      pahang: ['r'],
+      johor: ['r', 0, 6],
+      simpangrenggam: ['r', 0, -6],
+      sabah: ['l'],
+      sarawak: ['r'],
     };
+    // PO tambahan (petak) ditambah dahulu supaya berada di bawah penanda PO utama
+    if (window.FamaPOT) {
+      FamaPOT.pasangZum(map);
+      FamaPOT.tutup();
+      statePOTambahan().forEach((p) => {
+        const s = poStatus(p);
+        const el = FamaPOT.penanda(p, s, labels[s], {
+          kecil: !!state.po,
+          dipilih: state.po === p.id,
+        });
+        FamaPOT.pasangHover(map, el, p, () => infoTbh(p));
+        el.addEventListener('click', () => selectPO(p.id));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectPO(p.id);
+          }
+        });
+        addMapMarker(el, p.lon, p.lat);
+      });
+    }
     visible.forEach((p) => {
       const s = poStatus(p);
       const el = mapEl(
@@ -395,15 +968,14 @@ function renderMap() {
       );
       el.append(mapChild('span', 'halo'), mapChild('span', 'core'));
       if (!state.po) {
-        const [dx, dy] = labelShift[p.id] || [9, -10];
-        const t = mapChild('span', 'map-label po-label', p.label);
-        t.style.left = `calc(50% + ${dx}px)`;
-        t.style.top = `calc(50% + ${dy}px)`;
-        t.style.transform = dx < 0 ? 'translate(-100%,-50%)' : 'translate(0,-50%)';
+        const [sauh, lx = 0, ly = 0] = labelShift[p.id] || ['r'];
+        const t = mapChild('span', `map-label po-label sauh-${sauh}`, p.label);
+        t.style.setProperty('--lx', lx + 'px');
+        t.style.setProperty('--ly', ly + 'px');
         el.append(t);
       }
-      el.addEventListener('mouseenter', () => showPOHover(p));
-      el.addEventListener('mouseleave', jadualSembunyiPOHover);
+      el.addEventListener('mouseenter', () => masukPOHover(p));
+      el.addEventListener('mouseleave', keluarPOHover);
       el.addEventListener('focus', () => showPOHover(p));
       el.addEventListener('blur', hidePOHover);
       el.addEventListener('click', () => selectPO(p.id));
@@ -419,12 +991,15 @@ function renderMap() {
       const p = poById[state.po];
       p.districts.forEach((d, i) => {
         const s = poStatus(p, d[0]);
-        const el = mapEl(`district-marker status-${s}${state.daerah === d[0] ? ' selected' : ''}`, {
-          tabindex: '0',
-          role: 'button',
-          'aria-label': `${d[0]}, ${labels[s]}`,
-          title: `${d[0]} · ${labels[s]}`,
-        });
+        const el = mapEl(
+          `district-marker tanpa-kelip status-${s}${state.daerah === d[0] ? ' selected' : ''}`,
+          {
+            tabindex: '0',
+            role: 'button',
+            'aria-label': `${d[0]}, ${labels[s]}`,
+            'data-daerah': d[0],
+          },
+        );
         if (s === 'merah') el.append(mapChild('span', 'district-halo'));
         el.append(mapChild('span', 'dot-core'));
         const t = mapChild('span', 'map-label', d[0]);
@@ -432,6 +1007,10 @@ function renderMap() {
         t.style.top = 'calc(50% - 10px)';
         t.style.transform = i % 2 ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
         el.append(t);
+        el.addEventListener('mouseenter', () =>
+          masukHover('daerah:' + p.id + ':' + d[0], () => showDaerahHover(p, d)),
+        );
+        el.addEventListener('mouseleave', keluarPOHover);
         el.addEventListener('click', () => selectDistrict(d[0]));
         el.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -451,11 +1030,15 @@ function renderMap() {
   $('mapPOCount').textContent = state.po ? poById[state.po].districts.length : visible.length;
   mapCaptionAsas = state.po
     ? `${poById[state.po].name} · ${poById[state.po].districts.length} daerah · status tertinggi: ${labels[poStatus(poById[state.po])]}`
-    : '15 PO berpandukan infografik · koordinat bandar anggaran · warna risiko adalah simulasi';
+    : '15 PO berpandukan infografik · koordinat bandar anggaran · warna status daripada harga sebenar (DB Harga)' +
+      (statePOTambahan().length
+        ? ` · +${statePOTambahan().length} PO tambahan (petak, lokasi anggaran titik tengah daerah)`
+        : '');
   renderMapCaption();
+  if (window.FamaDaerah) FamaDaerah.kemasStatus();
   $('mapDetail').innerHTML = state.po
-    ? `<div class="detail-copy"><strong>${esc(poById[state.po].name)} · ${statusHTML(poStatus(poById[state.po]))}</strong><div class="note">${esc(poById[state.po].negeri)} · Kedudukan titik ialah anggaran bandar, bukan koordinat tapak sebenar. ${poById[state.po].logistik.shared ? '<b>Data logistik berkongsi angka dengan PO pasangan.</b>' : ''}</div><div class="note">Liputan daerah di bawah ialah <b>contoh simulasi</b> (tiada senarai seliaan daerah dalam infografik). Klik daerah untuk mengemas kini panel harga.</div><div class="district-pills"><button class="pill ${!state.daerah ? 'active' : ''}" data-district="">Semua daerah</button>${poById[state.po].districts.map((d) => `<button class="pill ${state.daerah === d[0] ? 'active' : ''}" data-district="${esc(d[0])}">${esc(d[0])} · ${labels[poStatus(poById[state.po], d[0])]}</button>`).join('')}</div></div><button class="button tiny ghost" id="clearSelection">Reset PO</button>`
-    : `<div class="detail-copy"><strong>Prinsip Amaran Minimum</strong><div class="note">Jika satu daerah atau komoditi ditanda kritikal (dummy), penanda PO berkelip merah. Klik titik atau nama PO untuk melihat logistik sumber dan perincian harga simulasi.</div></div><span class="tag-status"><i class="dot red"></i>Merah = tindakan segera</span>`;
+    ? `<div class="detail-copy"><strong>${esc(poById[state.po].name)} · ${statusHTML(poStatus(poById[state.po]))}</strong><div class="note">${esc(poById[state.po].negeri)} · Kedudukan titik ialah anggaran bandar, bukan koordinat tapak sebenar. ${poById[state.po].tambahan ? '<b>PO tambahan: tiada data logistik.</b> ' + esc(poById[state.po].fisNama) : poById[state.po].logistik.shared ? '<b>Data logistik berkongsi angka dengan PO pasangan.</b>' : ''}</div>${amaranPoNota(poById[state.po]).replace('outlet-note', 'note')}<div class="note">Daerah seliaan mengikut pemetaan FIS 2.1 (disahkan (FIS 2.1), Power BI); warna daerah ialah status harga sebenar. Klik daerah untuk mengemas kini panel harga.</div><div class="district-pills"><button class="pill ${!state.daerah ? 'active' : ''}" data-district="">Semua daerah</button>${poById[state.po].districts.map((d) => `<button class="pill ${state.daerah === d[0] ? 'active' : ''}" data-district="${esc(d[0])}">${esc(d[0])} · ${labels[poStatus(poById[state.po], d[0])]}</button>`).join('')}</div></div><button class="button tiny ghost" id="clearSelection">Reset PO</button>`
+    : `<div class="detail-copy"><strong>Prinsip Amaran Minimum</strong><div class="note">Warna penanda PO ialah status terburuk antara harga ladang (Pengeluar, turun) dan harga runcit (Pengguna, naik). Merah = Amaran harga (tidak berkelip), kelabu = tiada ambang. Klik titik atau nama PO untuk melihat logistik sumber dan perincian harga.</div></div><span class="tag-status"><i class="dot red"></i>Merah = amaran harga</span>`;
   document.querySelectorAll('[data-district]').forEach(
     (b) =>
       (b.onclick = () => {
@@ -474,7 +1057,7 @@ function applyMapView() {
     const b = new maplibregl.LngLatBounds([po.lon, po.lat], [po.lon, po.lat]);
     po.districts.forEach((d) => b.extend([d[2], d[1]]));
     map.fitBounds(b, { padding: 60, maxZoom: 10, duration: 700 });
-  } else map.fitBounds(MAP_BOUNDS, { padding: 20, duration: 700 });
+  } else map.fitBounds(MAP_BOUNDS, { padding: MAP_PADDING, duration: 700 });
 }
 function zoomTo(po) {
   mapView = po || null;
@@ -716,13 +1299,26 @@ function senaraiAmaranRasmi(kini = Date.now()) {
     ...dipilih.filter((a) => !a.aktif).sort((x, y) => masa(y) - masa(x)),
   ];
 }
-const amaranItemHTML = (a, i) => {
+// Senarai terkini yang dipaparkan panel Rasmi: satu-satunya sumber untuk lapisan peta Amaran Rasmi.
+let amaranRasmiTerkini = { senarai: [], kini: Date.now() };
+window.famaAmaranRasmi = () => amaranRasmiTerkini;
+function terbitAmaranRasmi(senarai, kini) {
+  amaranRasmiTerkini = { senarai, kini };
+  renderPetaKawalan();
+  document.dispatchEvent(new CustomEvent('fama:amaran-rasmi', { detail: amaranRasmiTerkini }));
+}
+// Teks wilayah dalam panel dan pop-up peta (sama)
+const amaranLokTeks = (a) => {
   const lok = a.negeri.length
     ? a.negeri.length > 4
       ? a.negeri.length + ' negeri'
       : a.negeri.join(', ')
     : '';
   const daerah = amaranDaerah(a);
+  return { lok, daerah, teks: lok + (lok && daerah ? ' · ' : '') + daerah };
+};
+const amaranItemHTML = (a, i) => {
+  const { lok, daerah } = amaranLokTeks(a);
   const tahap = a.tahap;
   const sah = a.sahHingga ? ' · Sah hingga ' + cuacaMasa(a.sahHingga) : '';
   const panjang = String(a.teks || '').length > 110;
@@ -773,7 +1369,8 @@ const renderMetAlerts = () => {
   ].filter(Boolean);
   const masa = cuacaMasa(diambil.sort().pop());
   note.textContent = `${sumber} · Dikemas kini ${masa}`;
-  const senarai = senaraiAmaranRasmi();
+  const kini = Date.now();
+  const senarai = senaraiAmaranRasmi(kini);
   const aktif = senarai.filter((a) => a.aktif).length;
   tag.textContent = senarai.length ? `${aktif} aktif · ${senarai.length} terkini` : '';
   const status = mesej.map((m) => `<div class="alert-status">${m}</div>`).join('');
@@ -781,9 +1378,11 @@ const renderMetAlerts = () => {
     body.innerHTML =
       status ||
       `<div class="alert-item"><b>Tiada amaran rasmi dalam 7 hari lepas</b><p>Sumber: MET Malaysia · JPS Malaysia · ${esc(masa)}</p></div>`;
+    terbitAmaranRasmi(senarai, kini);
     return;
   }
   body.innerHTML = status + senarai.map(amaranItemHTML).join('');
+  terbitAmaranRasmi(senarai, kini);
 };
 const aplikasiCuaca = (p) => {
   return p.then(
@@ -1036,13 +1635,40 @@ document.addEventListener('click', (ev) => {
   });
 });
 
-/* --- Lapisan peta stesen JPS (GeoJSON circle; bukan penanda DOM kerana ratusan titik) --- */
-const BANJIR_WARNA = {
-  Normal: '#22c55e',
-  Waspada: '#facc15',
-  Amaran: '#fb923c',
-  Bahaya: '#ef4444',
-};
+/* --- Lapisan peta stesen JPS (GeoJSON symbol dengan ikon ombak; bukan penanda DOM kerana ratusan titik) ---
+   Ikon banjir (bulatan + tiga ombak) mengikut warna: merah = Bahaya/Amaran, kuning = Waspada, hijau = Normal. */
+const BANJIR_IKON = { merah: '#ef4444', kuning: '#f5b400', hijau: '#22c55e' };
+const BANJIR_IKON_STATUS = { Bahaya: 'merah', Amaran: 'merah', Waspada: 'kuning', Normal: 'hijau' };
+// Lukis ikon pada kanvas (64 px, pixelRatio 2 = 32 px pada peta). Pulangan ImageData untuk map.addImage.
+function lukisIkonBanjir(warna) {
+  const S = 64,
+    c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.beginPath();
+  g.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2);
+  g.fillStyle = warna;
+  g.fill();
+  g.lineWidth = 3;
+  g.strokeStyle = '#0b1f3f';
+  g.stroke();
+  g.lineWidth = 4.5;
+  g.lineCap = 'round';
+  for (const y of [22, 32, 42]) {
+    g.beginPath();
+    g.moveTo(16, y);
+    g.bezierCurveTo(21, y - 5, 26, y - 5, 32, y);
+    g.bezierCurveTo(38, y + 5, 43, y + 5, 48, y);
+    g.stroke();
+  }
+  return g.getImageData(0, 0, S, S);
+}
+function pasangIkonBanjir() {
+  Object.entries(BANJIR_IKON).forEach(([k, w]) => {
+    const id = 'banjir-' + k;
+    if (!map.hasImage(id)) map.addImage(id, lukisIkonBanjir(w), { pixelRatio: 2 });
+  });
+}
 let banjirLapisan = { tunjuk: true, semua: false, sedia: false, popup: null };
 const banjirPenapis = () => (banjirLapisan.semua ? null : ['!=', ['get', 'statusRasmi'], 'Normal']);
 function banjirFitur() {
@@ -1120,20 +1746,27 @@ function pasangLapisanBanjir() {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: banjirFitur() },
     });
-    const warna = ['match', ['get', 'statusRasmi']];
-    Object.entries(BANJIR_WARNA).forEach(([k, v]) => warna.push(k, v));
-    warna.push(BANJIR_WARNA.Normal);
+    pasangIkonBanjir();
+    const ikon = ['match', ['get', 'statusRasmi']];
+    const susun = ['match', ['get', 'statusRasmi']];
+    Object.entries(BANJIR_IKON_STATUS).forEach(([k, v]) => {
+      ikon.push(k, 'banjir-' + v);
+      susun.push(k, { Bahaya: 0, Amaran: 1, Waspada: 2, Normal: 3 }[k]);
+    });
+    ikon.push('banjir-hijau');
+    susun.push(3);
     const lapisan = {
       id: 'banjir-stesen',
-      type: 'circle',
+      type: 'symbol',
       source: 'banjir-stesen',
-      layout: { visibility: banjirLapisan.tunjuk ? 'visible' : 'none' },
-      paint: {
-        'circle-color': warna,
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 3, 8, 5, 11, 8],
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1.2,
-        'circle-opacity': 0.95,
+      layout: {
+        visibility: banjirLapisan.tunjuk ? 'visible' : 'none',
+        'icon-image': ikon,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 8, 0.7, 11, 0.95],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        // Kunci lebih besar dilukis di atas: Bahaya/Amaran (merah) paling atas, Normal paling bawah
+        'symbol-sort-key': ['-', 3, susun],
       },
     };
     const f = banjirPenapis();
@@ -1238,13 +1871,35 @@ const stesenBarisHTML = (s) => {
     : '<span class="bj-trend">tiada data trend</span>';
   return `<button type="button" class="bj-row" data-act="stesen-banjir" data-stesen="${esc(s.id)}" data-tahap="${esc(s.statusRasmi)}" aria-label="${esc(s.nama + ', ' + s.statusRasmi + ', ' + paras + '. Papar pada peta')}"><span class="bj-row-top"><b class="bj-nama" title="${esc(s.nama)}">${esc(s.nama)}</b><span class="bj-chip bj-${esc(s.statusRasmi.toLowerCase())}">${esc(s.statusRasmi)}</span></span><span class="bj-lok" title="${esc(lok)}">${esc(lok || '-')}</span><span class="bj-row-bot"><b class="bj-paras">${esc(paras)}</b>${trend}<span class="bj-masa">${esc(banjirRingkas(s.masaBacaan))} MYT</span></span></button>`;
 };
+// Panel lama (#floodPanel, hidden) dan paparan Risiko Banjir dalam EWS (AI) berkongsi satu fungsi render.
+const FLOOD_TARGETS = [
+  {
+    list: 'floodList',
+    banner: 'floodStatus',
+    note: 'floodNote',
+    ring: 'floodSummary',
+    poNote: 'floodPoNote',
+    srcGagal: 'floodSrcGagal',
+  },
+  {
+    list: 'ewsFloodList',
+    banner: 'ewsFloodStatus',
+    note: 'ewsFloodNote',
+    ring: 'ewsFloodSummary',
+    poNote: 'ewsFloodPoNote',
+    srcGagal: 'ewsFloodSrcGagal',
+  },
+];
 function renderFloodCard() {
-  const list = $('floodList');
+  FLOOD_TARGETS.forEach(renderFloodInto);
+}
+function renderFloodInto(ids) {
+  const list = $(ids.list);
   if (!list) return;
-  const banner = $('floodStatus');
-  const note = $('floodNote');
-  const ring = $('floodSummary');
-  const poNote = $('floodPoNote');
+  const banner = $(ids.banner);
+  const note = $(ids.note);
+  const ring = $(ids.ring);
+  const poNote = $(ids.poNote);
   const bs = banjirState;
   let msg = '';
   let kind = '';
@@ -1282,7 +1937,7 @@ function renderFloodCard() {
   const gagal = ['jpsNasional', 'jpsSelangor']
     .filter((k) => d.sumber && d.sumber[k] && d.sumber[k].status === 'gagal')
     .map((k) => (k === 'jpsNasional' ? 'JPS Malaysia' : 'JPS Selangor'));
-  const sg = $('floodSrcGagal');
+  const sg = $(ids.srcGagal);
   if (sg) sg.textContent = gagal.map((g) => ' · ' + g + ': data terakhir').join('');
   banner.hidden = true;
   banner.textContent = '';
@@ -1323,8 +1978,8 @@ document.addEventListener('click', (ev) => {
   if (b) pilihStesenBanjir(b.dataset.stesen);
 });
 /* ===== Amaran cuaca data.gov.my (lapisan peta + kad Amaran Rasmi) =====
-   Dimuat daripada /api/met-malaysia (same-origin). Tiada poligon negeri dalam projek, jadi amaran aktif
-   ditanda pada titik tengah negeri yang disebut dalam teks amaran. */
+   Dimuat daripada /api/met-malaysia (same-origin) dan digabung ke dalam senaraiAmaranRasmi(). Lapisan peta amaran
+   (src/js/lapisan-amaran.js) tidak mengambil data sendiri: ia melanggan senarai yang sama (fama:amaran-rasmi). */
 const AMARAN_DG_API = {
   promise: null,
   load(force) {
@@ -1346,199 +2001,12 @@ const AMARAN_DG_API = {
   },
 };
 let amaranDGState = { status: 'memuat', data: null };
-let amaranLapisan = { tunjuk: true, sedia: false, popup: null, pengendali: false, negeri: {} };
-const NEGERI_PUSAT = {
-  Johor: [103.3, 1.95],
-  Kedah: [100.6, 6.1],
-  Kelantan: [102.0, 5.4],
-  'Kuala Lumpur': [101.69, 3.14],
-  Labuan: [115.24, 5.28],
-  Melaka: [102.25, 2.25],
-  'Negeri Sembilan': [102.2, 2.75],
-  Pahang: [102.6, 3.8],
-  'Pulau Pinang': [100.3, 5.4],
-  Perak: [101.1, 4.6],
-  Perlis: [100.2, 6.45],
-  Putrajaya: [101.69, 2.93],
-  Sabah: [116.8, 5.4],
-  Sarawak: [113.5, 2.5],
-  Selangor: [101.3, 3.55],
-  Terengganu: [102.9, 4.9],
-};
-const AMARAN_WARNA = { BAHAYA: '#b91c1c', BURUK: '#ea580c', WASPADA: '#ca8a04', UMUM: '#2563eb' };
-const amaranDGAktif = (a, kini = Date.now()) => {
-  const t = Date.parse(a.sah_hingga);
-  return !Number.isNaN(t) && t >= kini;
-};
-// Kumpul amaran aktif mengikut negeri; tahap negeri = tahap tertinggi.
-function amaranMengikutNegeri() {
-  const hasil = {};
-  if (amaranDGState.status !== 'ready') return hasil;
-  (amaranDGState.data.amaran || [])
-    .filter((a) => amaranDGAktif(a))
-    .forEach((a) =>
-      (a.negeri || []).forEach((n) => {
-        if (NEGERI_PUSAT[n]) (hasil[n] = hasil[n] || []).push(a);
-      }),
-    );
-  Object.values(hasil).forEach((l) =>
-    l.sort(
-      (x, y) =>
-        (AMARAN_TAHAP_NILAI[y.tahap] || 1) - (AMARAN_TAHAP_NILAI[x.tahap] || 1) ||
-        (Date.parse(y.dikeluarkan) || 0) - (Date.parse(x.dikeluarkan) || 0),
-    ),
-  );
-  return hasil;
-}
-function amaranFitur() {
-  amaranLapisan.negeri = amaranMengikutNegeri();
-  return Object.entries(amaranLapisan.negeri).map(([n, l]) => ({
-    type: 'Feature',
-    geometry: { type: 'Point', coordinates: NEGERI_PUSAT[n] },
-    properties: { negeri: n, tahap: l[0].tahap || 'UMUM', jumlah: l.length },
-  }));
-}
-function amaranPopupNode(negeri) {
-  const senarai = amaranLapisan.negeri[negeri] || [];
-  const n = document.createElement('div');
-  n.className = 'banjir-popup amaran-popup';
-  const t = document.createElement('div');
-  t.className = 'banjir-popup-tajuk';
-  t.textContent = `Amaran cuaca · ${negeri} (${senarai.length})`;
-  n.append(t);
-  senarai.slice(0, 3).forEach((a) => {
-    const k = document.createElement('div');
-    k.className = 'amaran-popup-item';
-    const h = document.createElement('b');
-    h.textContent = a.tajuk;
-    const chip = document.createElement('span');
-    chip.className = 'alert-tahap t-' + String(a.tahap || 'UMUM').toLowerCase();
-    chip.textContent = a.tahap || 'UMUM';
-    const sah = document.createElement('div');
-    sah.className = 'amaran-popup-sah';
-    sah.textContent = `Sah: ${a.sah_dari ? cuacaMasa(a.sah_dari) : '-'} hingga ${cuacaMasa(a.sah_hingga)}`;
-    const p = document.createElement('p');
-    p.className = 'amaran-popup-teks';
-    const penuh = String(a.teks || '');
-    const ringkas = penuh.length > 150 ? penuh.slice(0, 150).trimEnd() + '…' : penuh;
-    p.textContent = ringkas;
-    k.append(h, chip, sah, p);
-    if (penuh.length > 150) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'alert-more';
-      b.textContent = 'Lihat lagi';
-      b.setAttribute('aria-expanded', 'false');
-      b.addEventListener('click', () => {
-        const buka = b.getAttribute('aria-expanded') !== 'true';
-        p.textContent = buka ? penuh : ringkas;
-        b.textContent = buka ? 'Kurangkan' : 'Lihat lagi';
-        b.setAttribute('aria-expanded', buka ? 'true' : 'false');
-      });
-      k.append(b);
-    }
-    n.append(k);
-  });
-  if (senarai.length > 3) {
-    const lagi = document.createElement('div');
-    lagi.className = 'banjir-popup-sumber';
-    lagi.textContent = `+${senarai.length - 3} amaran lain (lihat kad Amaran Rasmi)`;
-    n.append(lagi);
-  }
-  const s = document.createElement('div');
-  s.className = 'banjir-popup-sumber';
-  s.textContent = 'Sumber: ' + AMARAN_DG + ' · kedudukan titik ialah tengah negeri';
-  n.append(s);
-  const g = document.createElement('div');
-  g.className = 'gmaps-baris';
-  g.append(gmapsPautan(NEGERI_PUSAT[negeri][1], NEGERI_PUSAT[negeri][0]));
-  n.append(g);
-  return n;
-}
-function bukaPopupAmaran(negeri) {
-  if (!map || !NEGERI_PUSAT[negeri] || !(amaranLapisan.negeri[negeri] || []).length) return null;
-  if (amaranLapisan.popup) amaranLapisan.popup.remove();
-  amaranLapisan.popup = new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
-    .setLngLat(NEGERI_PUSAT[negeri])
-    .setDOMContent(amaranPopupNode(negeri))
-    .addTo(map);
-  return amaranLapisan.popup;
-}
-function pasangLapisanAmaran() {
-  if (!map || amaranLapisan.sedia) return;
-  try {
-    map.addSource('amaran-cuaca', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: amaranFitur() },
-    });
-    const warna = ['match', ['get', 'tahap']];
-    Object.entries(AMARAN_WARNA).forEach(([k, v]) => warna.push(k, v));
-    warna.push(AMARAN_WARNA.UMUM);
-    const layout = { visibility: amaranLapisan.tunjuk ? 'visible' : 'none' };
-    const bawah = map.getLayer('banjir-stesen') ? 'banjir-stesen' : undefined;
-    map.addLayer(
-      {
-        id: 'amaran-cuaca-halo',
-        type: 'circle',
-        source: 'amaran-cuaca',
-        layout,
-        paint: { 'circle-color': warna, 'circle-radius': 20, 'circle-opacity': 0.16 },
-      },
-      bawah,
-    );
-    map.addLayer(
-      {
-        id: 'amaran-cuaca',
-        type: 'circle',
-        source: 'amaran-cuaca',
-        layout,
-        paint: {
-          'circle-color': warna,
-          'circle-opacity': 0.35,
-          'circle-radius': 10,
-          'circle-stroke-color': warna,
-          'circle-stroke-width': 3,
-        },
-      },
-      bawah,
-    );
-    if (!amaranLapisan.pengendali) {
-      amaranLapisan.pengendali = true;
-      map.on('click', 'amaran-cuaca', (e) => {
-        const ft = e.features && e.features[0];
-        if (ft) bukaPopupAmaran(ft.properties.negeri);
-      });
-      map.on('mouseenter', 'amaran-cuaca', () => (map.getCanvas().style.cursor = 'pointer'));
-      map.on('mouseleave', 'amaran-cuaca', () => (map.getCanvas().style.cursor = ''));
-    }
-    amaranLapisan.sedia = true;
-  } catch (err) {
-    console.warn('Lapisan amaran cuaca tidak dapat dipasang', err);
-  }
-}
-function kemasLapisanAmaran() {
-  if (!map) return;
-  pasangLapisanAmaran();
-  if (!amaranLapisan.sedia) return;
-  map.getSource('amaran-cuaca').setData({ type: 'FeatureCollection', features: amaranFitur() });
-  ['amaran-cuaca', 'amaran-cuaca-halo'].forEach((id) =>
-    map.setLayoutProperty(id, 'visibility', amaranLapisan.tunjuk ? 'visible' : 'none'),
-  );
-}
-function renderAmaranLayer() {
-  if (map) {
-    if (gayaDimuat) kemasLapisanAmaran();
-    else map.once('style.load', kemasLapisanAmaran);
-  }
-  renderPetaKawalan();
-}
 const initAmaranDG = () => {
   amaranDGState = { status: 'memuat', data: null };
   return AMARAN_DG_API.load().then(
     (d) => {
       amaranDGState = { status: 'ready', data: d };
       renderMetAlerts();
-      renderAmaranLayer();
     },
     (e) => {
       amaranDGState = { status: e && e.kind === 'file' ? 'file' : 'error', data: null };
@@ -1546,7 +2014,7 @@ const initAmaranDG = () => {
   );
 };
 
-/* ===== Kawalan peta: peta asas, lapisan Amaran Cuaca, lapisan cuaca (lapisan-cuaca/*.js) ===== */
+/* ===== Kawalan peta: peta asas, lapisan Amaran Rasmi, lapisan cuaca (lapisan-cuaca/*.js) ===== */
 function butangPeta(teks, atribut) {
   const b = document.createElement('button');
   b.type = 'button';
@@ -1562,9 +2030,14 @@ function renderPetaKawalan() {
     .forEach((b) => b.setAttribute('aria-pressed', b.dataset.asas === petaAsas ? 'true' : 'false'));
   const a = $('petaAmaranBtn');
   if (a) {
-    a.setAttribute('aria-pressed', amaranLapisan.tunjuk ? 'true' : 'false');
-    const n = Object.keys(amaranLapisan.negeri).length;
-    a.textContent = 'Amaran Cuaca' + (n ? ` (${n})` : '');
+    const P = window.FamaAmaranPeta;
+    a.setAttribute('aria-pressed', !P || P.tunjuk() ? 'true' : 'false');
+    // N = bilangan aktif dalam tag panel Rasmi ("N aktif · M terkini"); peta hanya menunjukkan yang aktif
+    const nAktif = amaranRasmiTerkini.senarai.filter((x) => x.aktif).length;
+    a.textContent = `Amaran Rasmi (${nAktif} aktif)`;
+    a.title = nAktif
+      ? 'Tunjuk atau sembunyi titik Amaran Rasmi aktif (sama dengan senarai panel EWS: MET Malaysia & JPS)'
+      : 'Tiada amaran rasmi aktif';
   }
 }
 function initPetaKawalan() {
@@ -1595,17 +2068,17 @@ function initPetaKawalan() {
   lapis.className = 'peta-seg';
   lapis.setAttribute('role', 'group');
   lapis.setAttribute('aria-label', 'Lapisan tambahan');
-  const am = butangPeta('Amaran Cuaca', {
+  const am = butangPeta('Amaran Rasmi', {
     id: 'petaAmaranBtn',
     'aria-pressed': 'true',
-    title: 'Tunjuk atau sembunyi amaran cuaca aktif (MET Malaysia, data.gov.my)',
+    title:
+      'Tunjuk atau sembunyi titik Amaran Rasmi (sama dengan senarai panel EWS: MET Malaysia & JPS)',
   });
   am.addEventListener('click', () => {
-    amaranLapisan.tunjuk = !amaranLapisan.tunjuk;
-    if (!amaranLapisan.tunjuk && amaranLapisan.popup) amaranLapisan.popup.remove();
-    renderAmaranLayer();
+    if (window.FamaAmaranPeta) FamaAmaranPeta.tetapTunjuk(!FamaAmaranPeta.tunjuk());
   });
   lapis.append(am);
+  if (window.FamaPOT) FamaPOT.pasangButang(lapis);
   menu.append(asas, lapis);
   if (map && window.FamaCuaca && FamaCuaca.pasangMenu) FamaCuaca.pasangMenu(menu);
   kot.append(menuBtn, menu);
@@ -1617,6 +2090,19 @@ function initPetaKawalan() {
   if (map && window.FamaCuaca && FamaCuaca.pasangPapan) FamaCuaca.pasangPapan(bingkai);
   renderPetaKawalan();
 }
+if (window.FamaPOT) {
+  window.addEventListener('fama-po-tambahan', () => {
+    if (!FamaPOT.tunjuk() && state.po && poById[state.po] && poById[state.po].tambahan) {
+      tutupPopupTbh();
+      state.po = null;
+      state.daerah = null;
+      state.chartRecord = null;
+      zoomPenapis();
+    }
+    renderAll();
+  });
+  FamaPOT.pasangLegenda(document.querySelector('.map-legend'));
+}
 let mapCaptionAsas = '';
 function renderMapCaption() {
   const c = $('mapCaption');
@@ -1625,21 +2111,123 @@ function renderMapCaption() {
 /* ===== Tamat cuaca sebenar ===== */ function logistikStatsHTML(l) {
   return `<div class="logistic-stat-grid"><div class="logistic-stat"><div class="l-label">Kenderaan</div><div class="l-val">${l.kenderaan} buah</div></div><div class="logistic-stat"><div class="l-label">Muatan</div><div class="l-val">${l.muatanMT.toFixed(2)} MT</div></div><div class="logistic-stat"><div class="l-label">Bilik sejuk</div><div class="l-val">${l.bilikSejuk} unit</div></div><div class="logistic-stat"><div class="l-label">Kapasiti simpanan</div><div class="l-val">${l.kapasitiSimpananMT.toFixed(2)} MT</div></div></div>`;
 }
+function amaranPoNota(p) {
+  const t = amaranPoTeks(p);
+  return t ? `<div class="outlet-note amaran-po-sebab" title="${esc(t)}">${esc(t)}</div>` : '';
+}
 function poHoverHTML(p) {
-  const l = p.logistik;
+  if (p.tambahan)
+    return `<div class="ph-name">${esc(p.fisNama)}</div><div class="ph-sub">PO tambahan · ${esc(p.negeriAsal || p.negeri)} · ${statusHTML(poStatus(p))}</div><div class="outlet-note">Tiada data logistik. ${esc(FamaPOT.LOKASI)}.</div>`;
   const s = poStatus(p);
-  const share = l.shared
-    ? `<div class="shared-warning">⚠ <b>Angka gabungan:</b> ${l.pemilikBersama.map(esc).join(' + ')}</div>`
-    : '';
-  return `<div class="ph-name">${esc(p.name)}</div><div class="ph-sub">${esc(p.negeri)} · ${statusHTML(s)}</div>${logistikStatsHTML(l)}${share}<div class="ph-out">Outlet intervensi terdekat (dummy)</div>${p.outlets
-    .slice(0, 3)
-    .map(
-      (o) =>
-        `<div class="outlet-item"><span><b>${esc(o.jenis)}</b> · ${esc(o.nama)}</span><span class="nowrap">${o.jarakKm} km</span></div>`,
+  return `<div class="ph-name">${esc(p.name)}</div><div class="ph-sub">${esc(p.negeri)} · ${statusHTML(s)}</div><div class="gmaps-baris ph-gmaps-atas"><a class="gmaps-link" href="${esc(gmapsUrl(p.lat, p.lon))}" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></div>${amaranPoSenaraiHTML(p)}`;
+}
+// Pop-up PO: senarai amaran harga (amaranPo) ikut penapis komoditi/varieti, terburuk dahulu (5 dipaparkan, selebihnya di sebalik butang Lihat lagi).
+function amaranPoSenaraiHTML(p) {
+  if (!HD.sedia) return '<div class="outlet-note">Memuatkan status harga…</div>';
+  const rr = [];
+  ['LADANG', 'RUNCIT'].forEach((pr) =>
+    ((HD.idxPO[pr] && HD.idxPO[pr].get(p.id)) || []).forEach((r) => {
+      if (r.amaranPo && padanRekod(r)) rr.push(r);
+    }),
+  );
+  if (!rr.length) return '<div class="outlet-note">Tiada data harga bagi tapisan semasa.</div>';
+  rr.sort(
+    (a, b) =>
+      weight[statusRekodPo(b)] - weight[statusRekodPo(a)] ||
+      b.amaranPo.daerah.merah - a.amaranPo.daerah.merah ||
+      b.amaranPo.daerah.kuning - a.amaranPo.daerah.kuning,
+  );
+  const isu = rr.filter((r) => ['merah', 'kuning'].includes(statusRekodPo(r)));
+  const tunjuk = isu.length ? isu : rr;
+  const kelas = { merah: 'red', kuning: 'yellow', hijau: 'green', kelabu: 'grey' };
+  const baris = tunjuk.map((r) => {
+    const a = r.amaranPo;
+    const d = a.daerah;
+    const ringkas = `${d.merah} merah · ${d.kuning} kuning · ${d.hijau} hijau · ${d.kelabu} tiada data (daripada ${d.jumlah} daerah)`;
+    return `<div class="ph-amaran"><div class="ph-amaran-tajuk"><i class="dot ${kelas[a.status]}"></i><b>${esc(namaRekod(r))}</b> · ${esc(PERINGKAT_NAMA[r.peringkat])}${r.harga == null ? '' : ` · ${money(r.harga)}`}</div><div class="ph-amaran-sebab">${esc(a.sebab)}</div><div class="ph-amaran-daerah">${esc(ringkas)}</div></div>`;
+  });
+  const mg = rr[0].minggu && rr[0].minggu.iso ? ` · minggu ${rr[0].minggu.iso}` : '';
+  const tajuk = isu.length
+    ? `Amaran harga (${isu.length} kunci merah/kuning)${mg}`
+    : `Tiada amaran harga${mg}`;
+  return senaraiAmaranHTML(tajuk, baris);
+}
+// Pop-up daerah (lapisan-daerah.js): senarai amaran harga daerah ini (status daerah sendiri), gaya sama dengan
+// pop-up PO. `pos` = PO (utama/tambahan) yang meliputi daerah; rekod digabung tanpa pendua. 5 dipaparkan, selebihnya Lihat lagi.
+function amaranDaerahSenaraiHTML(pos, district) {
+  if (!HD.sedia) return '<div class="outlet-note">Memuatkan status harga…</div>';
+  const dn = normD(district);
+  const dilihat = new Set();
+  const rr = [];
+  pos.forEach((p) =>
+    ['LADANG', 'RUNCIT'].forEach((pr) =>
+      ((HD.idxDaerah[pr] && HD.idxDaerah[pr].get(p.id)) || []).forEach((r) => {
+        const k = kunciRekod(r);
+        if (normD(r.daerah) !== dn || !padanRekod(r) || dilihat.has(k)) return;
+        dilihat.add(k);
+        rr.push(r);
+      }),
+    ),
+  );
+  if (!rr.length) return '<div class="outlet-note">Tiada data harga bagi tapisan semasa.</div>';
+  rr.sort((a, b) => weight[b.status] - weight[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
+  const isu = rr.filter((r) => r.status === 'merah' || r.status === 'kuning');
+  const senarai = isu.length ? isu : rr;
+  const tunjuk = senarai;
+  const kelas = { merah: 'red', kuning: 'yellow', hijau: 'green', kelabu: 'grey' };
+  const baris = tunjuk.map((r) => {
+    const butir = [];
+    if (r.pctMinggu != null)
+      butir.push(`minggu ke minggu ${r.pctMinggu >= 0 ? '+' : ''}${r.pctMinggu.toFixed(1)}%`);
+    if (r.peringkat === 'LADANG' && r.lantai != null) butir.push(`lantai ${money(r.lantai)}`);
+    if (r.peringkat === 'RUNCIT' && r.siling != null) butir.push(`siling ${money(r.siling)}`);
+    if (r.mean != null) butir.push(`purata asas ${money(r.mean)}`);
+    return `<div class="ph-amaran"><div class="ph-amaran-tajuk"><i class="dot ${kelas[r.status] || 'grey'}"></i><b>${esc(namaRekod(r))}</b> · ${esc(PERINGKAT_NAMA[r.peringkat])}${r.harga == null ? '' : ` · ${money(r.harga)}${r.unit ? ' / ' + esc(r.unit) : ''}`}</div><div class="ph-amaran-sebab">${esc(r.sebab)}</div>${butir.length ? `<div class="ph-amaran-daerah">${esc(butir.join(' · '))}</div>` : ''}${gantiHTML(r)}</div>`;
+  });
+  const mg = rr[0].minggu && rr[0].minggu.iso ? ` · minggu ${rr[0].minggu.iso}` : '';
+  const tajuk = isu.length
+    ? `Amaran harga (${isu.length} kunci merah/kuning)${mg}`
+    : `Tiada amaran harga${mg}`;
+  return senaraiAmaranHTML(tajuk, baris);
+}
+// Senarai amaran pop-up PO/daerah: AMARAN_TUNJUK kunci pertama dipaparkan, selebihnya tersembunyi di sebalik
+// butang "Lihat lagi" (pengendali klik didelegasi pada document; CSP tidak membenarkan onclick sebaris).
+const AMARAN_TUNJUK = 5;
+function senaraiAmaranHTML(tajuk, baris) {
+  const lebih = baris.length - AMARAN_TUNJUK;
+  const isi = baris
+    .map((h, i) =>
+      i < AMARAN_TUNJUK
+        ? h
+        : h.replace('<div class="ph-amaran">', '<div class="ph-amaran" hidden>'),
     )
-    .join(
-      '',
-    )}<div class="gmaps-baris"><a class="gmaps-link" href="${esc(gmapsUrl(p.lat, p.lon))}" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></div>`;
+    .join('');
+  return `<div class="ph-out">${esc(tajuk)}</div><div class="ph-amaran-senarai">${isi}</div>${lebih > 0 ? `<button type="button" class="ph-lihat-lagi" data-lihat-lagi="${lebih}" aria-expanded="false">Lihat lagi (${lebih})</button>` : ''}`;
+}
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest && ev.target.closest('[data-lihat-lagi]');
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const senarai = b.previousElementSibling;
+  const buka = b.getAttribute('aria-expanded') !== 'true';
+  [...senarai.querySelectorAll('.ph-amaran')].forEach((e, i) => {
+    if (i >= AMARAN_TUNJUK) e.hidden = !buka;
+  });
+  senarai.classList.toggle('buka', buka);
+  b.setAttribute('aria-expanded', String(buka));
+  b.textContent = buka ? 'Tunjuk kurang' : 'Lihat lagi (' + b.dataset.lihatLagi + ')';
+});
+// Pop-up tidak boleh lebih tinggi daripada peta: kandungan diskrol di dalam pop-up (cth. senarai amaran panjang).
+// Dengan ll (titik pop-up): had = ruang terbesar di atas atau di bawah titik, supaya pop-up muat pada satu sisi.
+function hadTinggiPopup(pp, ll) {
+  const el = pp && pp.getElement && pp.getElement().querySelector('.maplibregl-popup-content');
+  if (!el || !map) return;
+  const H = map.getContainer().clientHeight;
+  const y = ll ? map.project(ll).y : H / 2;
+  const ruang = ll ? Math.max(y, H - y) - 36 : H - 40;
+  el.style.maxHeight = Math.max(160, Math.round(ruang)) + 'px';
+  el.style.overflowY = 'auto';
 }
 let poHoverPopup = null;
 let poHoverTimer = null;
@@ -1652,12 +2240,45 @@ function jadualSembunyiPOHover() {
   clearTimeout(poHoverTimer);
   poHoverTimer = setTimeout(hidePOHover, 300);
 }
+// Kursor yang melintasi penanda PO lain dalam perjalanan ke pop-up tidak menukar pop-up serta-merta:
+// pertukaran ditangguh dan dibatalkan jika kursor masuk ke pop-up atau keluar dari penanda itu.
+let poHoverTunda = null;
+function masukPOHover(p) {
+  masukHover(p.id, () => showPOHover(p));
+}
+function masukHover(id, buka) {
+  clearTimeout(poHoverTunda);
+  if (poHoverPopup && poHoverPopup.isOpen() && poHoverPopup._poId !== id)
+    poHoverTunda = setTimeout(buka, 250);
+  else buka();
+}
+// Hover penanda daerah: kandungan sama dengan pop-up klik poligon daerah (lapisan-daerah.js).
+function showDaerahHover(p, d) {
+  if (!window.FamaDaerah || !FamaDaerah.kandungan) return;
+  const f = FamaDaerah.fitur(p.negeri, d[0]);
+  if (!f) return;
+  const isi = FamaDaerah.kandungan(f, { lng: d[2], lat: d[1] });
+  isi.className = 'daerah-hover';
+  bukaHover([d[2], d[1]], isi, 'daerah:' + p.id + ':' + d[0]);
+}
+function keluarPOHover() {
+  clearTimeout(poHoverTunda);
+  jadualSembunyiPOHover();
+}
 function ikatPOHover(popup) {
   const el = popup.getElement();
-  el.addEventListener('mouseenter', () => clearTimeout(poHoverTimer));
+  el.addEventListener('mouseenter', () => {
+    clearTimeout(poHoverTimer);
+    clearTimeout(poHoverTunda);
+  });
   el.addEventListener('mouseleave', jadualSembunyiPOHover);
 }
 function showPOHover(p) {
+  bukaHover([p.lon, p.lat], poHoverHTML(p), p.id);
+}
+// Pop-up hover (PO atau daerah): isi = rentetan HTML atau nod DOM.
+function bukaHover(ll, isi, id) {
+  clearTimeout(poHoverTunda);
   if (!map || typeof maplibregl === 'undefined') return;
   const O = 14,
     opts = {
@@ -1667,15 +2288,17 @@ function showPOHover(p) {
       maxWidth: '300px',
       className: 'po-hover-popup',
     };
-  const html = poHoverHTML(p);
+  const pasang = (pp) => (typeof isi === 'string' ? pp.setHTML(isi) : pp.setDOMContent(isi));
   hidePOHover();
-  poHoverPopup = new maplibregl.Popup(opts).setLngLat([p.lon, p.lat]).setHTML(html).addTo(map);
+  poHoverPopup = pasang(new maplibregl.Popup(opts).setLngLat(ll)).addTo(map);
+  hadTinggiPopup(poHoverPopup);
+  poHoverPopup._poId = id;
   ikatPOHover(poHoverPopup);
   // Jika popup tidak muat di atas atau di bawah titik, buka di sisi dan anjak supaya kekal dalam peta
   const e = poHoverPopup.getElement(),
     h = e.querySelector('.maplibregl-popup-content').offsetHeight,
     ht = e.offsetHeight,
-    pt = map.project([p.lon, p.lat]),
+    pt = map.project(ll),
     H = map.getContainer().clientHeight,
     W = map.getContainer().clientWidth;
   if (pt.y + O + ht <= H || pt.y - O - ht >= 0) return;
@@ -1688,10 +2311,10 @@ function showPOHover(p) {
     ...opts,
     anchor: side,
     offset: [side === 'left' ? O : -O, dy],
-  })
-    .setLngLat([p.lon, p.lat])
-    .setHTML(html)
-    .addTo(map);
+  });
+  poHoverPopup = pasang(poHoverPopup.setLngLat(ll)).addTo(map);
+  hadTinggiPopup(poHoverPopup);
+  poHoverPopup._poId = id;
   ikatPOHover(poHoverPopup);
   if (dy) poHoverPopup.addClassName('po-hover-notip');
 }
@@ -1703,6 +2326,11 @@ function renderOutlets() {
       `<div class="outlet-note" style="padding-bottom:11px">Klik salah satu daripada 15 PO untuk melihat bilangan kenderaan, muatan, bilik sejuk dan kapasiti simpanan berdasarkan infografik asal. Outlet intervensi di bawah ialah dummy.</div>`;
     return;
   }
+  if (p.tambahan) {
+    $('outletContent').innerHTML =
+      '<div class="outlet-note" style="padding-bottom:11px"><b>Tiada data logistik</b> untuk PO tambahan (pemetaan FIS 2.1). Calon mobilisasi hanya 15 PO utama.</div>';
+    return;
+  }
   const l = p.logistik;
   const share = l.shared
     ? `<div class="shared-warning">⚠ <b>Angka gabungan:</b> ${l.pemilikBersama.map(esc).join(' + ')}. Infografik tidak memperincikan agihan setiap PO. Angka ini <b>tidak</b> dikira dua kali dalam jumlah nasional.</div>`
@@ -1711,96 +2339,171 @@ function renderOutlets() {
     `${logistikStatsHTML(l)}${share}<div class="outlet-note">Sumber: infografik kesiapsiagaan logistik PO. Kadar penggunaan / baki semasa <b>tidak dinyatakan</b> dalam infografik.</div><div style="font-size:12px;font-weight:800;margin-top:11px">Outlet intervensi terdekat (dummy)</div>${p.outlets.map((o) => `<div class="outlet-item"><span><b>${esc(o.jenis)}</b> · ${esc(o.nama)}</span><span class="nowrap">${o.jarakKm} km</span></div>`).join('')}`;
 }
 
+/* ===== Panel harga (harga sebenar DB Harga) ===== */
+const lokasiRekod = (r) => `${namaKom(r.daerah || r.negeri)}, ${negeriRekod(r)}`;
+const namaRekod = (r) =>
+  namaKom(r.commodity) + (r.variety && r.variety !== r.commodity ? ' · ' + namaKom(r.variety) : '');
+const gantiHTML = (r) =>
+  r.ganti
+    ? `<div class="price-ganti">${esc(r.ganti.label)}: <b>${money(r.ganti.harga)}</b></div>`
+    : '';
+const klikBaris = (el) =>
+  (el.onclick = () => {
+    state.chartRecord = el.dataset.record;
+    renderTrend();
+    document.querySelector('.chart-panel').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
 function renderLists() {
-  const lo = filteredRecords({ stage: state.lowStage })
-    .sort((a, b) => a.mingguTerkini - b.mingguTerkini)
-    .slice(0, 5);
-  const hi = filteredRecords({ stage: state.highStage })
-    .sort((a, b) => b.mingguTerkini - a.mingguTerkini)
-    .slice(0, 5);
+  const msg = hargaBelumSedia();
+  if (msg) {
+    $('lowestPrices').innerHTML = $('highestPrices').innerHTML =
+      `<div class="empty">${esc(msg)}</div>`;
+    return;
+  }
+  // Rekod berharga disusun dahulu; kunci tanpa harga ladang (ganti borong) hanya selepasnya.
+  const susun = (stage, arah) => {
+    const rr = filteredRecords({ stage });
+    const ada = rr
+      .filter((r) => r.harga != null)
+      .sort((a, b) => (arah === 'asc' ? a.harga - b.harga : b.harga - a.harga));
+    return [...ada, ...rr.filter((r) => r.harga == null)].slice(0, 5);
+  };
+  const lo = susun(state.lowStage, 'asc');
+  const hi = susun(state.highStage, 'desc');
   const make = (rows, dir) =>
     rows.length
       ? rows
           .map(
             (r) =>
-              `<div class="price-row" data-record="${esc(r.id)}"><div><div class="price-name">${esc(r.komoditi)}</div><div class="price-loc">${esc(r.daerah)}, ${esc(r.negeri)} · ${esc(r.unit)} ${statusHTML(r.status)}</div></div><div class="price-value value-${dir}">${money(r.mingguTerkini)}</div></div>`,
+              `<div class="price-row" data-record="${esc(kunciRekod(r))}"><div><div class="price-name">${esc(namaRekod(r))}</div><div class="price-loc">${esc(lokasiRekod(r))} · ${esc(r.unit || '')} ${statusHTML(r.status)}</div><div class="price-sebab">${esc(r.sebab)}</div>${gantiHTML(r)}</div><div class="price-value value-${dir}">${r.harga == null ? '<span class="price-kosong">Tiada harga ladang</span>' : money(r.harga)}</div></div>`,
           )
           .join('')
       : '<div class="empty">Tiada rekod mengikut penapis. Tukar “Mod senarai” kepada semua komoditi.</div>';
   $('lowestPrices').innerHTML = make(lo, 'red');
   $('highestPrices').innerHTML = make(hi, 'green');
-  document.querySelectorAll('.price-row').forEach(
-    (el) =>
-      (el.onclick = () => {
-        state.chartRecord = el.dataset.record;
-        renderTrend();
-        document
-          .querySelector('.chart-panel')
-          .scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }),
-  );
+  document.querySelectorAll('.price-row').forEach(klikBaris);
 }
 function renderCompare() {
-  let rows = filteredRecords({ stage: 'Borong' })
+  const msg = hargaBelumSedia();
+  const nota = $('compareNota');
+  if (msg) {
+    $('compareBody').innerHTML =
+      `<tr><td colspan="4"><div class="empty">${esc(msg)}</div></td></tr>`;
+    if (nota) nota.textContent = '';
+    return;
+  }
+  const rows = filteredRecords()
+    .filter((r) => r.harga != null)
     .sort(
       (a, b) =>
-        weight[b.status] - weight[a.status] || Math.abs(b.perubahanPct) - Math.abs(a.perubahanPct),
+        weight[b.status] - weight[a.status] ||
+        Math.abs(b.pctMinggu ?? 0) - Math.abs(a.pctMinggu ?? 0),
     )
     .slice(0, 7);
+  if (nota) {
+    const m = rows[0] && rows[0].minggu;
+    nota.textContent = m
+      ? `Minggu ${m.iso}${m.separa ? ' (separa)' : ''}`
+      : 'Harga mingguan sebenar';
+  }
   $('compareBody').innerHTML = rows.length
     ? rows
-        .map(
-          (r) =>
-            `<tr data-record="${esc(r.id)}"><td><div class="cell-major">${esc(r.negeri)} · ${esc(r.daerah)}</div><div class="cell-minor">${esc(r.komoditi)}</div></td><td class="number">${money(r.mingguSebelum)}</td><td class="number"><b>${money(r.mingguTerkini)}</b></td><td class="number">${money(r.ramalan)}</td><td class="number ${r.perubahanPct >= 0 ? 'positive' : 'negative'}"><b>${r.perubahanPct >= 0 ? '+' : ''}${r.perubahanPct.toFixed(2)}%</b> ${r.perubahanPct >= 0 ? '▲' : '▼'}</td><td>${statusHTML(r.status)}</td></tr>`,
-        )
+        .map((r) => {
+          const pct = r.pctMinggu;
+          return `<tr data-record="${esc(kunciRekod(r))}"><td><div class="cell-major">${esc(negeriRekod(r))} · ${esc(namaKom(r.daerah || r.negeri))}</div><div class="cell-minor">${esc(namaRekod(r))} · ${esc(PERINGKAT_NAMA[r.peringkat])} ${statusHTML(r.status)}</div></td><td class="number">${r.hargaSebelum == null ? '—' : money(r.hargaSebelum)}</td><td class="number"><b>${money(r.harga)}</b></td><td class="number ${pct == null || pct >= 0 ? 'positive' : 'negative'}">${pct == null ? '—' : `<b>${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</b> ${pct >= 0 ? '▲' : '▼'}`}</td></tr>`;
+        })
         .join('')
-    : '<tr><td colspan="6"><div class="empty">Tiada komoditi memenuhi penapis.</div></td></tr>';
-  document.querySelectorAll('#compareBody tr[data-record]').forEach(
-    (el) =>
-      (el.onclick = () => {
-        state.chartRecord = el.dataset.record;
-        renderTrend();
-        document
-          .querySelector('.chart-panel')
-          .scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }),
-  );
+    : '<tr><td colspan="4"><div class="empty">Tiada komoditi memenuhi penapis.</div></td></tr>';
+  document.querySelectorAll('#compareBody tr[data-record]').forEach(klikBaris);
+}
+let trendToken = 0;
+function teksTrend(tajuk, sub, status) {
+  $('priceChart').innerHTML =
+    `<text x="300" y="205" text-anchor="middle" style="font-size:18px;font-weight:700;fill:var(--white)">${esc(tajuk)}</text>` +
+    (sub
+      ? `<text x="300" y="232" text-anchor="middle" style="font-size:13px">${esc(sub)}</text>`
+      : '');
+  $('chartSubject').textContent = sub || tajuk;
+  $('chartStatus').textContent = status || '';
 }
 function renderTrend() {
-  const all = filteredRecords({ stage: 'Borong', issues: false });
-  let r = DATA.rekod.find((x) => x.id === state.chartRecord && all.includes(x));
-  if (!r) {
-    r = [...all].sort((a, b) => weight[b.status] - weight[a.status])[0];
-  }
+  const msg = hargaBelumSedia();
+  if (msg) return teksTrend(msg === 'Memuat harga…' ? msg : 'Trend harga tidak tersedia', msg, '');
+  if (state.komoditi === 'all' && !state.chartRecord)
+    return teksTrend(
+      'Sila pilih komoditi',
+      'Graf trend dipaparkan mengikut komoditi. Pilih komoditi pada penapis di atas.',
+      '',
+    );
+  const all = filteredRecords({ issues: false });
+  const berharga = all.filter((r) => r.harga != null);
+  const utama = berharga.filter((r) => r.peringkat !== 'BORONG');
+  const r =
+    all.find((x) => kunciRekod(x) === state.chartRecord) ||
+    [...(utama.length ? utama : berharga)].sort(
+      (a, b) => weight[b.status] - weight[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0),
+    )[0];
   if (!r) {
     $('priceChart').innerHTML = '<text x="50" y="130">Tiada data untuk paparan graf.</text>';
     $('chartSubject').textContent = 'Tiada rekod memenuhi penapis';
+    $('chartStatus').textContent = '';
     return;
   }
-  const n = Math.min(state.days, r.prices.length),
-    vals = r.prices.slice(-n),
-    forecast = r.ramalan,
-    mean = r.purata,
-    sigma = r.sigma,
-    lower1 = mean - sigma,
-    upper1 = mean + sigma,
-    lower2 = mean - 2 * sigma,
-    upper2 = mean + 2 * sigma,
-    min = Math.min(...vals, lower2, r.hargaLantai, forecast),
-    max = Math.max(...vals, upper2, r.hargaSiling, forecast),
+  const params = {
+    peringkat: r.peringkat,
+    commodity: r.commodity,
+    variety: r.variety,
+    ...(r.po ? { po: r.po } : { negeri: r.negeri }),
+    ...(r.daerah ? { daerah: r.daerah } : {}),
+    ...(state.bulan !== 'all' ? { bulan: state.bulan } : {}),
+  };
+  const d = HARGADB.segerak('siri', params);
+  if (!d) {
+    teksTrend('Memuat trend…', 'Memuat siri harga harian…', '');
+    const token = ++trendToken;
+    HARGADB.siri(params).then(
+      () => token === trendToken && renderTrend(),
+      () => {
+        if (token !== trendToken) return;
+        teksTrend(
+          'Trend harga tidak dapat dimuatkan',
+          'Siri harian tidak tersedia buat masa ini.',
+          '',
+        );
+        $('chartStatus').innerHTML =
+          '<button type="button" class="button tiny ghost" id="trendCubaSemula">Cuba semula</button>';
+        $('trendCubaSemula').onclick = cubaSemulaHarga;
+      },
+    );
+    return;
+  }
+  ++trendToken;
+  const s = d.siri;
+  const titik = state.bulan === 'all' ? s.titik.slice(-state.days) : s.titik;
+  const n = titik.length;
+  if (!n) return teksTrend('Tiada titik harga', 'Tiada data harian untuk pilihan ini.', '');
+  const vals = titik.map((t) => t.h);
+  const sd = s.sd != null && s.sd > 0 ? s.sd : null;
+  const bandSigma = s.mean != null && sd != null;
+  const lower1 = bandSigma ? s.mean - sd : null,
+    upper1 = bandSigma ? s.mean + sd : null,
+    lower2 = bandSigma ? s.mean - 2 * sd : null,
+    upper2 = bandSigma ? s.mean + 2 * sd : null;
+  const tahap = [...vals, lower2, upper2, s.mean, s.lantai, s.siling].filter((v) => v != null);
+  const min = Math.min(...tahap),
+    max = Math.max(...tahap),
     pad = (max - min) * 0.1 || 1,
     ymin = min - pad,
     ymax = max + pad;
-  const W = 600,
-    H = 420,
-    left = 50,
+  const left = 50,
     right = 545,
     top = 16,
     bottom = 385;
-  const px = (i) => left + (i / n) * (right - left),
+  const px = (i) => (n > 1 ? left + (i / (n - 1)) * (right - left) : (left + right) / 2),
     py = (v) => bottom - ((v - ymin) / (ymax - ymin)) * (bottom - top);
   const e = [];
   const line = (y, cls, label) => {
+    if (y == null) return;
     const yy = py(y);
     e.push(
       `<line class="${cls}" x1="${left}" x2="${right}" y1="${yy}" y2="${yy}"/><text x="${right + 8}" y="${yy + 3}" style="font-size:13px">${label}</text>`,
@@ -1809,15 +2512,13 @@ function renderTrend() {
   e.push(
     `<rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}" rx="7" style="fill:var(--ch-bg)"/>`,
   );
-  e.push(
-    `<rect x="${left}" y="${py(upper1)}" width="${right - left}" height="${Math.max(0, py(lower1) - py(upper1))}" style="fill:var(--ch-ok)" opacity=".32"/>`,
-  );
-  e.push(
-    `<rect x="${left}" y="${py(upper2)}" width="${right - left}" height="${Math.max(0, py(upper1) - py(upper2))}" style="fill:var(--ch-warn)" opacity=".22"/>`,
-  );
-  e.push(
-    `<rect x="${left}" y="${py(lower1)}" width="${right - left}" height="${Math.max(0, py(lower2) - py(lower1))}" style="fill:var(--ch-warn)" opacity=".22"/>`,
-  );
+  if (bandSigma) {
+    e.push(
+      `<rect x="${left}" y="${py(upper1)}" width="${right - left}" height="${Math.max(0, py(lower1) - py(upper1))}" style="fill:var(--ch-ok)" opacity=".32"/>`,
+      `<rect x="${left}" y="${py(upper2)}" width="${right - left}" height="${Math.max(0, py(upper1) - py(upper2))}" style="fill:var(--ch-warn)" opacity=".22"/>`,
+      `<rect x="${left}" y="${py(lower1)}" width="${right - left}" height="${Math.max(0, py(lower2) - py(lower1))}" style="fill:var(--ch-warn)" opacity=".22"/>`,
+    );
+  }
   for (let i = 0; i < 5; i++) {
     const y = top + (i * (bottom - top)) / 4,
       v = ymax - (i * (ymax - ymin)) / 4;
@@ -1825,65 +2526,70 @@ function renderTrend() {
       `<line class="axis" x1="${left}" x2="${right}" y1="${y}" y2="${y}"/><text x="${left - 10}" y="${y + 4}" text-anchor="end">${v.toFixed(1)}</text>`,
     );
   }
-  line(upper2, 'critical-line', '+2σ');
-  line(lower2, 'critical-line', '−2σ');
-  line(upper1, 'warning-line', '+1σ');
-  line(lower1, 'warning-line', '−1σ');
-  line(mean, 'avg-line', 'μ');
-  line(r.hargaLantai, 'critical-line', 'Lantai');
-  line(r.hargaSiling, 'critical-line', 'Siling');
-  const coords = vals.map((v, i) => `${px(i)},${py(v)}`);
-  e.push(`<polyline class="line" points="${coords.join(' ')}"/>`);
+  if (bandSigma) {
+    line(upper2, 'critical-line', '+2σ');
+    line(lower2, 'critical-line', '−2σ');
+    line(upper1, 'warning-line', '+1σ');
+    line(lower1, 'warning-line', '−1σ');
+  }
+  line(s.mean, 'avg-line', 'μ');
+  line(s.lantai, 'critical-line', 'Lantai');
+  line(s.siling, 'critical-line', 'Siling');
+  e.push(`<polyline class="line" points="${vals.map((v, i) => `${px(i)},${py(v)}`).join(' ')}"/>`);
   for (let i = 0; i < n; i++) {
     if (i % Math.max(1, Math.ceil(n / 12)) === 0 || i === n - 1)
       e.push(
         `<circle cx="${px(i)}" cy="${py(vals[i])}" r="3" style="fill:var(--ch-pt);stroke:var(--ch-pt-stroke)" stroke-width="1.5"/>`,
       );
   }
-  e.push(
-    `<line class="forecast-line" x1="${px(n - 1)}" y1="${py(vals[n - 1])}" x2="${px(n)}" y2="${py(forecast)}"/>`,
-  );
-  e.push(
-    `<circle cx="${px(n)}" cy="${py(forecast)}" r="5" style="fill:${r.status === 'merah' ? 'var(--red)' : r.status === 'kuning' ? 'var(--yellow)' : 'var(--green)'}" stroke="white" stroke-width="1"/>`,
-  );
-  const start = new Date(Date.UTC(2026, 10, 14 - n + 1)),
-    datefmt = (d) =>
-      `${d.getUTCDate()} ${['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'][d.getUTCMonth()]}`;
-  for (let i = 0; i < n; i += Math.max(1, Math.ceil(n / 6))) {
-    const d = new Date(start);
-    d.setUTCDate(start.getUTCDate() + i);
-    e.push(`<text x="${px(i)}" y="${bottom + 19}" text-anchor="middle">${datefmt(d)}</text>`);
-  }
-  e.push(`<text x="${right}" y="${bottom + 19}" text-anchor="middle">Ramalan</text>`);
+  const bln = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+  const tarikh = (t) => `${+t.slice(8, 10)} ${bln[+t.slice(5, 7) - 1]}`;
+  for (let i = 0; i < n; i += Math.max(1, Math.ceil(n / 6)))
+    e.push(
+      `<text x="${px(i)}" y="${bottom + 19}" text-anchor="middle">${tarikh(titik[i].t)}</text>`,
+    );
+  if (!bandSigma)
+    e.push(
+      `<text x="${(left + right) / 2}" y="${top + 16}" text-anchor="middle" style="font-size:12px">${s.mean == null ? 'Tiada ambang untuk kunci ini' : 'Sisihan piawai tidak sah (jalur σ tidak dilukis)'}</text>`,
+    );
   $('priceChart').innerHTML = e.join('');
   $('chartSubject').textContent =
-    `${r.komoditi} · ${r.daerah}, ${r.negeri} · ${r.peringkat} · ${r.unit} · ${n} hari`;
-  $('chartStatus').innerHTML = `${statusHTML(r.status)} · Forecast ${money(r.ramalan)}`;
+    `${namaRekod(r)} · ${lokasiRekod(r)} · ${PERINGKAT_NAMA[r.peringkat]} · ${s.unit || r.unit || ''} · ${n} hari${state.bulan !== 'all' ? ' · ' + bulanLabel(state.bulan) : ''}${s.asas ? ' · asas ' + s.asas : ' · tiada tahun asas'}`;
+  $('chartSubject').title = s.asas
+    ? `μ dan σ ialah purata dan sisihan piawai tahun asas ${s.asas}; Lantai dan Siling ialah harga dasar.`
+    : 'Tiada ambang untuk kunci ini.';
+  $('chartStatus').innerHTML = statusHTML(r.status);
+  $('chartStatus').title = r.sebab;
 }
 function renderQueue() {
-  const rr = filteredRecords({ stage: 'Borong', issues: true }).sort(
-    (a, b) =>
-      weight[b.status] - weight[a.status] ||
-      Math.abs((b.ramalan - b.purata) / b.sigma) - Math.abs((a.ramalan - a.purata) / a.sigma),
-  );
+  const msg = hargaBelumSedia();
+  if (msg) {
+    $('riskCount').textContent = '…';
+    $('riskFeed').innerHTML = `<div class="empty">${esc(msg)}</div>`;
+    return;
+  }
+  const rr = filteredRecords({ issues: true })
+    .filter((r) => r.status === 'merah' || r.status === 'kuning')
+    .sort((a, b) => weight[b.status] - weight[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
   $('riskCount').textContent = rr.length + ' isu';
   $('riskFeed').innerHTML = rr.length
     ? rr
         .slice(0, 8)
         .map(
           (r) =>
-            `<div class="risk-item" data-risk="${esc(r.id)}"><i class="dot ${r.status === 'merah' ? 'red' : 'yellow'}" style="margin-top:5px"></i><div class="risk-main"><strong>${esc(r.daerah)} · ${esc(r.komoditi)}</strong><div class="meta">${esc(r.negeri)} · Ramalan <b>${money(r.ramalan)}</b> · ${esc(r.sebab)}<br>${esc(poById[r.poId].name)}</div></div><button class="button tiny ${r.status === 'merah' ? 'danger' : 'ghost'}" data-open-action="${esc(r.id)}">Tindakan</button></div>`,
+            `<div class="risk-item" data-risk="${esc(kunciRekod(r))}"><i class="dot ${r.status === 'merah' ? 'red' : 'yellow'}" style="margin-top:5px"></i><div class="risk-main"><strong>${esc(namaKom(r.daerah || r.negeri))} · ${esc(namaRekod(r))}</strong><div class="meta">${esc(negeriRekod(r))} · ${esc(PERINGKAT_NAMA[r.peringkat])} <b>${money(r.harga)}</b> · ${esc(r.sebab)}<br>${esc(r.po ? poById[r.po].name : 'Tiada PO ditugaskan')}</div></div><button class="button tiny ${r.status === 'merah' ? 'danger' : 'ghost'}" data-open-action="${esc(kunciRekod(r))}">Tindakan</button></div>`,
         )
         .join('')
-    : '<div class="empty">Tiada isu kritikal atau amaran dalam pilihan semasa.</div>';
+    : '<div class="empty">Tiada amaran harga atau isu berwaspada dalam pilihan semasa.</div>';
   document.querySelectorAll('[data-risk]').forEach((el) =>
     el.addEventListener('click', (event) => {
       if (event.target.closest('[data-open-action]')) return;
-      const r = DATA.rekod.find((x) => x.id === el.dataset.risk);
-      if (r) {
-        selectPO(r.poId);
-        state.daerah = r.daerah;
-        state.chartRecord = r.id;
+      const r = cariBaris(el.dataset.risk);
+      if (r && r.po) {
+        selectPO(r.po);
+        const dd = poById[r.po].districts.find((d) => normD(d[0]) === normD(r.daerah));
+        state.daerah = dd ? dd[0] : null;
+        state.chartRecord = kunciRekod(r);
         renderAll();
       }
     }),
@@ -1892,12 +2598,24 @@ function renderQueue() {
     .querySelectorAll('[data-open-action]')
     .forEach((b) => (b.onclick = () => openActionModal(b.dataset.openAction)));
 }
+const cariBaris = (kunci) =>
+  ['daerah', 'po'].reduce(
+    (a, aras) =>
+      a ||
+      ['LADANG', 'RUNCIT', 'BORONG']
+        .flatMap((p) => HD[aras][p] || [])
+        .find((x) => kunciRekod(x) === kunci),
+    null,
+  );
 function renderAll() {
+  muatHarga();
+  renderHargaKeadaan();
   renderLogistik();
   renderKpis();
   renderMap();
   renderPODirectory();
   renderWeather();
+  renderEws();
   renderOutlets();
   renderLists();
   renderCompare();
@@ -1907,18 +2625,49 @@ function renderAll() {
   const selected = state.po ? poById[state.po] : null;
   $('analyticsScope').textContent = selected
     ? `Tertapis: ${selected.name} · ${selected.negeri} / ${state.daerah || 'Semua daerah'} · ${state.issues ? 'komoditi bermasalah' : 'semua komoditi'}`
-    : `Paparan lalai: ${state.issues ? 'komoditi bermasalah' : 'semua komoditi'} seluruh kawasan pilihan`;
+    : `Paparan lalai: ${state.issues ? 'komoditi bermasalah' : 'semua komoditi'} ${state.negeri === 'all' ? 'seluruh kawasan pilihan' : 'negeri ' + state.negeri}`;
   $('scopeChip').textContent = selected
     ? `◉ ${selected.name} · ${selected.negeri} ${state.daerah ? '· ' + state.daerah : ''}`
-    : '◉ Seluruh Malaysia';
-  $('filterState').value = state.po || 'all';
+    : state.negeri === 'all'
+      ? '◉ Seluruh Malaysia'
+      : `◉ ${state.negeri}`;
+  kemasPenapis();
 }
 function openActionModal(recordId, opts) {
-  const r = DATA.rekod.find((x) => x.id === recordId);
-  if (!r) return;
-  const p = poById[r.poId];
+  // Rekod harga sebenar (kunci baris) atau, bagi konteks senario (scenarios.js), rekod dummy lama.
+  const b = cariBaris(recordId);
+  const lama = b ? null : DATA.rekod.find((x) => x.id === recordId);
+  if (!b && !lama) return;
+  const p = poById[b ? b.po : lama.poId] || null;
+  const r = b
+    ? {
+        komoditi: namaRekod(b),
+        daerah: namaKom(b.daerah || b.negeri),
+        negeri: negeriRekod(b),
+        status: b.status,
+        info:
+          `${PERINGKAT_NAMA[b.peringkat]} · ${b.harga == null ? 'Tiada harga ladang' : money(b.harga)}` +
+          (b.hargaSebelum == null ? '' : ` · Minggu sebelum: ${money(b.hargaSebelum)}`) +
+          (b.lantai == null && b.siling == null
+            ? ''
+            : ` · Lantai: ${b.lantai == null ? '—' : money(b.lantai)} · Siling: ${b.siling == null ? '—' : money(b.siling)}`) +
+          (b.mean == null
+            ? ''
+            : ` · μ ${money(b.mean)} · σ ${b.sd == null ? '—' : money(b.sd)} (asas ${b.asas || '—'})`) +
+          ` · ${b.sebab}`,
+      }
+    : {
+        komoditi: lama.komoditi,
+        daerah: lama.daerah,
+        negeri: lama.negeri,
+        status: lama.status,
+        info: `Forecast: ${money(lama.ramalan)} · Purata 30 hari: ${money(lama.purata)} · Had: ${money(lama.hargaLantai)} – ${money(lama.hargaSiling)} · ${lama.sebab}`,
+      };
+  const kadPO = p
+    ? `<div class="modal-grid"><div class="modal-card"><b>Cadangan outlet (simulasi)</b>${p.outlets.map((o) => `<div class="outlet-item">${esc(o.jenis)} · ${esc(o.nama)} <span>${o.jarakKm} km</span></div>`).join('')}</div><div class="modal-card"><b>Logistik PO (berdasarkan infografik)</b><div style="margin-top:10px">Kenderaan: ${p.logistik.kenderaan} buah · Muatan: ${p.logistik.muatanMT} MT</div><div>Bilik sejuk: ${p.logistik.bilikSejuk} unit</div><div>Kapasiti simpanan: ${p.logistik.kapasitiSimpananMT} MT</div><div class="note">${p.logistik.shared ? 'Angka gabungan: ' + p.logistik.pemilikBersama.join(' + ') : 'Angka PO daripada infografik'}. Baki sebenar tidak tersedia.</div></div></div>`
+    : '<div class="modal-card"><b>Tiada PO ditugaskan</b><div class="note">Daerah ini belum dipetakan kepada mana-mana PO.</div></div>';
   $('modalMount').innerHTML =
-    `<div class="modal-back" id="modalBack"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="eyebrow">REKOD INTERVENSI · DATA DUMMY</div><h2 id="modalTitle">${esc(r.komoditi)} · ${esc(r.daerah)}</h2></div><button class="close-x" id="modalClose" aria-label="Tutup">×</button></div><div class="modal-body"><div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(p.name)} / ${esc(r.negeri)}</b>${statusHTML(r.status)}</div><div class="note" style="margin-top:6px">Forecast: ${money(r.ramalan)} · Purata 30 hari: ${money(r.purata)} · Had: ${money(r.hargaLantai)} – ${money(r.hargaSiling)} · ${esc(r.sebab)}</div></div><div class="modal-grid"><div class="modal-card"><b>Cadangan outlet (simulasi)</b>${p.outlets.map((o) => `<div class="outlet-item">${esc(o.jenis)} · ${esc(o.nama)} <span>${o.jarakKm} km</span></div>`).join('')}</div><div class="modal-card"><b>Logistik PO (berdasarkan infografik)</b><div style="margin-top:10px">Kenderaan: ${p.logistik.kenderaan} buah · Muatan: ${p.logistik.muatanMT} MT</div><div>Bilik sejuk: ${p.logistik.bilikSejuk} unit</div><div>Kapasiti simpanan: ${p.logistik.kapasitiSimpananMT} MT</div><div class="note">${p.logistik.shared ? 'Angka gabungan: ' + p.logistik.pemilikBersama.join(' + ') : 'Angka PO daripada infografik'}. Baki sebenar tidak tersedia.</div></div></div><div class="modal-grid"><label>Jenis intervensi<select id="actionType"><option>Semakan pergerakan harga</option><option>Pengalihan bekalan</option><option>Penyelarasan jualan di outlet</option><option>Pemantauan bersama PO</option></select></label><label>Status tindakan<select id="actionStatus"><option>Dalam tindakan</option><option>Untuk semakan</option><option>Selesai</option></select></label></div><label style="display:block;margin-top:12px">Catatan tindakan<textarea id="actionNote" placeholder="Contoh: Semakan trend harga harian dan koordinasi dengan PO (simulasi)."></textarea></label><div class="note" style="margin-top:7px">Tindakan ini hanya direkodkan dalam pelayar tempatan. Tiada penghantaran kepada FAMA.</div></div><div class="modal-actions"><button class="button ghost" id="actionCancel">Batal</button><button class="button" id="saveAction">✓ Rekod Tindakan</button></div></section></div>`;
+    `<div class="modal-back" id="modalBack"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="eyebrow">REKOD INTERVENSI · ${b ? 'HARGA SEBENAR (DB Harga)' : 'DATA DUMMY'}</div><h2 id="modalTitle">${esc(r.komoditi)} · ${esc(r.daerah)}</h2></div><button class="close-x" id="modalClose" aria-label="Tutup">×</button></div><div class="modal-body"><div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(p ? p.name : 'Tiada PO')} / ${esc(r.negeri)}</b>${statusHTML(r.status)}</div><div class="note" style="margin-top:6px">${esc(r.info)}</div></div>${kadPO}<div class="modal-grid"><label>Jenis intervensi<select id="actionType"><option>Semakan pergerakan harga</option><option>Pengalihan bekalan</option><option>Penyelarasan jualan di outlet</option><option>Pemantauan bersama PO</option></select></label><label>Status tindakan<select id="actionStatus"><option>Dalam tindakan</option><option>Untuk semakan</option><option>Selesai</option></select></label></div><label style="display:block;margin-top:12px">Catatan tindakan<textarea id="actionNote" placeholder="Contoh: Semakan trend harga harian dan koordinasi dengan PO (simulasi)."></textarea></label><div class="note" style="margin-top:7px">Tindakan ini hanya direkodkan dalam pelayar tempatan. Tiada penghantaran kepada FAMA.</div></div><div class="modal-actions"><button class="button ghost" id="actionCancel">Batal</button><button class="button" id="saveAction">✓ Rekod Tindakan</button></div></section></div>`;
   if (opts && opts.note) $('actionNote').value = opts.note;
   const close = () => {
     $('modalMount').innerHTML = '';
@@ -1930,7 +2679,7 @@ function openActionModal(recordId, opts) {
   };
   $('saveAction').onclick = () => {
     actions.unshift({
-      poId: p.id,
+      poId: p ? p.id : null,
       daerah: r.daerah,
       komoditi: r.komoditi,
       jenis: $('actionType').value,
@@ -1987,25 +2736,42 @@ function openLogModal() {
   };
 }
 function exportCSV() {
+  if (!HD.sedia) {
+    toast(hargaBelumSedia() || 'Data harga belum sedia.');
+    return;
+  }
   const fields = [
-    'poId',
+    'peringkat',
     'negeri',
+    'po',
     'daerah',
     'komoditi',
-    'peringkat',
+    'varieti',
     'unit',
-    'mingguSebelum',
-    'mingguTerkini',
+    'minggu',
+    'harga',
+    'hargaSebelum',
     'perubahanPct',
-    'purata',
-    'sigma',
-    'ramalan',
-    'hargaLantai',
-    'hargaSiling',
     'status',
     'sebab',
+    'tahunAsas',
   ];
-  const recs = filteredRecords({ issues: false });
+  const recs = filteredRecords({ issues: false }).map((r) => ({
+    peringkat: PERINGKAT_NAMA[r.peringkat],
+    negeri: negeriRekod(r),
+    po: r.po ? poById[r.po].name : '',
+    daerah: namaKom(r.daerah || ''),
+    komoditi: namaKom(r.commodity),
+    varieti: namaKom(r.variety),
+    unit: r.unit,
+    minggu: r.minggu ? r.minggu.iso + (r.minggu.separa ? ' (separa)' : '') : '',
+    harga: r.harga,
+    hargaSebelum: r.hargaSebelum,
+    perubahanPct: r.pctMinggu,
+    status: labels[r.status],
+    sebab: r.sebab,
+    tahunAsas: r.asas,
+  }));
   const encode = (x) => '"' + String(x ?? '').replaceAll('"', '""') + '"';
   const csv =
     '\ufeff' +
@@ -2015,12 +2781,12 @@ function exportCSV() {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'fama_harga_dummy_tapisan.csv';
+  a.download = 'fama_harga_tapisan.csv';
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast(`${recs.length} rekod CSV dummy dieksport.`);
+  toast(`${recs.length} rekod CSV dieksport.`);
 }
 function exportLogistikCSV() {
   const fields = [
